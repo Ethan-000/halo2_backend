@@ -1,0 +1,13 @@
+[package]
+name = "axiom_halo2_backend"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+acvm = "0.6.0"
+halo2-base = { git = "https://github.com/axiom-crypto/halo2-lib.git", tag = "v0.2.2", features = [
+    "default",
+] }
+rand = "0.8"
