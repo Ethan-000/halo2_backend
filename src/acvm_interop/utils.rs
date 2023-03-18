@@ -1,17 +1,6 @@
-use halo2_base::halo2_proofs::{
-    halo2curves::bn256::{Bn256, Fq, Fr, G1Affine},
-    poly::{
-        commitment::{Params, ParamsProver},
-        kzg::{
-            commitment::{KZGCommitmentScheme, ParamsKZG},
-            multiopen::{ProverGWC, VerifierGWC},
-            strategy::AccumulatorStrategy,
-        },
-        Rotation, VerificationStrategy,
-    },
-};
+use halo2_proofs_axiom::{halo2curves::bn256::Bn256, poly::kzg::commitment::ParamsKZG};
 
-use rand::{rngs::OsRng, RngCore};
+use rand::rngs::OsRng;
 
 fn gen_srs(k: u32) -> ParamsKZG<Bn256> {
     ParamsKZG::<Bn256>::setup(k, OsRng)

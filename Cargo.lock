@@ -211,7 +211,7 @@ name = "axiom_halo2_backend"
 version = "0.1.0"
 dependencies = [
  "acvm",
- "halo2-base",
+ "halo2_proofs",
  "rand",
 ]
 
@@ -289,9 +289,9 @@ checksum = "9f6b64db6932c7e49332728e3a6bd82c6b7e16016607d20923b537c3bc4c0d5f"
 
 [[package]]
 name = "constant_time_eq"
-version = "0.2.4"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3ad85c1f65dc7b37604eb0e89748faf0b9653065f2a8ef69f96a687ec1e9279"
+checksum = "13418e745008f7349ec7e449155f419a61b92b58a99cc3616942b926825ec76b"
 
 [[package]]
 name = "cpufeatures"
@@ -545,21 +545,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "halo2-base"
-version = "0.2.2"
-source = "git+https://github.com/axiom-crypto/halo2-lib.git?tag=v0.2.2#0b1c3e09d01d278656d83c29412fc12e015e717a"
-dependencies = [
- "ff 0.12.1",
- "halo2_proofs",
- "itertools",
- "num-bigint",
- "num-integer",
- "num-traits",
- "rand_chacha",
- "rustc-hash",
-]
-
-[[package]]
 name = "halo2_proofs"
 version = "0.2.0"
 source = "git+https://github.com/axiom-crypto/halo2.git?tag=v2023_01_17#475e45f52a0774ceb81304dd6a3a97dddd07662e"
@@ -702,7 +687,6 @@ dependencies = [
  "autocfg",
  "num-integer",
  "num-traits",
- "rand",
 ]
 
 [[package]]

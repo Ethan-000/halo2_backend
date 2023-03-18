@@ -2,14 +2,6 @@ use std::collections::BTreeMap;
 
 use acvm::acir::{circuit::Circuit as NoirCircuit, native_types::Witness, BlackBoxFunc};
 use acvm::{FieldElement, Language, ProofSystemCompiler};
-use halo2_base::halo2_proofs::{
-    halo2curves::bn256::G1Affine,
-    plonk::{
-        create_proof, keygen_pk, keygen_vk, verify_proof, Advice, Assigned,
-        Circuit as Halo2Circuit, Column, ConstraintSystem, Error, Fixed, Instance, ProvingKey,
-        VerifyingKey,
-    },
-};
 
 use super::Halo2;
 
