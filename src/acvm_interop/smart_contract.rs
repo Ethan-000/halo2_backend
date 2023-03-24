@@ -9,7 +9,7 @@ impl SmartContract for Halo2 {
         todo!()
     }
 
-    fn eth_contract_from_vk(&self, verification_key: &[u8]) -> String {
+    fn eth_contract_from_vk(&self, _verification_key: &[u8]) -> String {
         todo!()
     }
 }

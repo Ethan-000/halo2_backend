@@ -5,11 +5,79 @@ use halo2_proofs_axiom::{
     arithmetic::Field,
     circuit::Layouter,
     circuit::{Cell, Value},
-    halo2curves::bn256::Fr,
+    halo2curves::{
+        bn256::{Bn256, Fr, G1Affine, G1},
+        group::cofactor::CofactorCurve,
+    },
     plonk::Assigned,
-    plonk::{Advice, Column, ConstraintSystem, Error, Fixed},
-    poly::Rotation,
+    plonk::{
+        create_proof, keygen_pk, keygen_vk, verify_proof, Advice, Column, ConstraintSystem, Error,
+        Fixed, ProvingKey, VerifyingKey,
+    },
+    poly::{
+        kzg::{
+            commitment::{KZGCommitmentScheme, ParamsKZG},
+            multiopen::{ProverGWC, VerifierGWC},
+            strategy::SingleStrategy,
+        },
+        Rotation,
+    },
+    transcript::{
+        Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
+    },
 };
+use rand::rngs::OsRng;
+
+use crate::circuit_translator::NoirHalo2Translator;
+
+pub fn keygen(
+    circuit: &NoirHalo2Translator<Fr>,
+    params: &ParamsKZG<Bn256>,
+) -> (
+    ProvingKey<<G1 as CofactorCurve>::Affine>,
+    VerifyingKey<<G1 as CofactorCurve>::Affine>,
+) {
+    let vk = keygen_vk(params, circuit).expect("keygen_vk should not fail");
+    let vk_return = vk.clone();
+    let pk = keygen_pk(params, vk, circuit).expect("keygen_pk should not fail");
+    (pk, vk_return)
+}
+
+pub fn prover(
+    circuit: NoirHalo2Translator<Fr>,
+    params: &ParamsKZG<Bn256>,
+    pk: &ProvingKey<<G1 as CofactorCurve>::Affine>,
+) -> Vec<u8> {
+    let rng = OsRng;
+    let mut transcript: Blake2bWrite<Vec<u8>, _, Challenge255<_>> =
+        Blake2bWrite::<_, _, Challenge255<_>>::init(vec![]);
+    create_proof::<
+        KZGCommitmentScheme<Bn256>,
+        ProverGWC<'_, Bn256>,
+        Challenge255<G1Affine>,
+        _,
+        Blake2bWrite<Vec<u8>, G1Affine, Challenge255<_>>,
+        _,
+    >(params, pk, &[circuit], &[&[]], rng, &mut transcript)
+    .expect("proof generation should not fail");
+    transcript.finalize()
+}
+
+pub fn verifier(
+    params: &ParamsKZG<Bn256>,
+    vk: &VerifyingKey<<G1 as CofactorCurve>::Affine>,
+    proof: &[u8],
+) -> Result<(), Error> {
+    let strategy = SingleStrategy::new(params);
+    let mut transcript = Blake2bRead::<_, _, Challenge255<_>>::init(proof);
+    verify_proof::<
+        KZGCommitmentScheme<Bn256>,
+        VerifierGWC<'_, Bn256>,
+        Challenge255<G1Affine>,
+        Blake2bRead<&[u8], G1Affine, Challenge255<G1Affine>>,
+        SingleStrategy<'_, Bn256>,
+    >(params, vk, strategy, &[&[]], &mut transcript)
+}
 
 #[derive(Clone, Copy)]
 pub struct PlonkConfig {
@@ -29,7 +97,6 @@ impl PlonkConfig {
         let a = meta.advice_column();
         let b = meta.advice_column();
         let c = meta.advice_column();
-        let p = meta.instance_column();
 
         meta.enable_equality(a);
         meta.enable_equality(b);
@@ -55,14 +122,6 @@ impl PlonkConfig {
             vec![a.clone() * sl + b.clone() * sr + a * b * sm + (c * so) + sc]
         });
 
-        meta.create_gate("Public input", |meta| {
-            let a = meta.query_advice(a, Rotation::cur());
-            let p = meta.query_instance(p, Rotation::cur());
-            let sc = meta.query_fixed(sc, Rotation::cur());
-
-            vec![sc * (a - p)]
-        });
-
         PlonkConfig {
             a,
             b,
@@ -76,7 +135,7 @@ impl PlonkConfig {
     }
 }
 #[allow(clippy::type_complexity)]
-trait StandardCs<FF: Field> {
+pub trait StandardCs<FF: Field> {
     fn raw_multiply<F>(
         &self,
         layouter: &mut impl Layouter<FF>,
@@ -91,10 +150,50 @@ trait StandardCs<FF: Field> {
     ) -> Result<(Cell, Cell, Cell), Error>
     where
         F: FnMut() -> Value<(Assigned<FF>, Assigned<FF>, Assigned<FF>)>;
-    fn copy(&self, layouter: &mut impl Layouter<FF>, a: Cell, b: Cell) -> Result<(), Error>;
-    fn public_input<F>(&self, layouter: &mut impl Layouter<FF>, f: F) -> Result<Cell, Error>
+    fn raw_poly<F>(
+        &self,
+        layouter: &mut impl Layouter<FF>,
+        f: F,
+    ) -> Result<(Cell, Cell, Cell), Error>
     where
-        F: FnMut() -> Value<FF>;
+        F: FnMut() -> PolyTriple<Assigned<FF>>;
+    fn copy(&self, layouter: &mut impl Layouter<FF>, a: Cell, b: Cell) -> Result<(), Error>;
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct PolyTriple<F> {
+    a: Value<F>,
+    b: Value<F>,
+    c: Value<F>,
+    qm: F,
+    ql: F,
+    qr: F,
+    qo: F,
+    qc: F,
+}
+
+impl<F> PolyTriple<F> {
+    pub fn new(
+        a: Value<F>,
+        b: Value<F>,
+        c: Value<F>,
+        qm: F,
+        ql: F,
+        qr: F,
+        qo: F,
+        qc: F,
+    ) -> PolyTriple<F> {
+        PolyTriple {
+            a,
+            b,
+            c,
+            qm,
+            ql,
+            qr,
+            qo,
+            qc,
+        }
+    }
 }
 
 pub struct StandardPlonk<F: Field> {
@@ -170,24 +269,35 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
             },
         )?)
     }
+    fn raw_poly<F>(
+        &self,
+        layouter: &mut impl Layouter<FF>,
+        mut f: F,
+    ) -> Result<(Cell, Cell, Cell), Error>
+    where
+        F: FnMut() -> PolyTriple<Assigned<FF>>,
+    {
+        layouter.assign_region(
+            || "raw_poly",
+            |mut region| {
+                let value = f();
+                let lhs = region.assign_advice(self.config.a, 0, value.a)?;
+                let rhs = region.assign_advice(self.config.b, 0, value.b)?;
+                let out = region.assign_advice(self.config.c, 0, value.c)?;
+
+                region.assign_fixed(self.config.sl, 0, value.ql);
+                region.assign_fixed(self.config.sr, 0, value.qr);
+                region.assign_fixed(self.config.so, 0, value.qo);
+                region.assign_fixed(self.config.sm, 0, value.qm);
+                region.assign_fixed(self.config.sc, 0, value.qc);
+                Ok((*lhs.cell(), *rhs.cell(), *out.cell()))
+            },
+        )
+    }
     fn copy(&self, layouter: &mut impl Layouter<FF>, left: Cell, right: Cell) -> Result<(), Error> {
         layouter.assign_region(
             || "copy",
             |mut region| Ok(region.constrain_equal(&left, &right)),
-        )
-    }
-    fn public_input<F>(&self, layouter: &mut impl Layouter<FF>, mut f: F) -> Result<Cell, Error>
-    where
-        F: FnMut() -> Value<FF>,
-    {
-        layouter.assign_region(
-            || "public_input",
-            |mut region| {
-                let value = region.assign_advice(self.config.a, 0, (&mut f)())?;
-                region.assign_fixed(self.config.sc, 0, FF::one());
-
-                Ok(*value.cell())
-            },
         )
     }
 }

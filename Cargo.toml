@@ -9,3 +9,4 @@ edition = "2021"
 acvm = "0.6.0"
 halo2_proofs_axiom = { git = "https://github.com/axiom-crypto/halo2.git", tag = "v2023_01_17", package = "halo2_proofs" }
 rand = "0.8"
+ark-std = "0.4"

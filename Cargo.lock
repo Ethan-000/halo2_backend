@@ -211,6 +211,7 @@ name = "axiom_halo2_backend"
 version = "0.1.0"
 dependencies = [
  "acvm",
+ "ark-std",
  "halo2_proofs",
  "rand",
 ]
