@@ -18,8 +18,8 @@ use crate::halo2_plonk_api::{keygen, prover, verifier};
 use super::Halo2;
 
 impl ProofSystemCompiler for Halo2 {
-    fn get_exact_circuit_size(&self, _: &NoirCircuit) -> u32 {
-        todo!()
+    fn get_exact_circuit_size(&self, circuit: &NoirCircuit) -> u32 {
+        circuit.opcodes.len() as u32
     }
 
     fn preprocess(&self, circuit: &NoirCircuit) -> (Vec<u8>, Vec<u8>) {
@@ -28,6 +28,7 @@ impl ProofSystemCompiler for Halo2 {
             witness_values: BTreeMap::new(),
             _marker: PhantomData::<Fr>,
         };
+
         let params = ParamsKZG::<Bn256>::setup(10, ark_std::test_rng());
         let (pk, vk) = keygen(&translator, &params);
 
@@ -63,11 +64,19 @@ impl ProofSystemCompiler for Halo2 {
             _marker: PhantomData::<Fr>,
         };
 
-        let params = ParamsKZG::<Bn256>::setup(1000, OsRng);
+        let f = File::open("serialization-test.params").unwrap();
+        let mut reader = BufReader::new(f);
+        let params = ParamsKZG::<Bn256>::read::<_>(&mut reader).unwrap();
 
-        let (pk, vk) = keygen(&translator, &params);
+        let f = File::open("serialization-test.pk").unwrap();
+        let mut reader = BufReader::new(f);
+        let pk = ProvingKey::<G1Affine>::read::<_, NoirHalo2Translator<Fr>>(
+            &mut reader,
+            SerdeFormat::RawBytes,
+        )
+        .unwrap();
+
         let proof = prover(translator, &params, &pk);
-        assert!(verifier(&params, &vk, &proof).is_ok());
         proof
     }
 
@@ -105,16 +114,6 @@ impl ProofSystemCompiler for Halo2 {
         };
 
         let proof = prover(translator, &params, &pk);
-
-        let f = File::open("serialization-test.vk").unwrap();
-        let mut reader = BufReader::new(f);
-        let vk = VerifyingKey::<G1Affine>::read::<_, NoirHalo2Translator<Fr>>(
-            &mut reader,
-            SerdeFormat::RawBytes,
-        )
-        .unwrap();
-
-        assert!(verifier(&params, &vk, &proof).is_ok());
 
         proof
     }
