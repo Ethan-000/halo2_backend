@@ -222,6 +222,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
         Ok(layouter.assign_region(
             || "raw_multiply",
             |mut region| {
+                #[allow(unused_assignments)]
                 let mut value = None;
                 let lhs = region.assign_advice(self.config.a, 0, {
                     value = Some(f());
@@ -251,6 +252,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
         Ok(layouter.assign_region(
             || "raw_add",
             |mut region| {
+                #[allow(unused_assignments)]
                 let mut value = None;
                 let lhs = region.assign_advice(self.config.a, 0, {
                     value = Some(f());

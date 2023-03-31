@@ -227,10 +227,10 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                         BlackBoxFunc::AES => panic!("AES has not yet been implemented"),
                     };
                 }
-                Opcode::Directive(_) => {
+                Opcode::Directive(_) | Opcode::Oracle(_) => {
                     // Directives are only needed by the pwg
                 }
-                Opcode::Block(_, _) => {
+                Opcode::Block(_) | Opcode::RAM(_) | Opcode::ROM(_) => {
                     todo!()
                 }
             }
