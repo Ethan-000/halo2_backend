@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use crate::aztec_crs::get_aztec_crs;
 use ark_std::log2;
 use halo2_proofs_axiom::{
@@ -6,9 +8,11 @@ use halo2_proofs_axiom::{
         bn256::{Bn256, Fq, Fq2, G1Affine, G2Affine},
         group::prime::PrimeCurveAffine,
         pairing::Engine,
+        serde::SerdeObject,
         CurveAffine,
     },
     poly::kzg::commitment::ParamsKZG,
+    SerdeFormat,
 };
 
 pub(crate) fn constuct_halo2_params_from_aztec_crs(num_points: u32) -> ParamsKZG<Bn256> {
@@ -17,6 +21,7 @@ pub(crate) fn constuct_halo2_params_from_aztec_crs(num_points: u32) -> ParamsKZG
 
     let k = log2(points_needed as usize);
     let n = points_needed as u64;
+    assert!(n == 1 << k);
 
     let mut g = vec![<<Bn256 as Engine>::G1Affine as PrimeCurveAffine>::generator()];
 
@@ -27,17 +32,39 @@ pub(crate) fn constuct_halo2_params_from_aztec_crs(num_points: u32) -> ParamsKZG
     let g2 = <<Bn256 as Engine>::G2Affine as PrimeCurveAffine>::generator();
     let s_g2 = to_g2_point(&g2_data);
 
-    // WARNING: currently the fields of ParamsKZG are private
-    // and there's no consturctor from these fields,
-    // so I changed my local version of these fields to public.
-    ParamsKZG::<Bn256> {
-        k,
-        n,
-        g,
-        g_lagrange,
-        g2,
-        s_g2,
+    params_kzg(k, g, g_lagrange, g2, s_g2)
+}
+
+/// Constructs a `ParamsKZG<Bn256>` from its parameters
+fn params_kzg(
+    k: u32,
+    g: Vec<G1Affine>,
+    g_lagrange: Vec<G1Affine>,
+    g2: G2Affine,
+    s_g2: G2Affine,
+) -> ParamsKZG<Bn256> {
+    // Halo2 doesn't allow us to directly construct a `ParamsKZG` from parameters directly,
+    // however it does allow constructing one from a serialized set of parameters.
+
+    // First we serialize all of the parameters into the format expected by Halo2.
+    // For format see:
+    // https://github.com/axiom-crypto/halo2/blob/475e45f52a0774ceb81304dd6a3a97dddd07662e/halo2_proofs/src/poly/kzg/commitment.rs#L142-L156
+    // We're using the equivalent of the `SerdeFormat::RawBytesUnchecked` encoding here.
+
+    let mut buf: Vec<u8> = Vec::new();
+    buf.write(&k.to_le_bytes()).unwrap();
+    for el in g.iter() {
+        el.write_raw(&mut buf).unwrap();
     }
+    for el in g_lagrange.iter() {
+        el.write_raw(&mut buf).unwrap();
+    }
+    g2.write_raw(&mut buf).unwrap();
+    s_g2.write_raw(&mut buf).unwrap();
+
+    // Then we feed it in to be deserialized again!
+
+    ParamsKZG::<Bn256>::read_custom(&mut &buf[..], SerdeFormat::RawBytesUnchecked)
 }
 
 fn to_g1_point(point: &[u8]) -> G1Affine {
