@@ -11,7 +11,7 @@ halo2_proofs_axiom = { git = "https://github.com/axiom-crypto/halo2.git", tag = 
 rand = "0.8"
 ark-std = "0.4"
 dirs = "3.0"
-downloader = { version = "0.2.7", default-features = false, features = [
-    "rustls-tls",
-] }
-indicatif = "0.15.0"
+reqwest = { version = "0.11.16", default-features = false, features = ["stream", "rustls-tls"] }
+tokio = "1.0"
+futures-util = "0.3.14"
+indicatif = "0.17.3"
