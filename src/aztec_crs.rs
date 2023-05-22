@@ -1,6 +1,6 @@
 use bytesize::ByteSize;
 use std::{env};
-use crate::error::{Error, CRSError};
+use crate::errors::{Error, CRSError};
 
 use reqwest::Client;
 

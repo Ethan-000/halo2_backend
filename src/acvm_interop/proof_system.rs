@@ -14,9 +14,9 @@ use halo2_proofs_axiom::SerdeFormat;
 
 use crate::circuit_translator::NoirHalo2Translator;
 use crate::halo2_plonk_api::{keygen, prover, verifier};
-use crate::error::BackendError;
+use crate::errors::BackendError;
 
-use super::Halo2;
+use crate::Halo2;
 
 impl ProofSystemCompiler for Halo2 {
     type Error = BackendError;

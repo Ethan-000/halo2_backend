@@ -3,7 +3,7 @@ use acvm::{acir::circuit::Circuit, async_trait, CommonReferenceString};
 
 use crate::Halo2;
 use crate::halo2_params::constuct_halo2_params_from_aztec_crs;
-use crate::error::BackendError;
+use crate::errors::BackendError;
 
 // TODO(#185): Ensure CRS download works in JS
 #[async_trait]

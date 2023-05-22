@@ -1,8 +1,8 @@
 use acvm::SmartContract;
 
-use crate::error::BackendError;
+use crate::errors::BackendError;
 
-use super::Halo2;
+use crate::Halo2;
 
 impl SmartContract for Halo2 {
     type Error = BackendError;

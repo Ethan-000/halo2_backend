@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use crate::{aztec_crs::get_aztec_crs, error::Error};
+use crate::{aztec_crs::get_aztec_crs, errors::Error};
 use ark_std::log2;
 use halo2_proofs_axiom::{
     arithmetic::g_to_lagrange,

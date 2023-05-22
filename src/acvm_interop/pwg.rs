@@ -4,7 +4,7 @@ use acvm::{PartialWitnessGenerator};
 
 mod gadget_call;
 
-use super::Halo2;
+use crate::Halo2;
 
 impl PartialWitnessGenerator for Halo2 {
 

@@ -1,11 +1,22 @@
-pub mod acvm_interop;
+mod acvm_interop;
 
 mod aztec_crs;
-pub mod circuit_translator;
+mod circuit_translator;
 mod halo2_params;
-pub mod halo2_plonk_api;
-mod error;
+mod halo2_plonk_api;
+mod errors;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Halo2;
 
+impl Halo2 {
+    pub(crate) fn new() -> Halo2 {
+        Halo2 {}
+    }
+}
+
+impl Default for Halo2 {
+    fn default() -> Halo2 {
+        Halo2::new()
+    }
+}
