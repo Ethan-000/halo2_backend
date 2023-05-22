@@ -1,5 +1,5 @@
 use bytesize::ByteSize;
-use std::{env, path::PathBuf};
+use std::{env};
 use crate::error::{Error, CRSError};
 
 use reqwest::Client;
@@ -20,22 +20,6 @@ pub(crate) async fn get_aztec_crs(points_needed: u32) -> Result<(Vec<u8>, Vec<u8
     let g2_data = download(G2_START, G2_END).await?;
 
     Ok((g1_data, g2_data))
-}
-
-fn read_crs(path: PathBuf) -> Vec<u8> {
-    match std::fs::read(&path) {
-        Ok(bytes) => bytes,
-        Err(e) => {
-            assert!(
-                e.kind() != std::io::ErrorKind::PermissionDenied,
-                "please run again with appropriate permissions."
-            );
-            panic!(
-                "Could not find transcript at location {}.\n Starting Download",
-                path.display()
-            );
-        }
-    }
 }
 
 async fn download(start: usize, end: usize) -> Result<Vec<u8>, CRSError> {

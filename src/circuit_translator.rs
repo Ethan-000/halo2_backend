@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, marker::PhantomData};
+use std::{marker::PhantomData};
 
 use crate::halo2_plonk_api::{PlonkConfig, PolyTriple, StandardCs, StandardPlonk};
 use acvm::{
@@ -221,7 +221,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                         }
                         BlackBoxFuncCall::Keccak256 {..} => panic!("Keccak256 has not yet been implemented"),
                         BlackBoxFuncCall::AES {..} => panic!("AES has not yet been implemented"),
-                        BlackBoxFuncCall::ComputeMerkleRoot { leaf, index, hash_path, output } => todo!(),
+                        BlackBoxFuncCall::ComputeMerkleRoot { leaf: _, index: _, hash_path: _, output: _ } => todo!(),
                     };
                 }
                 Opcode::Directive(_) | Opcode::Oracle(_) => {
