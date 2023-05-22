@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use crate::aztec_crs::get_aztec_crs;
+use crate::{aztec_crs::get_aztec_crs, error::Error};
 use ark_std::log2;
 use halo2_proofs_axiom::{
     arithmetic::g_to_lagrange,
@@ -15,9 +15,9 @@ use halo2_proofs_axiom::{
     SerdeFormat,
 };
 
-pub(crate) fn constuct_halo2_params_from_aztec_crs(num_points: u32) -> ParamsKZG<Bn256> {
+pub(crate) async fn constuct_halo2_params_from_aztec_crs(num_points: u32) -> Result<ParamsKZG<Bn256>,Error> {
     let points_needed = pow2ceil(num_points);
-    let (g1_data, g2_data) = get_aztec_crs(points_needed);
+    let (g1_data, g2_data) = get_aztec_crs(points_needed).await?;
 
     let k = log2(points_needed as usize);
     let n = points_needed as u64;
@@ -32,7 +32,7 @@ pub(crate) fn constuct_halo2_params_from_aztec_crs(num_points: u32) -> ParamsKZG
     let g2 = <<Bn256 as Engine>::G2Affine as PrimeCurveAffine>::generator();
     let s_g2 = to_g2_point(&g2_data);
 
-    params_kzg(k, g, g_lagrange, g2, s_g2)
+    Ok(params_kzg(k, g, g_lagrange, g2, s_g2))
 }
 
 /// Constructs a `ParamsKZG<Bn256>` from its parameters

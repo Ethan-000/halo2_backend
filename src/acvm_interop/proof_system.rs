@@ -1,10 +1,11 @@
-use std::collections::BTreeMap;
+
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
 use std::marker::PhantomData;
 
-use acvm::acir::{circuit::Circuit as NoirCircuit, native_types::Witness, BlackBoxFunc};
-use acvm::{FieldElement, Language, ProofSystemCompiler};
+use acvm::acir::native_types::WitnessMap;
+use acvm::acir::{circuit::Circuit as NoirCircuit};
+use acvm::{Language, ProofSystemCompiler};
 use halo2_proofs_axiom::halo2curves::bn256::{Bn256, Fr, G1Affine};
 use halo2_proofs_axiom::plonk::{ProvingKey, VerifyingKey};
 use halo2_proofs_axiom::poly::commitment::Params;
@@ -12,24 +13,26 @@ use halo2_proofs_axiom::poly::kzg::commitment::ParamsKZG;
 use halo2_proofs_axiom::SerdeFormat;
 
 use crate::circuit_translator::NoirHalo2Translator;
-use crate::halo2_params::constuct_halo2_params_from_aztec_crs;
 use crate::halo2_plonk_api::{keygen, prover, verifier};
+use crate::error::BackendError;
 
 use super::Halo2;
 
 impl ProofSystemCompiler for Halo2 {
-    fn get_exact_circuit_size(&self, circuit: &NoirCircuit) -> u32 {
-        circuit.opcodes.len() as u32
+    type Error = BackendError;
+
+    fn get_exact_circuit_size(&self, circuit: &NoirCircuit) -> Result<u32, BackendError> {
+        Ok(circuit.opcodes.len() as u32)
     }
 
-    fn preprocess(&self, circuit: &NoirCircuit) -> (Vec<u8>, Vec<u8>) {
+    fn preprocess(&self, mut common_reference_string: &[u8], circuit: &NoirCircuit) -> Result<(Vec<u8>, Vec<u8>), BackendError> {
         let translator = NoirHalo2Translator::<Fr> {
             circuit: circuit.clone(),
-            witness_values: BTreeMap::new(),
+            witness_values: WitnessMap::new(),
             _marker: PhantomData::<Fr>,
         };
 
-        let params = constuct_halo2_params_from_aztec_crs(self.get_exact_circuit_size(circuit));
+        let params = ParamsKZG::<Bn256>::read_custom(&mut common_reference_string, SerdeFormat::RawBytes);
         let (pk, vk) = keygen(&translator, &params);
 
         let f = File::create("target/halo2_kzg_bn256.params").unwrap();
@@ -37,18 +40,19 @@ impl ProofSystemCompiler for Halo2 {
         params.write(&mut writer).unwrap();
         writer.flush().unwrap();
 
-        (
+        Ok((
             pk.to_bytes(SerdeFormat::RawBytes),
             vk.to_bytes(SerdeFormat::RawBytes),
-        )
+        ))
     }
 
     fn prove_with_pk(
         &self,
+        _common_reference_string: &[u8],
         circuit: &NoirCircuit,
-        witness_values: BTreeMap<Witness, FieldElement>,
+        witness_values: WitnessMap,
         proving_key: &[u8],
-    ) -> Vec<u8> {
+    ) -> Result<Vec<u8>, BackendError> {
         let f = File::open("target/halo2_kzg_bn256.params").unwrap();
         let mut reader = BufReader::new(f);
         let params = ParamsKZG::<Bn256>::read::<_>(&mut reader).unwrap();
@@ -67,16 +71,17 @@ impl ProofSystemCompiler for Halo2 {
 
         let proof = prover(translator, &params, &pk);
 
-        proof
+        Ok(proof)
     }
 
     fn verify_with_vk(
         &self,
+        _common_reference_string: &[u8],
         proof: &[u8],
-        _public_inputs: BTreeMap<Witness, FieldElement>,
+        _public_inputs: WitnessMap,
         _circuit: &NoirCircuit,
         verification_key: &[u8],
-    ) -> bool {
+    ) -> Result<bool, BackendError> {
         let f = File::open("target/halo2_kzg_bn256.params").unwrap();
         let mut reader = BufReader::new(f);
         let params = ParamsKZG::<Bn256>::read::<_>(&mut reader).unwrap();
@@ -87,14 +92,14 @@ impl ProofSystemCompiler for Halo2 {
         )
         .unwrap();
 
-        verifier(&params, &vk, &proof).is_ok()
+        Ok(verifier(&params, &vk, &proof).is_ok())
     }
 
     fn np_language(&self) -> Language {
         Language::PLONKCSat { width: 3 }
     }
 
-    fn black_box_function_supported(&self, _opcode: &BlackBoxFunc) -> bool {
-        false
+    fn supports_opcode(&self, _opcode: &acvm::acir::circuit::Opcode) -> bool {
+        todo!()
     }
 }
