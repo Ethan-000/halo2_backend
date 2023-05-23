@@ -1,12 +1,12 @@
 [package]
-name = "axiom_halo2_backend"
+name = "halo2_backend"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-acvm = "0.9.0"
+acvm = "0.11.0"
 halo2_proofs_axiom = { git = "https://github.com/axiom-crypto/halo2.git", tag = "v2023_01_17", package = "halo2_proofs" }
 rand = "0.8"
 ark-std = "0.4"
@@ -15,3 +15,4 @@ reqwest = { version = "0.11.16", default-features = false, features = ["stream",
 tokio = "1.0"
 futures-util = "0.3.14"
 indicatif = "0.17.3"
+thiserror = "1.0.21"

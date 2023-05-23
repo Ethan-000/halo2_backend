@@ -4,9 +4,9 @@ version = 3
 
 [[package]]
 name = "acir"
-version = "0.9.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "018148d69bf14422b1c1d62909a241af2a7f51fec064feb2b01de88fb02b11b8"
+checksum = "084577e67b44c72d1cdfabe286d48adac6f5e0ad441ef134c5c467f4b6eee291"
 dependencies = [
  "acir_field",
  "flate2",
@@ -16,9 +16,9 @@ dependencies = [
 
 [[package]]
 name = "acir_field"
-version = "0.9.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d40dac25cf6be6335dd86286caeac859afd0dc74a4a75c64eed041b0f00a278"
+checksum = "a267ef529f4b132293199ecdf8c232ade817f01d916039f2d34562cab39e75e9"
 dependencies = [
  "ark-bn254",
  "ark-ff",
@@ -30,9 +30,9 @@ dependencies = [
 
 [[package]]
 name = "acvm"
-version = "0.9.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e17b7bc8f2b2215075b8e080ba3a0b8b7d759f04bc44b27e5bb8d845f4c77f20"
+checksum = "4e1d6795105b50b13fa0dd1779b5191c4d8e9cd98b357b0b9a0b04a847baacf0"
 dependencies = [
  "acir",
  "acvm_stdlib",
@@ -43,14 +43,15 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "sha2",
+ "sha3",
  "thiserror",
 ]
 
 [[package]]
 name = "acvm_stdlib"
-version = "0.9.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33ce2d19a9d1e7ff1bf415ed909b43031e33ef6df21be70e470bb1817b3e6989"
+checksum = "3131af53d17ac12340c0ff50f8555d8e040321f8078b8ee3cd8846560b6a44a9"
 dependencies = [
  "acir",
 ]
@@ -208,21 +209,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
-name = "axiom_halo2_backend"
-version = "0.1.0"
-dependencies = [
- "acvm",
- "ark-std",
- "dirs",
- "futures-util",
- "halo2_proofs",
- "indicatif",
- "rand",
- "reqwest",
- "tokio",
-]
-
-[[package]]
 name = "base64"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -285,8 +271,15 @@ version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4152116fd6e9dadb291ae18fc1ec3575ed6d84c29642d97890f4b4a3417297e4"
 dependencies = [
+ "block-padding",
  "generic-array",
 ]
+
+[[package]]
+name = "block-padding"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
 
 [[package]]
 name = "bumpalo"
@@ -725,6 +718,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "halo2_backend"
+version = "0.1.0"
+dependencies = [
+ "acvm",
+ "ark-std",
+ "dirs",
+ "futures-util",
+ "halo2_proofs",
+ "indicatif",
+ "rand",
+ "reqwest",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
 name = "halo2_proofs"
 version = "0.2.0"
 source = "git+https://github.com/axiom-crypto/halo2.git?tag=v2023_01_17#475e45f52a0774ceb81304dd6a3a97dddd07662e"
@@ -943,6 +952,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "keccak"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8f6d5ed8676d904364de097082f4e7d240b571b67989ced0240f08b7f966f940"
+dependencies = [
+ "cpufeatures",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1125,18 +1143,18 @@ checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.51"
+version = "1.0.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d727cae5b39d21da60fa540906919ad737832fe0b1c165da3a34d6548c849d6"
+checksum = "fa1fb82fc0c281dd9671101b66b771ebbe1eaf967b96ac8740dcba4b70005ca8"
 dependencies = [
  "unicode-ident",
 ]
 
 [[package]]
 name = "quote"
-version = "1.0.23"
+version = "1.0.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8856d8364d252a14d474036ea1358d63c9e6965c8e5c1885c18f73d70bff9c7b"
+checksum = "8f4f29d145265ec1c483c7c654450edde0bfe043d3938d6972630663356d9500"
 dependencies = [
  "proc-macro2",
 ]
@@ -1426,6 +1444,18 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest 0.9.0",
+ "opaque-debug",
+]
+
+[[package]]
+name = "sha3"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f81199417d4e5de3f04b1e871023acea7389672c4135918f05aa9cbf2f2fa809"
+dependencies = [
+ "block-buffer",
+ "digest 0.9.0",
+ "keccak",
  "opaque-debug",
 ]
 

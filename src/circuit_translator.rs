@@ -205,9 +205,6 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                         BlackBoxFunc::Blake2s => {
                             todo!()
                         }
-                        BlackBoxFunc::MerkleMembership => {
-                            todo!()
-                        }
                         BlackBoxFunc::SchnorrVerify => {
                             todo!()
                         }
@@ -225,6 +222,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                         }
                         BlackBoxFunc::Keccak256 => panic!("Keccak256 has not yet been implemented"),
                         BlackBoxFunc::AES => panic!("AES has not yet been implemented"),
+                        BlackBoxFunc::ComputeMerkleRoot => todo!(),
                     };
                 }
                 Opcode::Directive(_) | Opcode::Oracle(_) => {
