@@ -13,6 +13,7 @@ use halo2_proofs_axiom::poly::kzg::commitment::ParamsKZG;
 use halo2_proofs_axiom::SerdeFormat;
 
 use crate::circuit_translator::NoirHalo2Translator;
+use crate::halo2_params::constuct_halo2_params_from_aztec_crs;
 use crate::halo2_plonk_api::{keygen, prover, verifier};
 use crate::errors::BackendError;
 
@@ -102,4 +103,6 @@ impl ProofSystemCompiler for Halo2 {
     fn supports_opcode(&self, _opcode: &acvm::acir::circuit::Opcode) -> bool {
         todo!()
     }
+
+    type Error = BackendError;
 }
