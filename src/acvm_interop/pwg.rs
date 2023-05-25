@@ -1,5 +1,6 @@
 use acvm::acir::native_types::Witness;
 use acvm::OpcodeResolutionError;
+use acvm::pwg::range;
 use acvm::{PartialWitnessGenerator};
 
 mod gadget_call;
@@ -39,10 +40,10 @@ impl PartialWitnessGenerator for Halo2 {
 
     fn range(
         &self,
-        _initial_witness: &mut acvm::acir::native_types::WitnessMap,
-        _input: &acvm::acir::circuit::opcodes::FunctionInput,
+        initial_witness: &mut acvm::acir::native_types::WitnessMap,
+        input: &acvm::acir::circuit::opcodes::FunctionInput,
     ) -> Result<acvm::pwg::OpcodeResolution, OpcodeResolutionError> {
-        todo!()
+        range::solve_range_opcode(initial_witness, input)
     }
 
     fn sha256(

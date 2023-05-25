@@ -44,7 +44,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "sha2 0.10.6",
- "sha3",
+ "sha3 0.10.8",
  "thiserror",
 ]
 
@@ -290,6 +290,7 @@ version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4152116fd6e9dadb291ae18fc1ec3575ed6d84c29642d97890f4b4a3417297e4"
 dependencies = [
+ "block-padding",
  "generic-array",
 ]
 
@@ -301,6 +302,12 @@ checksum = "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71"
 dependencies = [
  "generic-array",
 ]
+
+[[package]]
+name = "block-padding"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
 
 [[package]]
 name = "bumpalo"
@@ -382,6 +389,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "crossbeam"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2801af0d36612ae591caa9568261fddce32ce6e08a7275ea334a06a4ad021a2c"
+dependencies = [
+ "cfg-if",
+ "crossbeam-channel",
+ "crossbeam-deque",
+ "crossbeam-epoch",
+ "crossbeam-queue",
+ "crossbeam-utils",
+]
+
+[[package]]
 name = "crossbeam-channel"
 version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -413,6 +434,16 @@ dependencies = [
  "crossbeam-utils",
  "memoffset",
  "scopeguard",
+]
+
+[[package]]
+name = "crossbeam-queue"
+version = "0.3.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d1cfb3ea8a53f37c40dea2c7bedcbd88bdfae54f5e2175d6ecaff1c988353add"
+dependencies = [
+ "cfg-if",
+ "crossbeam-utils",
 ]
 
 [[package]]
@@ -737,6 +768,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "halo2-base"
+version = "0.3.0"
+source = "git+https://github.com/axiom-crypto/halo2-lib?branch=axiom-dev-0406#8cdff0c6fc7257b7a23a3759d62960c9e1f8a42b"
+dependencies = [
+ "ff 0.12.1",
+ "halo2_proofs 0.2.0 (git+https://github.com/axiom-crypto/halo2.git?branch=axiom/dev)",
+ "itertools",
+ "log",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "rand_chacha",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "halo2_backend"
 version = "0.1.0"
 dependencies = [
@@ -746,7 +795,8 @@ dependencies = [
  "bytesize",
  "dirs",
  "futures-util",
- "halo2_proofs",
+ "halo2-base",
+ "halo2_proofs 0.2.0 (git+https://github.com/axiom-crypto/halo2.git?tag=v2023_01_17)",
  "indicatif",
  "rand",
  "reqwest",
@@ -762,7 +812,7 @@ dependencies = [
  "blake2b_simd",
  "ff 0.12.1",
  "group 0.12.1",
- "halo2curves",
+ "halo2curves 0.3.1 (git+https://github.com/axiom-crypto/halo2.git?tag=v2023_01_17)",
  "rand_core 0.6.4",
  "rayon",
  "rustc-hash",
@@ -770,9 +820,45 @@ dependencies = [
 ]
 
 [[package]]
+name = "halo2_proofs"
+version = "0.2.0"
+source = "git+https://github.com/axiom-crypto/halo2.git?branch=axiom/dev#2e9c8724604c926efff139d7d44dbeebfd8d960b"
+dependencies = [
+ "blake2b_simd",
+ "crossbeam",
+ "ff 0.12.1",
+ "group 0.12.1",
+ "halo2curves 0.3.1 (git+https://github.com/axiom-crypto/halo2.git?branch=axiom/dev)",
+ "rand",
+ "rand_core 0.6.4",
+ "rayon",
+ "rustc-hash",
+ "sha3 0.9.1",
+ "tracing",
+]
+
+[[package]]
 name = "halo2curves"
 version = "0.3.1"
 source = "git+https://github.com/axiom-crypto/halo2.git?tag=v2023_01_17#475e45f52a0774ceb81304dd6a3a97dddd07662e"
+dependencies = [
+ "ff 0.12.1",
+ "group 0.12.1",
+ "lazy_static",
+ "num-bigint",
+ "num-traits",
+ "pasta_curves",
+ "rand",
+ "rand_core 0.6.4",
+ "serde",
+ "static_assertions",
+ "subtle",
+]
+
+[[package]]
+name = "halo2curves"
+version = "0.3.1"
+source = "git+https://github.com/axiom-crypto/halo2.git?branch=axiom/dev#2e9c8724604c926efff139d7d44dbeebfd8d960b"
 dependencies = [
  "ff 0.12.1",
  "group 0.12.1",
@@ -1053,6 +1139,7 @@ dependencies = [
  "autocfg",
  "num-integer",
  "num-traits",
+ "rand",
 ]
 
 [[package]]
@@ -1496,6 +1583,18 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest 0.10.7",
+]
+
+[[package]]
+name = "sha3"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f81199417d4e5de3f04b1e871023acea7389672c4135918f05aa9cbf2f2fa809"
+dependencies = [
+ "block-buffer 0.9.0",
+ "digest 0.9.0",
+ "keccak",
+ "opaque-debug",
 ]
 
 [[package]]

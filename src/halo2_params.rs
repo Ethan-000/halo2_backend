@@ -27,7 +27,9 @@ pub(crate) async fn constuct_halo2_params_from_aztec_crs(num_points: u32) -> Res
 
     g.extend(g1_data.chunks(64).map(|g1| to_g1_point(g1)));
 
+
     let g_lagrange = g_to_lagrange(g.iter().map(|g| PrimeCurveAffine::to_curve(g)).collect(), k);
+
 
     let g2 = <<Bn256 as Engine>::G2Affine as PrimeCurveAffine>::generator();
     let s_g2 = to_g2_point(&g2_data);

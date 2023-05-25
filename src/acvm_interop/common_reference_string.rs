@@ -22,9 +22,12 @@ impl CommonReferenceString for Halo2 {
 
     async fn update_common_reference_string(
         &self,
-        common_reference_string: Vec<u8>,
-        _circuit: &Circuit,
+        _common_reference_string: Vec<u8>,
+        circuit: &Circuit,
     ) -> Result<Vec<u8>, Self::Error> {
+        let mut common_reference_string = Vec::new();
+        constuct_halo2_params_from_aztec_crs(self.get_exact_circuit_size(circuit)?).await?.write_custom(&mut common_reference_string, halo2_proofs_axiom::SerdeFormat::RawBytes);
+
         // TODO: Implement this
         // Separated to have nicer coercion on error types
         Ok(common_reference_string)

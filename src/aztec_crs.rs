@@ -5,7 +5,7 @@ use crate::errors::{Error, CRSError};
 use reqwest::Client;
 
 const G1_START: usize = 28;
-const G2_START: usize = 28 + (5_040_000 * 64);
+const G2_START: usize = 28 + (5_040_001 * 64);
 const G2_END: usize = G2_START + 128 - 1;
 
 const TRANSCRIPT_URL_ENV_VAR: &str = "TRANSCRIPT_URL";

@@ -3,6 +3,8 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
 use std::marker::PhantomData;
 
+use acvm::acir::BlackBoxFunc;
+use acvm::acir::circuit::Opcode;
 use acvm::acir::native_types::WitnessMap;
 use acvm::acir::{circuit::Circuit as NoirCircuit};
 use acvm::{Language, ProofSystemCompiler};
@@ -99,7 +101,30 @@ impl ProofSystemCompiler for Halo2 {
         Language::PLONKCSat { width: 3 }
     }
 
-    fn supports_opcode(&self, _opcode: &acvm::acir::circuit::Opcode) -> bool {
-        todo!()
+    fn supports_opcode(&self, opcode: &acvm::acir::circuit::Opcode) -> bool {
+        match opcode {
+            Opcode::Arithmetic(_) => true,
+            Opcode::Directive(_) => true,
+            Opcode::Block(_) => false,
+            Opcode::ROM(_) => true,
+            Opcode::RAM(_) => true,
+            Opcode::Oracle(_) => true,
+            Opcode::BlackBoxFuncCall(func) => match func.get_black_box_func() {
+                BlackBoxFunc::AND
+                | BlackBoxFunc::XOR
+                | BlackBoxFunc::RANGE
+                | BlackBoxFunc::SHA256
+                | BlackBoxFunc::Blake2s
+                | BlackBoxFunc::Keccak256
+                | BlackBoxFunc::ComputeMerkleRoot
+                | BlackBoxFunc::SchnorrVerify
+                | BlackBoxFunc::Pedersen
+                | BlackBoxFunc::HashToField128Security
+                | BlackBoxFunc::EcdsaSecp256k1
+                | BlackBoxFunc::FixedBaseScalarMul => true,
+
+                BlackBoxFunc::AES => false,
+            },
+        }
     }
 }
