@@ -54,7 +54,7 @@ fn params_kzg(
     // We're using the equivalent of the `SerdeFormat::RawBytesUnchecked` encoding here.
 
     let mut buf: Vec<u8> = Vec::new();
-    buf.write(&k.to_le_bytes()).unwrap();
+    buf.write_all(&k.to_le_bytes()).unwrap();
     for el in g.iter() {
         el.write_raw(&mut buf).unwrap();
     }

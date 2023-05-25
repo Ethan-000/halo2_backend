@@ -23,7 +23,6 @@ impl NoirHalo2Translator<Fr> {
         let mut a: Value<Assigned<_>> = Value::known(Fr::zero()).into();
         let mut b: Value<Assigned<_>> = Value::known(Fr::zero()).into();
         let mut c: Value<Assigned<_>> = Value::known(Fr::zero()).into();
-        let d: Value<Assigned<_>> = Value::known(Fr::zero()).into();
         let mut qm = Fr::zero();
         let mut ql = Fr::zero();
         let mut qr = Fr::zero();
@@ -121,7 +120,6 @@ impl NoirHalo2Translator<Fr> {
             a,
             b,
             c,
-            d,
             qm.into(),
             ql.into(),
             qr.into(),
@@ -159,8 +157,6 @@ fn noir_field_to_halo2_field(noir_ele: FieldElement) -> Fr {
     let mut bytes = noir_ele.to_be_bytes();
     bytes.reverse();
     let mut halo_ele: [u8; 32] = [0; 32];
-    for i in 0..bytes.len() {
-        halo_ele[i] = bytes[i]
-    }
+    halo_ele[..bytes.len()].copy_from_slice(&bytes[..]);
     Fr::from_bytes(&halo_ele).unwrap()
 }

@@ -85,7 +85,6 @@ pub struct PlonkConfig {
     a: Column<Advice>,
     b: Column<Advice>,
     c: Column<Advice>,
-    d: Column<Advice>,
 
     sl: Column<Fixed>,
     sr: Column<Fixed>,
@@ -101,12 +100,10 @@ impl PlonkConfig {
         let a = meta.advice_column();
         let b = meta.advice_column();
         let c = meta.advice_column();
-        let d = meta.advice_column();
 
         meta.enable_equality(a);
         meta.enable_equality(b);
         meta.enable_equality(c);
-        meta.enable_equality(d);
 
         let sm = meta.fixed_column();
         let sl = meta.fixed_column();
@@ -134,7 +131,6 @@ impl PlonkConfig {
             a,
             b,
             c,
-            d,
             sl,
             sr,
             so,
@@ -164,7 +160,7 @@ pub trait StandardCs<FF: Field> {
         &self,
         layouter: &mut impl Layouter<FF>,
         f: F,
-    ) -> Result<(Cell, Cell, Cell, Cell), Error>
+    ) -> Result<(Cell, Cell, Cell), Error>
     where
         F: FnMut() -> PolyTriple<Assigned<FF>>;
     fn copy(&self, layouter: &mut impl Layouter<FF>, a: Cell, b: Cell) -> Result<(), Error>;
@@ -175,7 +171,6 @@ pub struct PolyTriple<F> {
     a: Value<F>,
     b: Value<F>,
     c: Value<F>,
-    d: Value<F>,
     qm: F,
     ql: F,
     qr: F,
@@ -184,11 +179,11 @@ pub struct PolyTriple<F> {
 }
 
 impl<F> PolyTriple<F> {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         a: Value<F>,
         b: Value<F>,
         c: Value<F>,
-        d: Value<F>,
         qm: F,
         ql: F,
         qr: F,
@@ -199,7 +194,6 @@ impl<F> PolyTriple<F> {
             a,
             b,
             c,
-            d,
             qm,
             ql,
             qr,
@@ -288,7 +282,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
         &self,
         layouter: &mut impl Layouter<FF>,
         mut f: F,
-    ) -> Result<(Cell, Cell, Cell, Cell), Error>
+    ) -> Result<(Cell, Cell, Cell), Error>
     where
         F: FnMut() -> PolyTriple<Assigned<FF>>,
     {
@@ -299,14 +293,13 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
                 let lhs = region.assign_advice(self.config.a, 0, value.a)?;
                 let rhs = region.assign_advice(self.config.b, 0, value.b)?;
                 let out = region.assign_advice(self.config.c, 0, value.c)?;
-                let d = region.assign_advice(self.config.d, 0, value.d)?;
 
                 region.assign_fixed(self.config.sl, 0, value.ql);
                 region.assign_fixed(self.config.sr, 0, value.qr);
                 region.assign_fixed(self.config.so, 0, value.qo);
                 region.assign_fixed(self.config.sm, 0, value.qm);
                 region.assign_fixed(self.config.sc, 0, value.qc);
-                Ok((*lhs.cell(), *rhs.cell(), *out.cell(), *d.cell()))
+                Ok((*lhs.cell(), *rhs.cell(), *out.cell()))
             },
         )
     }

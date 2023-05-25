@@ -4,19 +4,19 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub(crate) enum FeatureError {
     #[error("Could not slice field element")]
-    FieldElementSlice {
+    _FieldElementSlice {
         source: std::array::TryFromSliceError,
     },
     #[error("Expected a Vec of length {0} but it was {1}")]
-    FieldToArray(usize, usize),
+    _FieldToArray(usize, usize),
 }
 
 #[derive(Debug, Error)]
 pub(crate) enum CRSError {
     #[error("Failed to deserialize CRS")]
-    Deserialize { source: Box<bincode::ErrorKind> },
+    _Deserialize { source: Box<bincode::ErrorKind> },
     #[error("Failed to serialize CRS")]
-    Serialize { source: Box<bincode::ErrorKind> },
+    _Serialize { source: Box<bincode::ErrorKind> },
 
     #[error("Failed to build request '{url}' ({source})")]
     Request { url: String, source: reqwest::Error },
@@ -32,13 +32,13 @@ pub(crate) enum CRSError {
 #[derive(Debug, Error)]
 pub(crate) enum Error {
     #[error("The value {0} overflows in the pow2ceil function")]
-    Pow2CeilOverflow(u32),
+    _Pow2CeilOverflow(u32),
 
     #[error("Malformed Black Box Function: {0} - {1}")]
-    MalformedBlackBoxFunc(BlackBoxFunc, String),
+    _MalformedBlackBoxFunc(BlackBoxFunc, String),
 
     #[error("Unsupported Black Box Function: {0}")]
-    UnsupportedBlackBoxFunc(BlackBoxFunc),
+    _UnsupportedBlackBoxFunc(BlackBoxFunc),
 
     #[error(transparent)]
     FromFeature(#[from] FeatureError),
