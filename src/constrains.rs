@@ -3,7 +3,10 @@ use acvm::{
     acir::native_types::{Expression, Witness},
     FieldElement,
 };
-use halo2_base::{gates::RangeInstructions, Context};
+use halo2_base::{
+    gates::{GateInstructions, RangeInstructions},
+    Context,
+};
 use halo2_proofs_axiom::{
     circuit::{Layouter, Value},
     halo2curves::bn256::Fr,
@@ -138,19 +141,65 @@ impl NoirHalo2Translator<Fr> {
     ) {
         let mut ctx = Context::<Fr>::new(true, 0);
 
-        let d = noir_field_to_halo2_field(
+        let x = noir_field_to_halo2_field(
             *self
                 .witness_values
                 .get(&witness)
                 .unwrap_or(&FieldElement::zero()),
         );
 
-        let x = ctx.load_witness(d);
+        let x = ctx.load_witness(x);
 
         config
             .range_chip
             .range_check(&mut ctx, x, num_bits as usize);
     }
+
+    pub(crate) fn add_and_constrain(
+        &self,
+        lhs: Witness,
+        rhs: Witness,
+        output: Witness,
+        config: &PlonkConfig,
+    ) {
+        let mut ctx = Context::<Fr>::new(true, 0);
+        let lhs_v = noir_field_to_halo2_field(
+            *self
+                .witness_values
+                .get(&lhs)
+                .unwrap_or(&FieldElement::zero()),
+        );
+
+        let rhs_v = noir_field_to_halo2_field(
+            *self
+                .witness_values
+                .get(&rhs)
+                .unwrap_or(&FieldElement::zero()),
+        );
+
+        let output_v = noir_field_to_halo2_field(
+            *self
+                .witness_values
+                .get(&output)
+                .unwrap_or(&FieldElement::zero()),
+        );
+
+        let a = ctx.load_witness(lhs_v);
+        let b = ctx.load_witness(rhs_v);
+        let c = ctx.load_witness(output_v);
+
+        let and_out = config.gate_chip.and(&mut ctx, a, b);
+
+        config.gate_chip.is_equal(&mut ctx, c, and_out);
+    }
+
+    // pub(crate) fn add_xor_constrain(
+    //     &self,
+    //     lhs: Witness,
+    //     rhs: Witness,
+    //     output: Witness,
+    //     config: &PlonkConfig,
+    // ) {}
 }
 
 fn noir_field_to_halo2_field(noir_ele: FieldElement) -> Fr {

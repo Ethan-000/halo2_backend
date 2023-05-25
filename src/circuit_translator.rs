@@ -47,20 +47,25 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                         BlackBoxFuncCall::RANGE { input } => {
                             self.add_range_constrain(input.witness, input.num_bits, &config)
                         }
-                        BlackBoxFuncCall::AND {
-                            lhs,
-                            rhs,
-                            output: _,
-                        }
-                        | BlackBoxFuncCall::XOR {
-                            lhs,
-                            rhs,
-                            output: _,
-                        } => {
+                        BlackBoxFuncCall::AND { lhs, rhs, output }
+                        | BlackBoxFuncCall::XOR { lhs, rhs, output } => {
                             let _witness_lhs = lhs.witness;
                             let _witness_rhs = rhs.witness;
 
                             assert_eq!(lhs.num_bits, rhs.num_bits);
+
+                            match gadget_call {
+                                BlackBoxFuncCall::AND { .. } => self.add_and_constrain(
+                                    lhs.witness,
+                                    rhs.witness,
+                                    *output,
+                                    &config,
+                                ),
+                                BlackBoxFuncCall::XOR { .. } => {
+                                    panic!("xor operation is currently not supported")
+                                }
+                                _ => unreachable!("expected either an AND or XOR opcode"),
+                            }
                         }
                         BlackBoxFuncCall::SHA256 { .. } => {
                             todo!()

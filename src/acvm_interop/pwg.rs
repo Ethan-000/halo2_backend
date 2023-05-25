@@ -1,4 +1,5 @@
 use acvm::acir::native_types::Witness;
+use acvm::pwg::logic;
 use acvm::pwg::range;
 use acvm::OpcodeResolutionError;
 use acvm::PartialWitnessGenerator;
@@ -19,12 +20,12 @@ impl PartialWitnessGenerator for Halo2 {
 
     fn and(
         &self,
-        _initial_witness: &mut acvm::acir::native_types::WitnessMap,
-        _lhs: &acvm::acir::circuit::opcodes::FunctionInput,
-        _rhs: &acvm::acir::circuit::opcodes::FunctionInput,
-        _output: &Witness,
+        initial_witness: &mut acvm::acir::native_types::WitnessMap,
+        lhs: &acvm::acir::circuit::opcodes::FunctionInput,
+        rhs: &acvm::acir::circuit::opcodes::FunctionInput,
+        output: &Witness,
     ) -> Result<acvm::pwg::OpcodeResolution, OpcodeResolutionError> {
-        todo!()
+        logic::and(initial_witness, lhs, rhs, output)
     }
 
     fn xor(

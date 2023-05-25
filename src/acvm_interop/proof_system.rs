@@ -1,4 +1,4 @@
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::{BufReader, BufWriter, Write};
 use std::marker::PhantomData;
 
@@ -41,6 +41,7 @@ impl ProofSystemCompiler for Halo2 {
             ParamsKZG::<Bn256>::read_custom(&mut common_reference_string, SerdeFormat::RawBytes);
         let (pk, vk) = keygen(&translator, &params);
 
+        fs::create_dir_all("target").unwrap();
         let f = File::create("target/halo2_kzg_bn256.params").unwrap();
         let mut writer = BufWriter::new(f);
         params.write(&mut writer).unwrap();

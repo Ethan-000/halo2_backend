@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use halo2_base::gates::RangeChip;
+use halo2_base::gates::{GateChip, RangeChip};
 use halo2_proofs_axiom::{
     self,
     arithmetic::Field,
@@ -93,6 +93,7 @@ pub struct PlonkConfig {
     sc: Column<Fixed>,
 
     pub(crate) range_chip: RangeChip<Fr>,
+    pub(crate) gate_chip: GateChip<Fr>,
 }
 
 impl PlonkConfig {
@@ -112,6 +113,7 @@ impl PlonkConfig {
         let sc = meta.fixed_column();
 
         let range_chip = RangeChip::default(17);
+        let gate_chip = GateChip::default();
 
         meta.create_gate("Combined add-mult", |meta| {
             let a = meta.query_advice(a, Rotation::cur());
@@ -137,6 +139,7 @@ impl PlonkConfig {
             sm,
             sc,
             range_chip,
+            gate_chip,
         }
     }
 }
