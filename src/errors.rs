@@ -1,6 +1,5 @@
-
-use thiserror::Error;
 use acvm::acir::BlackBoxFunc;
+use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub(crate) enum FeatureError {

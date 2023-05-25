@@ -93,7 +93,7 @@ pub struct PlonkConfig {
     sm: Column<Fixed>,
     sc: Column<Fixed>,
 
-    pub(crate) range_chip: RangeChip<Fr>
+    pub(crate) range_chip: RangeChip<Fr>,
 }
 
 impl PlonkConfig {
@@ -140,7 +140,7 @@ impl PlonkConfig {
             so,
             sm,
             sc,
-            range_chip
+            range_chip,
         }
     }
 }
@@ -232,7 +232,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
     where
         F: FnMut() -> Value<(Assigned<FF>, Assigned<FF>, Assigned<FF>)>,
     {
-        Ok(layouter.assign_region(
+        layouter.assign_region(
             || "raw_multiply",
             |mut region| {
                 #[allow(unused_assignments)]
@@ -252,7 +252,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
                 region.assign_fixed(self.config.sm, 0, FF::one());
                 Ok((*lhs.cell(), *rhs.cell(), *out.cell()))
             },
-        )?)
+        )
     }
     fn raw_add<F>(
         &self,
@@ -262,7 +262,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
     where
         F: FnMut() -> Value<(Assigned<FF>, Assigned<FF>, Assigned<FF>)>,
     {
-        Ok(layouter.assign_region(
+        layouter.assign_region(
             || "raw_add",
             |mut region| {
                 #[allow(unused_assignments)]
@@ -282,7 +282,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
                 region.assign_fixed(self.config.sm, 0, FF::zero());
                 Ok((*lhs.cell(), *rhs.cell(), *out.cell()))
             },
-        )?)
+        )
     }
     fn raw_poly<F>(
         &self,
@@ -313,7 +313,10 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
     fn copy(&self, layouter: &mut impl Layouter<FF>, left: Cell, right: Cell) -> Result<(), Error> {
         layouter.assign_region(
             || "copy",
-            |mut region| Ok(region.constrain_equal(&left, &right)),
+            |mut region| {
+                region.constrain_equal(&left, &right);
+                Ok(())
+            },
         )
     }
 }

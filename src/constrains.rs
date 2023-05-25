@@ -1,13 +1,12 @@
-use crate::halo2_plonk_api::{PolyTriple, StandardCs, PlonkConfig};
+use crate::halo2_plonk_api::{PlonkConfig, PolyTriple, StandardCs};
 use acvm::{
     acir::native_types::{Expression, Witness},
     FieldElement,
 };
-use halo2_base::{Context, gates::RangeInstructions};
+use halo2_base::{gates::RangeInstructions, Context};
 use halo2_proofs_axiom::{
     circuit::{Layouter, Value},
     halo2curves::bn256::Fr,
-
     plonk::Assigned,
 };
 
@@ -38,10 +37,7 @@ impl NoirHalo2Translator<Fr> {
             // Get wL term
             let wL = &mul_term.1;
             a = Value::known(noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(&wL)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(wL).unwrap_or(&FieldElement::zero()),
             ))
             .into();
 
@@ -50,7 +46,7 @@ impl NoirHalo2Translator<Fr> {
             b = Value::known(noir_field_to_halo2_field(
                 *self
                     .witness_values
-                    .get(&wR)
+                    .get(wR)
                     .unwrap_or(&FieldElement::zero()),
             ))
             .into();
@@ -67,7 +63,7 @@ impl NoirHalo2Translator<Fr> {
             c = Value::known(noir_field_to_halo2_field(
                 *self
                     .witness_values
-                    .get(&wO)
+                    .get(wO)
                     .unwrap_or(&FieldElement::zero()),
             ))
             .into();
@@ -84,7 +80,7 @@ impl NoirHalo2Translator<Fr> {
             a = Value::known(noir_field_to_halo2_field(
                 *self
                     .witness_values
-                    .get(&wL)
+                    .get(wL)
                     .unwrap_or(&FieldElement::zero()),
             ))
             .into();
@@ -96,7 +92,7 @@ impl NoirHalo2Translator<Fr> {
             b = Value::known(noir_field_to_halo2_field(
                 *self
                     .witness_values
-                    .get(&wR)
+                    .get(wR)
                     .unwrap_or(&FieldElement::zero()),
             ))
             .into();
@@ -110,7 +106,7 @@ impl NoirHalo2Translator<Fr> {
             a = Value::known(noir_field_to_halo2_field(
                 *self
                     .witness_values
-                    .get(&wL)
+                    .get(wL)
                     .unwrap_or(&FieldElement::zero()),
             ))
             .into();
@@ -122,7 +118,7 @@ impl NoirHalo2Translator<Fr> {
             b = Value::known(noir_field_to_halo2_field(
                 *self
                     .witness_values
-                    .get(&wR)
+                    .get(wR)
                     .unwrap_or(&FieldElement::zero()),
             ))
             .into();
@@ -134,7 +130,7 @@ impl NoirHalo2Translator<Fr> {
             c = Value::known(noir_field_to_halo2_field(
                 *self
                     .witness_values
-                    .get(&wO)
+                    .get(wO)
                     .unwrap_or(&FieldElement::zero()),
             ))
             .into();
@@ -157,24 +153,26 @@ impl NoirHalo2Translator<Fr> {
         cs.raw_poly(layouter, || poly_triple).unwrap();
     }
 
-    pub(crate) fn add_range_constrain(&self, witness: Witness, num_bits: u32, config: &PlonkConfig) {
+    pub(crate) fn add_range_constrain(
+        &self,
+        witness: Witness,
+        num_bits: u32,
+        config: &PlonkConfig,
+    ) {
+        let mut ctx = Context::<Fr>::new(true, 0);
 
-            let mut ctx = Context::<Fr>::new(true, 0);
+        let d = noir_field_to_halo2_field(
+            *self
+                .witness_values
+                .get(&witness)
+                .unwrap_or(&FieldElement::zero()),
+        );
 
-            
-            let d = noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(&witness)
-                    .unwrap_or(&FieldElement::zero(),
-            ));
+        let x = ctx.load_witness(d);
 
-            let x = ctx.load_witness(d);
-            
-
-            config.range_chip.range_check(&mut ctx, x, num_bits as usize);
-          
-
+        config
+            .range_chip
+            .range_check(&mut ctx, x, num_bits as usize);
     }
 }
 
