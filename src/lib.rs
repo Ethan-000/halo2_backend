@@ -3,9 +3,9 @@ mod acvm_interop;
 mod aztec_crs;
 mod circuit_translator;
 mod constrains;
+mod errors;
 mod halo2_params;
 mod halo2_plonk_api;
-mod errors;
 
 #[derive(Debug)]
 pub struct Halo2;

@@ -15,7 +15,9 @@ use halo2_proofs_axiom::{
     SerdeFormat,
 };
 
-pub(crate) async fn constuct_halo2_params_from_aztec_crs(num_points: u32) -> Result<ParamsKZG<Bn256>,Error> {
+pub(crate) async fn constuct_halo2_params_from_aztec_crs(
+    num_points: u32,
+) -> Result<ParamsKZG<Bn256>, Error> {
     let points_needed = pow2ceil(num_points);
     let (g1_data, g2_data) = get_aztec_crs(points_needed).await?;
 
@@ -25,11 +27,9 @@ pub(crate) async fn constuct_halo2_params_from_aztec_crs(num_points: u32) -> Res
 
     let mut g = vec![<<Bn256 as Engine>::G1Affine as PrimeCurveAffine>::generator()];
 
-    g.extend(g1_data.chunks(64).map(|g1| to_g1_point(g1)));
+    g.extend(g1_data.chunks(64).map(to_g1_point));
 
-
-    let g_lagrange = g_to_lagrange(g.iter().map(|g| PrimeCurveAffine::to_curve(g)).collect(), k);
-
+    let g_lagrange = g_to_lagrange(g.iter().map(PrimeCurveAffine::to_curve).collect(), k);
 
     let g2 = <<Bn256 as Engine>::G2Affine as PrimeCurveAffine>::generator();
     let s_g2 = to_g2_point(&g2_data);
@@ -54,7 +54,7 @@ fn params_kzg(
     // We're using the equivalent of the `SerdeFormat::RawBytesUnchecked` encoding here.
 
     let mut buf: Vec<u8> = Vec::new();
-    buf.write(&k.to_le_bytes()).unwrap();
+    buf.write_all(&k.to_le_bytes()).unwrap();
     for el in g.iter() {
         el.write_raw(&mut buf).unwrap();
     }
@@ -72,12 +72,11 @@ fn params_kzg(
 fn to_g1_point(point: &[u8]) -> G1Affine {
     let le_bytes: Vec<u8> = point
         .chunks(8)
-        .map(|limb| {
+        .flat_map(|limb| {
             let mut new_limb = limb.to_vec();
             new_limb.reverse();
             new_limb
         })
-        .flatten()
         .collect();
 
     let mut first_byte_array = [0u8; 32];
@@ -101,12 +100,11 @@ fn to_g1_point(point: &[u8]) -> G1Affine {
 fn to_g2_point(point: &[u8]) -> G2Affine {
     let le_bytes: Vec<u8> = point
         .chunks(8)
-        .map(|limb| {
+        .flat_map(|limb| {
             let mut new_limb = limb.to_vec();
             new_limb.reverse();
             new_limb
         })
-        .flatten()
         .collect();
 
     let mut first_byte_array = [0u8; 64];

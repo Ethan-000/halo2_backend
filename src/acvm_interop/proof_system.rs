@@ -1,12 +1,11 @@
-
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
 use std::marker::PhantomData;
 
-use acvm::acir::BlackBoxFunc;
+use acvm::acir::circuit::Circuit as NoirCircuit;
 use acvm::acir::circuit::Opcode;
 use acvm::acir::native_types::WitnessMap;
-use acvm::acir::{circuit::Circuit as NoirCircuit};
+use acvm::acir::BlackBoxFunc;
 use acvm::{Language, ProofSystemCompiler};
 use halo2_proofs_axiom::halo2curves::bn256::{Bn256, Fr, G1Affine};
 use halo2_proofs_axiom::plonk::{ProvingKey, VerifyingKey};
@@ -15,8 +14,8 @@ use halo2_proofs_axiom::poly::kzg::commitment::ParamsKZG;
 use halo2_proofs_axiom::SerdeFormat;
 
 use crate::circuit_translator::NoirHalo2Translator;
-use crate::halo2_plonk_api::{keygen, prover, verifier};
 use crate::errors::BackendError;
+use crate::halo2_plonk_api::{keygen, prover, verifier};
 
 use crate::Halo2;
 
@@ -27,14 +26,19 @@ impl ProofSystemCompiler for Halo2 {
         Ok(circuit.opcodes.len() as u32)
     }
 
-    fn preprocess(&self, mut common_reference_string: &[u8], circuit: &NoirCircuit) -> Result<(Vec<u8>, Vec<u8>), BackendError> {
+    fn preprocess(
+        &self,
+        mut common_reference_string: &[u8],
+        circuit: &NoirCircuit,
+    ) -> Result<(Vec<u8>, Vec<u8>), BackendError> {
         let translator = NoirHalo2Translator::<Fr> {
             circuit: circuit.clone(),
             witness_values: WitnessMap::new(),
             _marker: PhantomData::<Fr>,
         };
 
-        let params = ParamsKZG::<Bn256>::read_custom(&mut common_reference_string, SerdeFormat::RawBytes);
+        let params =
+            ParamsKZG::<Bn256>::read_custom(&mut common_reference_string, SerdeFormat::RawBytes);
         let (pk, vk) = keygen(&translator, &params);
 
         let f = File::create("target/halo2_kzg_bn256.params").unwrap();
@@ -94,7 +98,7 @@ impl ProofSystemCompiler for Halo2 {
         )
         .unwrap();
 
-        Ok(verifier(&params, &vk, &proof).is_ok())
+        Ok(verifier(&params, &vk, proof).is_ok())
     }
 
     fn np_language(&self) -> Language {

@@ -1,13 +1,12 @@
-use crate::halo2_plonk_api::{PolyTriple, StandardCs, PlonkConfig};
+use crate::halo2_plonk_api::{PlonkConfig, PolyTriple, StandardCs};
 use acvm::{
     acir::native_types::{Expression, Witness},
     FieldElement,
 };
-use halo2_base::{Context, gates::RangeInstructions};
+use halo2_base::{gates::RangeInstructions, Context};
 use halo2_proofs_axiom::{
     circuit::{Layouter, Value},
     halo2curves::bn256::Fr,
-
     plonk::Assigned,
 };
 
@@ -24,7 +23,6 @@ impl NoirHalo2Translator<Fr> {
         let mut a: Value<Assigned<_>> = Value::known(Fr::zero()).into();
         let mut b: Value<Assigned<_>> = Value::known(Fr::zero()).into();
         let mut c: Value<Assigned<_>> = Value::known(Fr::zero()).into();
-        let d: Value<Assigned<_>> = Value::known(Fr::zero()).into();
         let mut qm = Fr::zero();
         let mut ql = Fr::zero();
         let mut qr = Fr::zero();
@@ -38,20 +36,14 @@ impl NoirHalo2Translator<Fr> {
             // Get wL term
             let wL = &mul_term.1;
             a = Value::known(noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(&wL)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(wL).unwrap_or(&FieldElement::zero()),
             ))
             .into();
 
             // Get wR term
             let wR = &mul_term.2;
             b = Value::known(noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(&wR)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(wR).unwrap_or(&FieldElement::zero()),
             ))
             .into();
         }
@@ -65,10 +57,7 @@ impl NoirHalo2Translator<Fr> {
 
             let wO = &qO_wO_term.1;
             c = Value::known(noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(&wO)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(wO).unwrap_or(&FieldElement::zero()),
             ))
             .into();
         }
@@ -82,10 +71,7 @@ impl NoirHalo2Translator<Fr> {
 
             let wL = &qL_wL_term.1;
             a = Value::known(noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(&wL)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(wL).unwrap_or(&FieldElement::zero()),
             ))
             .into();
 
@@ -94,10 +80,7 @@ impl NoirHalo2Translator<Fr> {
 
             let wR = &qR_wR_term.1;
             b = Value::known(noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(&wR)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(wR).unwrap_or(&FieldElement::zero()),
             ))
             .into();
         }
@@ -108,10 +91,7 @@ impl NoirHalo2Translator<Fr> {
 
             let wL = &qL_wL_term.1;
             a = Value::known(noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(&wL)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(wL).unwrap_or(&FieldElement::zero()),
             ))
             .into();
 
@@ -120,10 +100,7 @@ impl NoirHalo2Translator<Fr> {
 
             let wR = &qR_wR_term.1;
             b = Value::known(noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(&wR)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(wR).unwrap_or(&FieldElement::zero()),
             ))
             .into();
 
@@ -132,10 +109,7 @@ impl NoirHalo2Translator<Fr> {
 
             let wO = &qO_wO_term.1;
             c = Value::known(noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(&wO)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(wO).unwrap_or(&FieldElement::zero()),
             ))
             .into();
         }
@@ -146,7 +120,6 @@ impl NoirHalo2Translator<Fr> {
             a,
             b,
             c,
-            d,
             qm.into(),
             ql.into(),
             qr.into(),
@@ -157,24 +130,26 @@ impl NoirHalo2Translator<Fr> {
         cs.raw_poly(layouter, || poly_triple).unwrap();
     }
 
-    pub(crate) fn add_range_constrain(&self, witness: Witness, num_bits: u32, config: &PlonkConfig) {
+    pub(crate) fn add_range_constrain(
+        &self,
+        witness: Witness,
+        num_bits: u32,
+        config: &PlonkConfig,
+    ) {
+        let mut ctx = Context::<Fr>::new(true, 0);
 
-            let mut ctx = Context::<Fr>::new(true, 0);
+        let d = noir_field_to_halo2_field(
+            *self
+                .witness_values
+                .get(&witness)
+                .unwrap_or(&FieldElement::zero()),
+        );
 
-            
-            let d = noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(&witness)
-                    .unwrap_or(&FieldElement::zero(),
-            ));
+        let x = ctx.load_witness(d);
 
-            let x = ctx.load_witness(d);
-            
-
-            config.range_chip.range_check(&mut ctx, x, num_bits as usize);
-          
-
+        config
+            .range_chip
+            .range_check(&mut ctx, x, num_bits as usize);
     }
 }
 
@@ -182,8 +157,6 @@ fn noir_field_to_halo2_field(noir_ele: FieldElement) -> Fr {
     let mut bytes = noir_ele.to_be_bytes();
     bytes.reverse();
     let mut halo_ele: [u8; 32] = [0; 32];
-    for i in 0..bytes.len() {
-        halo_ele[i] = bytes[i]
-    }
+    halo_ele[..bytes.len()].copy_from_slice(&bytes[..]);
     Fr::from_bytes(&halo_ele).unwrap()
 }

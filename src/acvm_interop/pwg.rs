@@ -1,14 +1,13 @@
 use acvm::acir::native_types::Witness;
-use acvm::OpcodeResolutionError;
 use acvm::pwg::range;
-use acvm::{PartialWitnessGenerator};
+use acvm::OpcodeResolutionError;
+use acvm::PartialWitnessGenerator;
 
 mod gadget_call;
 
 use crate::Halo2;
 
 impl PartialWitnessGenerator for Halo2 {
-
     fn aes(
         &self,
         _initial_witness: &mut acvm::acir::native_types::WitnessMap,

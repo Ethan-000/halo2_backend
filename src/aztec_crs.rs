@@ -1,6 +1,6 @@
+use crate::errors::{CRSError, Error};
 use bytesize::ByteSize;
-use std::{env};
-use crate::errors::{Error, CRSError};
+use std::env;
 
 use reqwest::Client;
 
@@ -12,10 +12,9 @@ const TRANSCRIPT_URL_ENV_VAR: &str = "TRANSCRIPT_URL";
 const TRANSCRIPT_URL_FALLBACK: &str =
     "https://aztec-ignition.s3.amazonaws.com/MAIN%20IGNITION/monomial/transcript00.dat";
 
-
 pub(crate) async fn get_aztec_crs(points_needed: u32) -> Result<(Vec<u8>, Vec<u8>), Error> {
     let g1_end = G1_START + ((points_needed as usize - 1) * 64) - 1;
-    
+
     let g1_data = download(G1_START, g1_end).await?;
     let g2_data = download(G2_START, G2_END).await?;
 
@@ -65,4 +64,3 @@ async fn download(start: usize, end: usize) -> Result<Vec<u8>, CRSError> {
 
     Ok(crs_bytes.into())
 }
-

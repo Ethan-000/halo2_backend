@@ -1,16 +1,12 @@
-use std::{marker::PhantomData};
+use std::marker::PhantomData;
 
 use crate::halo2_plonk_api::{PlonkConfig, StandardPlonk};
-use acvm::{
-    acir::{
-        circuit::{Circuit as NoirCircuit, Opcode, opcodes::BlackBoxFuncCall},
-        native_types::WitnessMap,
-    },
+use acvm::acir::{
+    circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
+    native_types::WitnessMap,
 };
 use halo2_proofs_axiom::{
-    circuit::SimpleFloorPlanner,
-    halo2curves::bn256::Fr,
-    plonk::Circuit as Halo2PlonkCircuit,
+    circuit::SimpleFloorPlanner, halo2curves::bn256::Fr, plonk::Circuit as Halo2PlonkCircuit,
     plonk::ConstraintSystem,
 };
 
@@ -51,34 +47,52 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                         BlackBoxFuncCall::RANGE { input } => {
                             self.add_range_constrain(input.witness, input.num_bits, &config)
                         }
-                        BlackBoxFuncCall::AND {..} | BlackBoxFuncCall::XOR {..} => {
-                            todo!()
+                        BlackBoxFuncCall::AND {
+                            lhs,
+                            rhs,
+                            output: _,
                         }
-                        BlackBoxFuncCall::SHA256 {..} => {
-                            todo!()
-                        }
-                        BlackBoxFuncCall::Blake2s {..} => {
-                            todo!()
-                        }
-                        BlackBoxFuncCall::SchnorrVerify {..} => {
-                            todo!()
-                        }
-                        BlackBoxFuncCall::Pedersen {..} => {
-                            todo!()
-                        }
-                        BlackBoxFuncCall::HashToField128Security {..} => {
-                            todo!()
-                        }
-                        BlackBoxFuncCall::EcdsaSecp256k1 {..} => {
-                            todo!()
-                        }
-                        BlackBoxFuncCall::FixedBaseScalarMul {..} => {
-                            todo!()
-                        }
-                        BlackBoxFuncCall::Keccak256 {..} => panic!("Keccak256 has not yet been implemented"),
-                        BlackBoxFuncCall::AES {..} => panic!("AES has not yet been implemented"),
-                        BlackBoxFuncCall::ComputeMerkleRoot { leaf: _, index: _, hash_path: _, output: _ } => todo!(),
+                        | BlackBoxFuncCall::XOR {
+                            lhs,
+                            rhs,
+                            output: _,
+                        } => {
+                            let _witness_lhs = lhs.witness;
+                            let _witness_rhs = rhs.witness;
 
+                            assert_eq!(lhs.num_bits, rhs.num_bits);
+                        }
+                        BlackBoxFuncCall::SHA256 { .. } => {
+                            todo!()
+                        }
+                        BlackBoxFuncCall::Blake2s { .. } => {
+                            todo!()
+                        }
+                        BlackBoxFuncCall::SchnorrVerify { .. } => {
+                            todo!()
+                        }
+                        BlackBoxFuncCall::Pedersen { .. } => {
+                            todo!()
+                        }
+                        BlackBoxFuncCall::HashToField128Security { .. } => {
+                            todo!()
+                        }
+                        BlackBoxFuncCall::EcdsaSecp256k1 { .. } => {
+                            todo!()
+                        }
+                        BlackBoxFuncCall::FixedBaseScalarMul { .. } => {
+                            todo!()
+                        }
+                        BlackBoxFuncCall::Keccak256 { .. } => {
+                            panic!("Keccak256 has not yet been implemented")
+                        }
+                        BlackBoxFuncCall::AES { .. } => panic!("AES has not yet been implemented"),
+                        BlackBoxFuncCall::ComputeMerkleRoot {
+                            leaf: _,
+                            index: _,
+                            hash_path: _,
+                            output: _,
+                        } => todo!(),
                     };
                 }
                 Opcode::Directive(_) | Opcode::Oracle(_) => {
@@ -92,5 +106,3 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
         Ok(())
     }
 }
-
-
