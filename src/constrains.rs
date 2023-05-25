@@ -44,10 +44,7 @@ impl NoirHalo2Translator<Fr> {
             // Get wR term
             let wR = &mul_term.2;
             b = Value::known(noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(wR)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(wR).unwrap_or(&FieldElement::zero()),
             ))
             .into();
         }
@@ -61,10 +58,7 @@ impl NoirHalo2Translator<Fr> {
 
             let wO = &qO_wO_term.1;
             c = Value::known(noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(wO)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(wO).unwrap_or(&FieldElement::zero()),
             ))
             .into();
         }
@@ -78,10 +72,7 @@ impl NoirHalo2Translator<Fr> {
 
             let wL = &qL_wL_term.1;
             a = Value::known(noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(wL)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(wL).unwrap_or(&FieldElement::zero()),
             ))
             .into();
 
@@ -90,10 +81,7 @@ impl NoirHalo2Translator<Fr> {
 
             let wR = &qR_wR_term.1;
             b = Value::known(noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(wR)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(wR).unwrap_or(&FieldElement::zero()),
             ))
             .into();
         }
@@ -104,10 +92,7 @@ impl NoirHalo2Translator<Fr> {
 
             let wL = &qL_wL_term.1;
             a = Value::known(noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(wL)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(wL).unwrap_or(&FieldElement::zero()),
             ))
             .into();
 
@@ -116,10 +101,7 @@ impl NoirHalo2Translator<Fr> {
 
             let wR = &qR_wR_term.1;
             b = Value::known(noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(wR)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(wR).unwrap_or(&FieldElement::zero()),
             ))
             .into();
 
@@ -128,10 +110,7 @@ impl NoirHalo2Translator<Fr> {
 
             let wO = &qO_wO_term.1;
             c = Value::known(noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(wO)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(wO).unwrap_or(&FieldElement::zero()),
             ))
             .into();
         }

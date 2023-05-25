@@ -47,8 +47,16 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                         BlackBoxFuncCall::RANGE { input } => {
                             self.add_range_constrain(input.witness, input.num_bits, &config)
                         }
-                        BlackBoxFuncCall::AND { lhs, rhs, output: _ }
-                        | BlackBoxFuncCall::XOR { lhs, rhs, output: _ } => {
+                        BlackBoxFuncCall::AND {
+                            lhs,
+                            rhs,
+                            output: _,
+                        }
+                        | BlackBoxFuncCall::XOR {
+                            lhs,
+                            rhs,
+                            output: _,
+                        } => {
                             let _witness_lhs = lhs.witness;
                             let _witness_rhs = rhs.witness;
 
