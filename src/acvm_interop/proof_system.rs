@@ -7,11 +7,12 @@ use acvm::acir::circuit::Opcode;
 use acvm::acir::native_types::WitnessMap;
 use acvm::acir::BlackBoxFunc;
 use acvm::{Language, ProofSystemCompiler};
-use halo2_proofs_axiom::halo2curves::bn256::{Bn256, Fr, G1Affine};
-use halo2_proofs_axiom::plonk::{ProvingKey, VerifyingKey};
-use halo2_proofs_axiom::poly::commitment::Params;
-use halo2_proofs_axiom::poly::kzg::commitment::ParamsKZG;
-use halo2_proofs_axiom::SerdeFormat;
+use halo2_base::halo2_proofs::halo2curves::bn256::Fr;
+use halo2_base::halo2_proofs::halo2curves::bn256::{Bn256, G1Affine};
+use halo2_base::halo2_proofs::plonk::{ProvingKey, VerifyingKey};
+use halo2_base::halo2_proofs::poly::commitment::Params;
+use halo2_base::halo2_proofs::poly::kzg::commitment::ParamsKZG;
+use halo2_base::halo2_proofs::SerdeFormat;
 
 use crate::circuit_translator::NoirHalo2Translator;
 use crate::errors::BackendError;
@@ -109,26 +110,24 @@ impl ProofSystemCompiler for Halo2 {
     fn supports_opcode(&self, opcode: &acvm::acir::circuit::Opcode) -> bool {
         match opcode {
             Opcode::Arithmetic(_) => true,
-            Opcode::Directive(_) => true,
+            Opcode::Directive(_) => false,
             Opcode::Block(_) => false,
-            Opcode::ROM(_) => true,
-            Opcode::RAM(_) => true,
-            Opcode::Oracle(_) => true,
+            Opcode::ROM(_) => false,
+            Opcode::RAM(_) => false,
+            Opcode::Oracle(_) => false,
             Opcode::BlackBoxFuncCall(func) => match func.get_black_box_func() {
-                BlackBoxFunc::AND
-                | BlackBoxFunc::XOR
-                | BlackBoxFunc::RANGE
+                BlackBoxFunc::AND | BlackBoxFunc::RANGE | BlackBoxFunc::Keccak256 => true,
+
+                BlackBoxFunc::XOR
                 | BlackBoxFunc::SHA256
                 | BlackBoxFunc::Blake2s
-                | BlackBoxFunc::Keccak256
-                | BlackBoxFunc::ComputeMerkleRoot
-                | BlackBoxFunc::SchnorrVerify
                 | BlackBoxFunc::Pedersen
                 | BlackBoxFunc::HashToField128Security
                 | BlackBoxFunc::EcdsaSecp256k1
-                | BlackBoxFunc::FixedBaseScalarMul => true,
-
-                BlackBoxFunc::AES => false,
+                | BlackBoxFunc::FixedBaseScalarMul
+                | BlackBoxFunc::ComputeMerkleRoot
+                | BlackBoxFunc::SchnorrVerify
+                | BlackBoxFunc::AES => false,
             },
         }
     }

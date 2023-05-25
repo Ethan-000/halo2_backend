@@ -1,13 +1,14 @@
 use std::marker::PhantomData;
 
 use halo2_base::gates::{GateChip, RangeChip};
-use halo2_proofs_axiom::{
-    self,
+use halo2_base::halo2_proofs::halo2curves::bn256::Fr;
+// use halo2_ecc::secp256k1::{FpChip, FqChip};
+use halo2_base::halo2_proofs::{
     arithmetic::Field,
     circuit::Layouter,
     circuit::{Cell, Value},
     halo2curves::{
-        bn256::{Bn256, Fr, G1Affine, G1},
+        bn256::{Bn256, G1Affine, G1},
         group::cofactor::CofactorCurve,
     },
     plonk::Assigned,
@@ -27,6 +28,8 @@ use halo2_proofs_axiom::{
         Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
     },
 };
+
+// use halo2_base::zkevm_keccak::KeccakConfig;
 use rand::rngs::OsRng;
 
 use crate::circuit_translator::NoirHalo2Translator;
@@ -94,6 +97,12 @@ pub struct PlonkConfig {
 
     pub(crate) range_chip: RangeChip<Fr>,
     pub(crate) gate_chip: GateChip<Fr>,
+    // ecdsa secp256k1 chips
+    // pub(crate) ecdsa_range_chip: RangeChip<Fr>,
+    // pub(crate) ecdsa_fp_chip: FpChip<'a>,
+    // pub(crate) ecdsa_fq_chip: FqChip<Fr>,
+
+    // pub(crate) keccak_chip: KeccakConfig<Fr>
 }
 
 impl PlonkConfig {
@@ -140,6 +149,9 @@ impl PlonkConfig {
             sc,
             range_chip,
             gate_chip,
+            // ecdsa_range_chip,
+            // ecdsa_fp_chip,
+            // ecdsa_fq_chip,
         }
     }
 }
@@ -237,11 +249,11 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
                 let lhs = region.assign_advice(self.config.a, 0, {
                     value = Some(f());
                     value.unwrap().map(|v| v.0)
-                })?;
-                region.assign_advice(self.config.b, 0, value.unwrap().map(|v| v.1))?;
-                let rhs = region.assign_advice(self.config.b, 0, value.unwrap().map(|v| v.1))?;
-                region.assign_advice(self.config.c, 0, value.unwrap().map(|v| v.2))?;
-                let out = region.assign_advice(self.config.c, 0, value.unwrap().map(|v| v.2))?;
+                });
+                region.assign_advice(self.config.b, 0, value.unwrap().map(|v| v.1));
+                let rhs = region.assign_advice(self.config.b, 0, value.unwrap().map(|v| v.1));
+                region.assign_advice(self.config.c, 0, value.unwrap().map(|v| v.2));
+                let out = region.assign_advice(self.config.c, 0, value.unwrap().map(|v| v.2));
 
                 region.assign_fixed(self.config.sl, 0, FF::zero());
                 region.assign_fixed(self.config.sr, 0, FF::zero());
@@ -267,11 +279,11 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
                 let lhs = region.assign_advice(self.config.a, 0, {
                     value = Some(f());
                     value.unwrap().map(|v| v.0)
-                })?;
-                region.assign_advice(self.config.b, 0, value.unwrap().map(|v| v.1))?;
-                let rhs = region.assign_advice(self.config.b, 0, value.unwrap().map(|v| v.1))?;
-                region.assign_advice(self.config.c, 0, value.unwrap().map(|v| v.2))?;
-                let out = region.assign_advice(self.config.c, 0, value.unwrap().map(|v| v.2))?;
+                });
+                region.assign_advice(self.config.b, 0, value.unwrap().map(|v| v.1));
+                let rhs = region.assign_advice(self.config.b, 0, value.unwrap().map(|v| v.1));
+                region.assign_advice(self.config.c, 0, value.unwrap().map(|v| v.2));
+                let out = region.assign_advice(self.config.c, 0, value.unwrap().map(|v| v.2));
 
                 region.assign_fixed(self.config.sl, 0, FF::one());
                 region.assign_fixed(self.config.sr, 0, FF::one());
@@ -293,9 +305,9 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
             || "raw_poly",
             |mut region| {
                 let value = f();
-                let lhs = region.assign_advice(self.config.a, 0, value.a)?;
-                let rhs = region.assign_advice(self.config.b, 0, value.b)?;
-                let out = region.assign_advice(self.config.c, 0, value.c)?;
+                let lhs = region.assign_advice(self.config.a, 0, value.a);
+                let rhs = region.assign_advice(self.config.b, 0, value.b);
+                let out = region.assign_advice(self.config.c, 0, value.c);
 
                 region.assign_fixed(self.config.sl, 0, value.ql);
                 region.assign_fixed(self.config.sr, 0, value.qr);

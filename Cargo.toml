@@ -10,8 +10,9 @@ edition = "2021"
 acvm = "0.12.0"
 bincode = "1.3.3"
 bytesize = "1.2"
-halo2-base = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "axiom-dev-0406" }
-halo2_proofs_axiom = { git = "https://github.com/axiom-crypto/halo2.git", tag = "v2023_01_17", package = "halo2_proofs" }
+halo2-base = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "release-0.3.0" }
+halo2-ecc = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "release-0.3.0" }
+# zkevm-keccak = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "release-0.3.0" }
 rand = "0.8"
 ark-std = "0.4"
 dirs = "3.0"

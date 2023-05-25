@@ -35,7 +35,7 @@ pub(crate) enum Error {
     _Pow2CeilOverflow(u32),
 
     #[error("Malformed Black Box Function: {0} - {1}")]
-    _MalformedBlackBoxFunc(BlackBoxFunc, String),
+    MalformedBlackBoxFunc(BlackBoxFunc, String),
 
     #[error("Unsupported Black Box Function: {0}")]
     _UnsupportedBlackBoxFunc(BlackBoxFunc),

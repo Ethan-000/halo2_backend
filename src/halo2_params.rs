@@ -2,7 +2,7 @@ use std::io::Write;
 
 use crate::{aztec_crs::get_aztec_crs, errors::Error};
 use ark_std::log2;
-use halo2_proofs_axiom::{
+use halo2_base::halo2_proofs::{
     arithmetic::g_to_lagrange,
     halo2curves::{
         bn256::{Bn256, Fq, Fq2, G1Affine, G2Affine},

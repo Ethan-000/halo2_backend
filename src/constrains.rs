@@ -1,16 +1,30 @@
+use std::slice::Iter;
+
 use crate::halo2_plonk_api::{PlonkConfig, PolyTriple, StandardCs};
 use acvm::{
     acir::native_types::{Expression, Witness},
     FieldElement,
 };
 use halo2_base::{
+    gates::RangeChip,
+    halo2_proofs::{
+        circuit::{Layouter, Value},
+        halo2curves::{
+            bn256::Fr,
+            secp256k1::{Fp, Fq, Secp256k1Affine},
+            CurveAffine,
+        },
+        plonk::Assigned,
+    },
+};
+use halo2_base::{
     gates::{GateInstructions, RangeInstructions},
     Context,
 };
-use halo2_proofs_axiom::{
-    circuit::{Layouter, Value},
-    halo2curves::bn256::Fr,
-    plonk::Assigned,
+use halo2_ecc::{
+    ecc::{ecdsa::ecdsa_verify_no_pubkey_check, EccChip},
+    fields::FieldChip,
+    secp256k1::{FpChip, FqChip},
 };
 
 use crate::circuit_translator::NoirHalo2Translator;
@@ -200,6 +214,96 @@ impl NoirHalo2Translator<Fr> {
     //     output: Witness,
     //     config: &PlonkConfig,
     // ) {}
+
+    pub(crate) fn add_ecdsa_secp256k1_constrain(
+        &self,
+        hashed_message: Vec<Witness>,
+        signature: Vec<Witness>,
+        public_key_x: Vec<Witness>,
+        public_key_y: Vec<Witness>,
+        result: Witness,
+        config: &PlonkConfig,
+    ) {
+        let r = self.noir_field_to_secp255k1_fq_field(signature[..32].to_vec());
+        let s = self.noir_field_to_secp255k1_fq_field(signature[32..].to_vec());
+        let msghash = self.noir_field_to_secp255k1_fq_field(hashed_message);
+        let public_key_x = self.noir_field_to_secp255k1_fp_field(public_key_x);
+        let public_key_y = self.noir_field_to_secp255k1_fp_field(public_key_y);
+
+        let pk = Secp256k1Affine::from_xy(public_key_x, public_key_y).unwrap();
+
+        // loading the chip here instead of in config cus
+        // puting them in a struct requires lifetime parameters
+        // not sure if theres a way around this
+        // this could be okay
+        let mut ctx = Context::<Fr>::new(true, 0);
+        let ecdsa_range_chip = RangeChip::<Fr>::default(17);
+        let ecdsa_fp_chip = FpChip::new(&ecdsa_range_chip, 88, 3);
+        let ecdsa_fq_chip = FqChip::new(&ecdsa_range_chip, 88, 3);
+
+        let [m, r, s] = [msghash, r, s].map(|x| ecdsa_fq_chip.load_private(&mut ctx, x));
+
+        let ecc_chip = EccChip::<Fr, FpChip<Fr>>::new(&ecdsa_fp_chip);
+        let pk = ecc_chip.load_private_unchecked(&mut ctx, (pk.x, pk.y));
+        // test ECDSA
+        let res = ecdsa_verify_no_pubkey_check::<Fr, Fp, Fq, Secp256k1Affine>(
+            &ecc_chip, &mut ctx, pk, r, s, m, 4, 4,
+        );
+        assert_eq!(res.value(), &Fr::one());
+
+        let result_value = noir_field_to_halo2_field(
+            *self
+                .witness_values
+                .get(&result)
+                .unwrap_or(&FieldElement::zero()),
+        );
+
+        let output = ctx.load_witness(result_value);
+        config.gate_chip.is_equal(&mut ctx, output, res);
+    }
+
+    // pub(crate) fn add_keccak256_constrain(
+    //     &self,
+    //     _input: Vec<(i32, i32)>,
+    //     _output: [i32; 32],
+    //     _config: &PlonkConfig,
+    // ) {
+
+    // }
+}
+
+impl NoirHalo2Translator<Fr> {
+    fn noir_field_to_secp255k1_fq_field(&self, limbs: Vec<Witness>) -> Fq {
+        let binding: Vec<u8> = limbs
+            .into_iter()
+            .map(|w| *self.witness_values.get(&w).unwrap_or(&FieldElement::zero()))
+            .flat_map(|ele| ele.to_be_bytes())
+            .collect::<Vec<u8>>();
+
+        let mut element_bytes = [0u8; 32];
+        let mut element_vec: Iter<u8> = binding.iter();
+        for byte in element_bytes.iter_mut() {
+            *byte = *element_vec.next().unwrap();
+        }
+
+        Fq::from_bytes(&element_bytes).unwrap()
+    }
+
+    fn noir_field_to_secp255k1_fp_field(&self, limbs: Vec<Witness>) -> Fp {
+        let binding: Vec<u8> = limbs
+            .into_iter()
+            .map(|w| *self.witness_values.get(&w).unwrap_or(&FieldElement::zero()))
+            .flat_map(|ele| ele.to_be_bytes())
+            .collect::<Vec<u8>>();
+
+        let mut element_bytes = [0u8; 32];
+        let mut element_vec: Iter<u8> = binding.iter();
+        for byte in element_bytes.iter_mut() {
+            *byte = *element_vec.next().unwrap();
+        }
+
+        Fp::from_bytes(&element_bytes).unwrap()
+    }
 }
 
 fn noir_field_to_halo2_field(noir_ele: FieldElement) -> Fr {

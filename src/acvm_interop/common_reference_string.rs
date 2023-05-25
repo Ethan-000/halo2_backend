@@ -19,7 +19,7 @@ impl CommonReferenceString for Halo2 {
             .await?
             .write_custom(
                 &mut common_reference_string,
-                halo2_proofs_axiom::SerdeFormat::RawBytes,
+                halo2_base::halo2_proofs::SerdeFormat::RawBytes,
             );
         // Separated to have nicer coercion on error types
         Ok(common_reference_string)
@@ -35,7 +35,7 @@ impl CommonReferenceString for Halo2 {
             .await?
             .write_custom(
                 &mut common_reference_string,
-                halo2_proofs_axiom::SerdeFormat::RawBytes,
+                halo2_base::halo2_proofs::SerdeFormat::RawBytes,
             );
 
         // TODO: Implement this
