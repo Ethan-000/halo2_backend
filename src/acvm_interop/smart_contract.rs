@@ -7,7 +7,7 @@ use halo2_base::halo2_proofs::{
     SerdeFormat,
 };
 use snark_verifier::{
-    loader::evm::{self, EvmLoader, ExecutorBuilder},
+    loader::evm::EvmLoader,
     pcs::kzg::{Gwc19, KzgAs},
     system::halo2::{compile, transcript::evm::EvmTranscript, Config},
     verifier::{self, SnarkVerifier},
@@ -46,16 +46,21 @@ impl SmartContract for Halo2 {
     type Error = BackendError;
     fn eth_contract_from_vk(
         &self,
-        _common_reference_string: &[u8],
+        common_reference_string: &[u8],
         verification_key: &[u8],
     ) -> Result<String, Self::Error> {
+        let params = ParamsKZG::<Bn256>::read_custom(
+            &mut common_reference_string.clone(),
+            SerdeFormat::RawBytes,
+        );
+
         // Deserialize verification key
         let vk = VerifyingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr>>(
             verification_key,
             SerdeFormat::RawBytes,
         )
         .unwrap();
-        // TODO: Replace with contract code
-        Ok(String::from(""))
+
+        Ok(gen_evm_verifier(&params, &vk, vec![0]))
     }
 }
