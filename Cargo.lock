@@ -775,7 +775,6 @@ dependencies = [
  "ff 0.12.1",
  "halo2_proofs",
  "itertools",
- "jemallocator",
  "log",
  "num-bigint",
  "num-integer",
@@ -785,27 +784,6 @@ dependencies = [
  "rustc-hash",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "halo2-ecc"
-version = "0.3.0"
-source = "git+https://github.com/axiom-crypto/halo2-lib?branch=release-0.3.0#71cfc51abf80998647692ea113ece08851682011"
-dependencies = [
- "ff 0.12.1",
- "group 0.12.1",
- "halo2-base",
- "itertools",
- "num-bigint",
- "num-integer",
- "num-traits",
- "rand",
- "rand_chacha",
- "rand_core 0.6.4",
- "rayon",
- "serde",
- "serde_json",
- "test-case",
 ]
 
 [[package]]
@@ -819,7 +797,6 @@ dependencies = [
  "dirs",
  "futures-util",
  "halo2-base",
- "halo2-ecc",
  "indicatif",
  "rand",
  "reqwest",
@@ -1026,26 +1003,6 @@ name = "itoa"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "453ad9f582a441959e5f0d088b02ce04cfe8d51a8eaf077f12ac6d3e94164ca6"
-
-[[package]]
-name = "jemalloc-sys"
-version = "0.5.3+5.3.0-patched"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9bd5d616ea7ed58b571b2e209a65759664d7fb021a0819d7a790afc67e47ca1"
-dependencies = [
- "cc",
- "libc",
-]
-
-[[package]]
-name = "jemallocator"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "16c2514137880c52b0b4822b563fadd38257c1f380858addb74a400889696ea6"
-dependencies = [
- "jemalloc-sys",
- "libc",
-]
 
 [[package]]
 name = "js-sys"
@@ -1267,30 +1224,6 @@ name = "ppv-lite86"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
-
-[[package]]
-name = "proc-macro-error"
-version = "1.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da25490ff9892aab3fcf7c36f08cfb902dd3e71ca0f9f9517bea02a73a5ce38c"
-dependencies = [
- "proc-macro-error-attr",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
- "version_check",
-]
-
-[[package]]
-name = "proc-macro-error-attr"
-version = "1.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1be40180e52ecc98ad80b184934baf3d0d29f979574e439af5a55274b35f869"
-dependencies = [
- "proc-macro2",
- "quote",
- "version_check",
-]
 
 [[package]]
 name = "proc-macro2"
@@ -1715,41 +1648,6 @@ name = "tap"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
-
-[[package]]
-name = "test-case"
-version = "3.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a1d6e7bde536b0412f20765b76e921028059adfd1b90d8974d33fd3c91b25df"
-dependencies = [
- "test-case-macros",
-]
-
-[[package]]
-name = "test-case-core"
-version = "3.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d10394d5d1e27794f772b6fc854c7e91a2dc26e2cbf807ad523370c2a59c0cee"
-dependencies = [
- "cfg-if",
- "proc-macro-error",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "test-case-macros"
-version = "3.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eeb9a44b1c6a54c1ba58b152797739dba2a83ca74e18168a68c980eb142f9404"
-dependencies = [
- "proc-macro-error",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
- "test-case-core",
-]
 
 [[package]]
 name = "thiserror"

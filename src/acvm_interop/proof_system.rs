@@ -1,5 +1,3 @@
-use std::fs::{self, File};
-use std::io::{BufReader, BufWriter, Write};
 use std::marker::PhantomData;
 
 use acvm::acir::circuit::Circuit as NoirCircuit;
@@ -10,13 +8,13 @@ use acvm::{Language, ProofSystemCompiler};
 use halo2_base::halo2_proofs::halo2curves::bn256::Fr;
 use halo2_base::halo2_proofs::halo2curves::bn256::{Bn256, G1Affine};
 use halo2_base::halo2_proofs::plonk::{ProvingKey, VerifyingKey};
-use halo2_base::halo2_proofs::poly::commitment::Params;
+
 use halo2_base::halo2_proofs::poly::kzg::commitment::ParamsKZG;
 use halo2_base::halo2_proofs::SerdeFormat;
 
 use crate::circuit_translator::NoirHalo2Translator;
 use crate::errors::BackendError;
-use crate::halo2_plonk_api::{keygen, prover, verifier};
+use crate::halo2_plonk_api::{halo2_keygen, halo2_prove, halo2_verify};
 
 use crate::Halo2;
 
@@ -40,13 +38,7 @@ impl ProofSystemCompiler for Halo2 {
 
         let params =
             ParamsKZG::<Bn256>::read_custom(&mut common_reference_string, SerdeFormat::RawBytes);
-        let (pk, vk) = keygen(&translator, &params);
-
-        fs::create_dir_all("target").unwrap();
-        let f = File::create("target/halo2_kzg_bn256.params").unwrap();
-        let mut writer = BufWriter::new(f);
-        params.write(&mut writer).unwrap();
-        writer.flush().unwrap();
+        let (pk, vk) = halo2_keygen(&translator, &params);
 
         Ok((
             pk.to_bytes(SerdeFormat::RawBytes),
@@ -56,14 +48,13 @@ impl ProofSystemCompiler for Halo2 {
 
     fn prove_with_pk(
         &self,
-        _common_reference_string: &[u8],
+        mut common_reference_string: &[u8],
         circuit: &NoirCircuit,
         witness_values: WitnessMap,
         proving_key: &[u8],
     ) -> Result<Vec<u8>, BackendError> {
-        let f = File::open("target/halo2_kzg_bn256.params").unwrap();
-        let mut reader = BufReader::new(f);
-        let params = ParamsKZG::<Bn256>::read::<_>(&mut reader).unwrap();
+        let params =
+            ParamsKZG::<Bn256>::read_custom(&mut common_reference_string, SerdeFormat::RawBytes);
 
         let pk = ProvingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr>>(
             proving_key,
@@ -77,22 +68,21 @@ impl ProofSystemCompiler for Halo2 {
             _marker: PhantomData::<Fr>,
         };
 
-        let proof = prover(translator, &params, &pk);
+        let proof = halo2_prove(translator, &params, &pk);
 
         Ok(proof)
     }
 
     fn verify_with_vk(
         &self,
-        _common_reference_string: &[u8],
+        mut common_reference_string: &[u8],
         proof: &[u8],
         _public_inputs: WitnessMap,
         _circuit: &NoirCircuit,
         verification_key: &[u8],
     ) -> Result<bool, BackendError> {
-        let f = File::open("target/halo2_kzg_bn256.params").unwrap();
-        let mut reader = BufReader::new(f);
-        let params = ParamsKZG::<Bn256>::read::<_>(&mut reader).unwrap();
+        let params =
+            ParamsKZG::<Bn256>::read_custom(&mut common_reference_string, SerdeFormat::RawBytes);
 
         let vk = VerifyingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr>>(
             verification_key,
@@ -100,7 +90,7 @@ impl ProofSystemCompiler for Halo2 {
         )
         .unwrap();
 
-        Ok(verifier(&params, &vk, proof).is_ok())
+        Ok(halo2_verify(&params, &vk, proof).is_ok())
     }
 
     fn np_language(&self) -> Language {
@@ -116,7 +106,7 @@ impl ProofSystemCompiler for Halo2 {
             Opcode::RAM(_) => false,
             Opcode::Oracle(_) => false,
             Opcode::BlackBoxFuncCall(func) => match func.get_black_box_func() {
-                BlackBoxFunc::AND | BlackBoxFunc::RANGE | BlackBoxFunc::Keccak256 => true,
+                BlackBoxFunc::AND | BlackBoxFunc::RANGE => true,
 
                 BlackBoxFunc::XOR
                 | BlackBoxFunc::SHA256
@@ -124,6 +114,7 @@ impl ProofSystemCompiler for Halo2 {
                 | BlackBoxFunc::Pedersen
                 | BlackBoxFunc::HashToField128Security
                 | BlackBoxFunc::EcdsaSecp256k1
+                | BlackBoxFunc::Keccak256
                 | BlackBoxFunc::FixedBaseScalarMul
                 | BlackBoxFunc::ComputeMerkleRoot
                 | BlackBoxFunc::SchnorrVerify

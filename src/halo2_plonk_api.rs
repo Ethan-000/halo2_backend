@@ -1,40 +1,40 @@
 use std::marker::PhantomData;
 
-use halo2_base::gates::{GateChip, RangeChip};
-use halo2_base::halo2_proofs::halo2curves::bn256::Fr;
-// use halo2_ecc::secp256k1::{FpChip, FqChip};
-use halo2_base::halo2_proofs::{
-    arithmetic::Field,
-    circuit::Layouter,
-    circuit::{Cell, Value},
-    halo2curves::{
-        bn256::{Bn256, G1Affine, G1},
-        group::cofactor::CofactorCurve,
-    },
-    plonk::Assigned,
-    plonk::{
-        create_proof, keygen_pk, keygen_vk, verify_proof, Advice, Column, ConstraintSystem, Error,
-        Fixed, ProvingKey, VerifyingKey,
-    },
-    poly::{
-        kzg::{
-            commitment::{KZGCommitmentScheme, ParamsKZG},
-            multiopen::{ProverGWC, VerifierGWC},
-            strategy::SingleStrategy,
+use halo2_base::{
+    gates::{GateChip, RangeChip},
+    halo2_proofs::{
+        arithmetic::Field,
+        circuit::Layouter,
+        circuit::{Cell, Value},
+        halo2curves::bn256::Fr,
+        halo2curves::{
+            bn256::{Bn256, G1Affine, G1},
+            group::cofactor::CofactorCurve,
         },
-        Rotation,
-    },
-    transcript::{
-        Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
+        plonk::Assigned,
+        plonk::{
+            create_proof, keygen_pk, keygen_vk, verify_proof, Advice, Column, ConstraintSystem,
+            Error, Fixed, ProvingKey, VerifyingKey,
+        },
+        poly::{
+            kzg::{
+                commitment::{KZGCommitmentScheme, ParamsKZG},
+                multiopen::{ProverGWC, VerifierGWC},
+                strategy::SingleStrategy,
+            },
+            Rotation,
+        },
+        transcript::{
+            Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
+        },
     },
 };
 
-// use halo2_base::zkevm_keccak::KeccakConfig;
 use rand::rngs::OsRng;
 
 use crate::circuit_translator::NoirHalo2Translator;
 
-pub fn keygen(
+pub fn halo2_keygen(
     circuit: &NoirHalo2Translator<Fr>,
     params: &ParamsKZG<Bn256>,
 ) -> (
@@ -47,7 +47,7 @@ pub fn keygen(
     (pk, vk_return)
 }
 
-pub fn prover(
+pub fn halo2_prove(
     circuit: NoirHalo2Translator<Fr>,
     params: &ParamsKZG<Bn256>,
     pk: &ProvingKey<<G1 as CofactorCurve>::Affine>,
@@ -67,7 +67,7 @@ pub fn prover(
     transcript.finalize()
 }
 
-pub fn verifier(
+pub fn halo2_verify(
     params: &ParamsKZG<Bn256>,
     vk: &VerifyingKey<<G1 as CofactorCurve>::Affine>,
     proof: &[u8],
@@ -97,12 +97,6 @@ pub struct PlonkConfig {
 
     pub(crate) range_chip: RangeChip<Fr>,
     pub(crate) gate_chip: GateChip<Fr>,
-    // ecdsa secp256k1 chips
-    // pub(crate) ecdsa_range_chip: RangeChip<Fr>,
-    // pub(crate) ecdsa_fp_chip: FpChip<'a>,
-    // pub(crate) ecdsa_fq_chip: FqChip<Fr>,
-
-    // pub(crate) keccak_chip: KeccakConfig<Fr>
 }
 
 impl PlonkConfig {
@@ -149,9 +143,6 @@ impl PlonkConfig {
             sc,
             range_chip,
             gate_chip,
-            // ecdsa_range_chip,
-            // ecdsa_fp_chip,
-            // ecdsa_fq_chip,
         }
     }
 }

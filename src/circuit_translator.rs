@@ -1,17 +1,14 @@
+use core::panic;
 use std::marker::PhantomData;
 
-use crate::{
-    errors::Error,
-    halo2_plonk_api::{PlonkConfig, StandardPlonk},
-};
+use crate::halo2_plonk_api::{PlonkConfig, StandardPlonk};
 use acvm::acir::{
     circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
     native_types::WitnessMap,
-    BlackBoxFunc,
 };
-use halo2_base::halo2_proofs::halo2curves::bn256::Fr;
 use halo2_base::halo2_proofs::{
-    circuit::SimpleFloorPlanner, plonk::Circuit as Halo2PlonkCircuit, plonk::ConstraintSystem,
+    circuit::SimpleFloorPlanner, halo2curves::bn256::Fr, plonk::Circuit as Halo2PlonkCircuit,
+    plonk::ConstraintSystem,
 };
 
 #[derive(Clone, Default)]
@@ -87,68 +84,13 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                             panic!("hash to field has not yet been implemented")
                         }
                         BlackBoxFuncCall::EcdsaSecp256k1 {
-                            public_key_x: public_key_x_inputs,
-                            public_key_y: public_key_y_inputs,
-                            signature: signature_inputs,
-                            hashed_message: hashed_message_inputs,
-                            output,
+                            public_key_x: _public_key_x_inputs,
+                            public_key_y: _public_key_y_inputs,
+                            signature: _signature_inputs,
+                            hashed_message: _hashed_message_inputs,
+                            output: _,
                         } => {
-                            // public key x
-                            let mut public_key_x_inputs = public_key_x_inputs.iter();
-                            let mut public_key_x = Vec::new();
-                            for (i, pkx) in public_key_x.iter_mut().enumerate() {
-                                let x_byte = public_key_x_inputs
-                                    .next()
-                                    .ok_or_else(|| Error::MalformedBlackBoxFunc(
-                                        BlackBoxFunc::EcdsaSecp256k1,
-                                        format!("Missing rest of `x` component for public key. Tried to get byte {i} but failed"),
-                                    )).unwrap();
-                                let x_byte_index = x_byte.witness;
-                                *pkx = x_byte_index;
-                            }
-
-                            // public key y
-                            let mut public_key_y_inputs = public_key_y_inputs.iter();
-                            let mut public_key_y = Vec::new();
-                            for (i, pky) in public_key_y.iter_mut().enumerate() {
-                                let y_byte = public_key_y_inputs
-                                    .next()
-                                    .ok_or_else(|| Error::MalformedBlackBoxFunc(
-                                        BlackBoxFunc::EcdsaSecp256k1,
-                                        format!("Missing rest of `y` component for public key. Tried to get byte {i} but failed"),
-                                    )).unwrap();
-                                let y_byte_index = y_byte.witness;
-                                *pky = y_byte_index;
-                            }
-
-                            // signature
-                            let mut signature_inputs = signature_inputs.iter();
-                            let mut signature = Vec::new();
-                            for (i, sig) in signature.iter_mut().enumerate() {
-                                let sig_byte =
-                                    signature_inputs.next().ok_or_else(|| Error::MalformedBlackBoxFunc(
-                                        BlackBoxFunc::EcdsaSecp256k1,
-                                        format!("Missing rest of signature. Tried to get byte {i} but failed"),
-                                    )).unwrap();
-                                let sig_byte_index = sig_byte.witness;
-                                *sig = sig_byte_index;
-                            }
-
-                            // The rest of the input is the message
-                            let mut hashed_message = Vec::new();
-                            for msg in hashed_message_inputs.iter() {
-                                let msg_byte_index = msg.witness;
-                                hashed_message.push(msg_byte_index);
-                            }
-
-                            self.add_ecdsa_secp256k1_constrain(
-                                hashed_message,
-                                signature,
-                                public_key_x,
-                                public_key_y,
-                                *output,
-                                &config,
-                            );
+                            panic!("ecdsa has not yet been implemented")
                         }
                         BlackBoxFuncCall::FixedBaseScalarMul { .. } => {
                             todo!()
@@ -158,32 +100,6 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                             outputs: _,
                         } => {
                             panic!("keccak256 has not yet been implemented")
-
-                            // let mut keccak_inputs: Vec<(i32, i32)> = Vec::new();
-                            // for input in inputs.iter() {
-                            //     let witness_index = input.witness.witness_index() as i32;
-                            //     let num_bits = input.num_bits as i32;
-                            //     keccak_inputs.push((witness_index, num_bits));
-                            // }
-
-                            // assert_eq!(outputs.len(), 32);
-
-                            // let mut outputs_iter = outputs.iter();
-                            // let mut result = [0i32; 32];
-                            // for (i, res) in result.iter_mut().enumerate() {
-                            //     let out_byte =
-                            //         outputs_iter.next().ok_or_else(|| {
-                            //             Error::MalformedBlackBoxFunc(
-                            //                 BlackBoxFunc::Keccak256,
-                            //                 format!("Missing rest of output. Tried to get byte {i} but failed"),
-                            //             )
-                            //         }).unwrap();
-
-                            //     let out_byte_index = out_byte.witness_index() as i32;
-                            //     *res = out_byte_index
-                            // }
-
-                            // self.add_keccak256_constrain(keccak_inputs, result, &config);
                         }
                         BlackBoxFuncCall::AES { .. } => panic!("AES has not yet been implemented"),
                         BlackBoxFuncCall::ComputeMerkleRoot {

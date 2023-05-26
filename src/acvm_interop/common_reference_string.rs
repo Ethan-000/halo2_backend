@@ -1,5 +1,4 @@
-use acvm::ProofSystemCompiler;
-use acvm::{acir::circuit::Circuit, async_trait, CommonReferenceString};
+use acvm::{acir::circuit::Circuit, async_trait, CommonReferenceString, ProofSystemCompiler};
 
 use crate::errors::BackendError;
 use crate::halo2_params::constuct_halo2_params_from_aztec_crs;
@@ -25,6 +24,7 @@ impl CommonReferenceString for Halo2 {
         Ok(common_reference_string)
     }
 
+    // Separated to have nicer coercion on error types
     async fn update_common_reference_string(
         &self,
         _common_reference_string: Vec<u8>,
@@ -38,8 +38,6 @@ impl CommonReferenceString for Halo2 {
                 halo2_base::halo2_proofs::SerdeFormat::RawBytes,
             );
 
-        // TODO: Implement this
-        // Separated to have nicer coercion on error types
         Ok(common_reference_string)
     }
 }
