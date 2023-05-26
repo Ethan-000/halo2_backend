@@ -5,12 +5,12 @@ use std::env;
 use reqwest::Client;
 
 const G1_START: usize = 28;
-const G2_START: usize = 28 + (5_040_001 * 64);
+const G2_START: usize = 28 + (5_040_000 * 64);
 const G2_END: usize = G2_START + 128 - 1;
 
 const TRANSCRIPT_URL_ENV_VAR: &str = "TRANSCRIPT_URL";
 const TRANSCRIPT_URL_FALLBACK: &str =
-    "https://aztec-ignition.s3.amazonaws.com/MAIN%20IGNITION/monomial/transcript00.dat";
+    "http://aztec-ignition.s3.amazonaws.com/MAIN%20IGNITION/sealed/transcript00.dat";
 
 pub(crate) async fn get_aztec_crs(points_needed: u32) -> Result<(Vec<u8>, Vec<u8>), Error> {
     let g1_end = G1_START + ((points_needed as usize - 1) * 64) - 1;
