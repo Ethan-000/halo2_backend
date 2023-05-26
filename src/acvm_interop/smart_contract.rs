@@ -4,43 +4,42 @@ use halo2_base::halo2_proofs::{
     halo2curves::bn256::{Bn256, Fq, Fr, G1Affine},
     plonk::VerifyingKey,
     poly::{commitment::ParamsProver, kzg::commitment::ParamsKZG},
+    SerdeFormat,
 };
 use snark_verifier::{
-    loader::evm::{self, encode_calldata, EvmLoader, ExecutorBuilder},
-    pcs::kzg::{Gwc19, Kzg},
+    loader::evm::{self, EvmLoader, ExecutorBuilder},
+    pcs::kzg::{Gwc19, KzgAs},
     system::halo2::{compile, transcript::evm::EvmTranscript, Config},
-    verifier::{self, PlonkVerifier},
+    verifier::{self, SnarkVerifier},
 };
 
+use crate::circuit_translator::NoirHalo2Translator;
 use crate::errors::BackendError;
-
 use crate::Halo2;
 
 use std::rc::Rc;
-type Plonk = verifier::Plonk<Kzg<Bn256, Gwc19>>;
+type PlonkVerifier = verifier::plonk::PlonkVerifier<KzgAs<Bn256, Gwc19>>;
 
 fn gen_evm_verifier(
     params: &ParamsKZG<Bn256>,
     vk: &VerifyingKey<G1Affine>,
     num_instance: Vec<usize>,
-) -> Vec<u8> {
-    let svk = params.get_g()[0].into();
-    let dk = (params.g2(), params.s_g2()).into();
+) -> String {
     let protocol = compile(
         params,
         vk,
         Config::kzg().with_num_instance(num_instance.clone()),
     );
+    let vk = (params.get_g()[0], params.g2(), params.s_g2()).into();
 
     let loader = EvmLoader::new::<Fq, Fr>();
     let protocol = protocol.loaded(&loader);
     let mut transcript = EvmTranscript::<_, Rc<EvmLoader>, _, _>::new(&loader);
 
     let instances = transcript.load_instances(num_instance);
-    let proof = Plonk::read_proof(&svk, &protocol, &instances, &mut transcript);
-    Plonk::verify(&svk, &dk, &protocol, &instances, &proof);
-
-    evm::compile_yul(&loader.yul_code())
+    let proof = PlonkVerifier::read_proof(&vk, &protocol, &instances, &mut transcript).unwrap();
+    PlonkVerifier::verify(&vk, &protocol, &instances, &proof).unwrap();
+    loader.yul_code()
 }
 
 impl SmartContract for Halo2 {
@@ -48,8 +47,15 @@ impl SmartContract for Halo2 {
     fn eth_contract_from_vk(
         &self,
         _common_reference_string: &[u8],
-        _verification_key: &[u8],
+        verification_key: &[u8],
     ) -> Result<String, Self::Error> {
-        todo!()
+        // Deserialize verification key
+        let vk = VerifyingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr>>(
+            verification_key,
+            SerdeFormat::RawBytes,
+        )
+        .unwrap();
+        // TODO: Replace with contract code
+        Ok(String::from(""))
     }
 }
