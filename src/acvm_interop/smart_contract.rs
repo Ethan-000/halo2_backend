@@ -50,7 +50,7 @@ impl SmartContract for Halo2 {
         verification_key: &[u8],
     ) -> Result<String, Self::Error> {
         let params = ParamsKZG::<Bn256>::read_custom(
-            &mut common_reference_string.clone(),
+            &mut &(*common_reference_string),
             SerdeFormat::RawBytes,
         );
 
