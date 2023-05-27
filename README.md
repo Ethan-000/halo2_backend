@@ -54,7 +54,7 @@ nargo verify add
 
 ## Features
 
--[ ] [halo2-zcash](https://github.com/zcash/halo2)
+- [ ] [halo2-zcash](https://github.com/zcash/halo2)
 -[ ] [halo2-pse](https://github.com/privacy-scaling-explorations/halo2)
 -[x] [halo2-axiom](https://github.com/axiom-crypto/halo2-lib)
 
