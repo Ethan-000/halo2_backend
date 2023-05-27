@@ -40,13 +40,13 @@ cd to the `examples` folder of this crate
 cd add
 ```
 
-to generate proof `run`
+to generate proof run
 
 ```text
 nargo prove add
 ```
 
-to verify proof `run`
+to verify proof run
 
 ```text
 nargo verify add
