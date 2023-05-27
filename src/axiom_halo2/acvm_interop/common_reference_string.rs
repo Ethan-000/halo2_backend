@@ -1,12 +1,12 @@
 use acvm::{acir::circuit::Circuit, async_trait, CommonReferenceString, ProofSystemCompiler};
 
+use crate::axiom_halo2::halo2_params::constuct_halo2_params_from_aztec_crs;
+use crate::axiom_halo2::AxiomHalo2;
 use crate::errors::BackendError;
-use crate::halo2_params::constuct_halo2_params_from_aztec_crs;
-use crate::Halo2;
 
 // TODO(#185): Ensure CRS download works in JS
 #[async_trait]
-impl CommonReferenceString for Halo2 {
+impl CommonReferenceString for AxiomHalo2 {
     type Error = BackendError;
 
     async fn generate_common_reference_string(

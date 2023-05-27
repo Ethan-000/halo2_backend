@@ -13,9 +13,9 @@ use snark_verifier::{
     verifier::{self, SnarkVerifier},
 };
 
-use crate::circuit_translator::NoirHalo2Translator;
+use crate::axiom_halo2::circuit_translator::NoirHalo2Translator;
+use crate::axiom_halo2::AxiomHalo2;
 use crate::errors::BackendError;
-use crate::Halo2;
 
 use std::rc::Rc;
 type PlonkVerifier = verifier::plonk::PlonkVerifier<KzgAs<Bn256, Gwc19>>;
@@ -42,7 +42,7 @@ fn gen_evm_verifier(
     loader.yul_code()
 }
 
-impl SmartContract for Halo2 {
+impl SmartContract for AxiomHalo2 {
     type Error = BackendError;
     fn eth_contract_from_vk(
         &self,

@@ -1,24 +1,30 @@
 use std::slice::Iter;
 
-use crate::halo2_plonk_api::{PlonkConfig, PolyTriple, StandardCs};
+use crate::axiom_halo2::halo2_plonk_api::{PlonkConfig, PolyTriple, StandardCs};
 use acvm::{
     acir::native_types::{Expression, Witness},
     FieldElement,
 };
 use halo2_base::{
-    gates::{GateInstructions, RangeInstructions},
+    gates::{GateInstructions, RangeChip, RangeInstructions},
     halo2_proofs::{
         circuit::{Layouter, Value},
         halo2curves::{
             bn256::Fr,
-            secp256k1::{Fp, Fq},
+            secp256k1::{Fp, Fq, Secp256k1Affine},
+            CurveAffine,
         },
         plonk::Assigned,
     },
     Context,
 };
+use halo2_ecc::{
+    ecc::{ecdsa::ecdsa_verify_no_pubkey_check, EccChip},
+    fields::FieldChip,
+    secp256k1::{FpChip, FqChip},
+};
 
-use crate::circuit_translator::NoirHalo2Translator;
+use crate::axiom_halo2::circuit_translator::NoirHalo2Translator;
 
 impl NoirHalo2Translator<Fr> {
     #[allow(non_snake_case)]
@@ -197,10 +203,57 @@ impl NoirHalo2Translator<Fr> {
 
         config.gate_chip.is_equal(&mut ctx, c, and_out);
     }
+
+    pub(crate) fn add_ecdsa_secp256k1_constrain(
+        &self,
+        hashed_message: Vec<Witness>,
+        signature: Vec<Witness>,
+        public_key_x: Vec<Witness>,
+        public_key_y: Vec<Witness>,
+        result: Witness,
+        config: &PlonkConfig,
+    ) {
+        let r = self.noir_field_to_secp255k1_fq_field(signature[..32].to_vec());
+        let s = self.noir_field_to_secp255k1_fq_field(signature[32..].to_vec());
+        let msghash = self.noir_field_to_secp255k1_fq_field(hashed_message);
+        let public_key_x = self.noir_field_to_secp255k1_fp_field(public_key_x);
+        let public_key_y = self.noir_field_to_secp255k1_fp_field(public_key_y);
+
+        let pk = Secp256k1Affine::from_xy(public_key_x, public_key_y).unwrap();
+
+        // loading the chip here instead of in config cus
+        // puting them in a struct requires lifetime parameters
+        // not sure if theres a way around this
+        // this could be okay
+        let mut ctx = Context::<Fr>::new(true, 0);
+        let ecdsa_range_chip = RangeChip::<Fr>::default(17);
+        let ecdsa_fp_chip = FpChip::new(&ecdsa_range_chip, 88, 3);
+        let ecdsa_fq_chip = FqChip::new(&ecdsa_range_chip, 88, 3);
+
+        let [m, r, s] = [msghash, r, s].map(|x| ecdsa_fq_chip.load_private(&mut ctx, x));
+
+        let ecc_chip = EccChip::<Fr, FpChip<Fr>>::new(&ecdsa_fp_chip);
+        let pk = ecc_chip.load_private_unchecked(&mut ctx, (pk.x, pk.y));
+        // test ECDSA
+        let res = ecdsa_verify_no_pubkey_check::<Fr, Fp, Fq, Secp256k1Affine>(
+            &ecc_chip, &mut ctx, pk, r, s, m, 4, 4,
+        );
+        assert_eq!(res.value(), &Fr::one());
+
+        let result_value = noir_field_to_halo2_field(
+            *self
+                .witness_values
+                .get(&result)
+                .unwrap_or(&FieldElement::zero()),
+        );
+
+        let output = ctx.load_witness(result_value);
+        config.gate_chip.is_equal(&mut ctx, output, res);
+    }
 }
 
 impl NoirHalo2Translator<Fr> {
-    fn _noir_field_to_secp255k1_fq_field(&self, limbs: Vec<Witness>) -> Fq {
+    fn noir_field_to_secp255k1_fq_field(&self, limbs: Vec<Witness>) -> Fq {
         let binding: Vec<u8> = limbs
             .into_iter()
             .map(|w| *self.witness_values.get(&w).unwrap_or(&FieldElement::zero()))
@@ -216,7 +269,7 @@ impl NoirHalo2Translator<Fr> {
         Fq::from_bytes(&element_bytes).unwrap()
     }
 
-    fn _noir_field_to_secp255k1_fp_field(&self, limbs: Vec<Witness>) -> Fp {
+    fn noir_field_to_secp255k1_fp_field(&self, limbs: Vec<Witness>) -> Fp {
         let binding: Vec<u8> = limbs
             .into_iter()
             .map(|w| *self.witness_values.get(&w).unwrap_or(&FieldElement::zero()))

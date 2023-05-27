@@ -12,13 +12,13 @@ use halo2_base::halo2_proofs::plonk::{ProvingKey, VerifyingKey};
 use halo2_base::halo2_proofs::poly::kzg::commitment::ParamsKZG;
 use halo2_base::halo2_proofs::SerdeFormat;
 
-use crate::circuit_translator::NoirHalo2Translator;
+use crate::axiom_halo2::circuit_translator::NoirHalo2Translator;
+use crate::axiom_halo2::halo2_plonk_api::{halo2_keygen, halo2_prove, halo2_verify};
 use crate::errors::BackendError;
-use crate::halo2_plonk_api::{halo2_keygen, halo2_prove, halo2_verify};
 
-use crate::Halo2;
+use crate::axiom_halo2::AxiomHalo2;
 
-impl ProofSystemCompiler for Halo2 {
+impl ProofSystemCompiler for AxiomHalo2 {
     type Error = BackendError;
 
     fn get_exact_circuit_size(&self, circuit: &NoirCircuit) -> Result<u32, BackendError> {
