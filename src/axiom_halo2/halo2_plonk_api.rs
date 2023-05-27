@@ -32,7 +32,7 @@ use halo2_base::{
 
 use rand::rngs::OsRng;
 
-use crate::circuit_translator::NoirHalo2Translator;
+use crate::axiom_halo2::circuit_translator::NoirHalo2Translator;
 
 pub fn halo2_keygen(
     circuit: &NoirHalo2Translator<Fr>,
