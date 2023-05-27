@@ -55,25 +55,25 @@ nargo verify add
 ## Features
 
 - [ ] [halo2-zcash](https://github.com/zcash/halo2)
--[ ] [halo2-pse](https://github.com/privacy-scaling-explorations/halo2)
--[x] [halo2-axiom](https://github.com/axiom-crypto/halo2-lib)
+- [ ] [halo2-pse](https://github.com/privacy-scaling-explorations/halo2)
+- [x] [halo2-axiom](https://github.com/axiom-crypto/halo2-lib)
 
 ### halo2-axiom features
 
--[x] arithmetic gates
--[x] range proofs
--[x] and gates
+- [x] arithmetic gates
+- [x] range proofs
+- [x] and gates
 
--[ ] xor
--[ ] sha256 
--[ ] blake2s 
--[ ] compute_merkle_root 
--[ ] schnorr_verify
--[ ] pedersen
--[ ] hash_to_field
--[ ] ecdsa_secp256k1
--[ ] fixed_base_scalar_mul
--[ ] keccak256
+- [ ] xor
+- [ ] sha256 
+- [ ] blake2s 
+- [ ] compute_merkle_root 
+- [ ] schnorr_verify
+- [ ] pedersen
+- [ ] hash_to_field
+- [ ] ecdsa_secp256k1
+- [ ] fixed_base_scalar_mul
+- [ ] keccak256
 
 ## License
 
