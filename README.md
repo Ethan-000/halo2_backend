@@ -34,19 +34,19 @@ cargo install --path . --locked --features axiom_halo2_backend --no-default-feat
 
 ## Examples
 
-go to the examples folder of this crate
+cd to the `examples` folder of this crate
 
 ```text
 cd add
 ```
 
-to generate proof run 
+to generate proof `run`
 
 ```text
 nargo prove add
 ```
 
-to verify proof run
+to verify proof `run`
 
 ```text
 nargo verify add
