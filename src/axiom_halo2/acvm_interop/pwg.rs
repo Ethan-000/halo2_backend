@@ -1,9 +1,9 @@
 use acvm::acir::native_types::Witness;
 use acvm::pwg::logic;
 use acvm::pwg::range;
+use acvm::pwg::signature;
 use acvm::OpcodeResolutionError;
 use acvm::PartialWitnessGenerator;
-use acvm::pwg::signature;
 
 mod gadget_call;
 
