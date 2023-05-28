@@ -1,38 +1,35 @@
 use std::marker::PhantomData;
 
-use halo2_base::{
-    gates::{GateChip, RangeChip},
-    halo2_proofs::{
-        arithmetic::Field,
-        circuit::Layouter,
-        circuit::{Cell, Value},
-        halo2curves::bn256::Fr,
-        halo2curves::{
-            bn256::{Bn256, G1Affine, G1},
-            group::cofactor::CofactorCurve,
+use pse_halo2_proofs::{
+    arithmetic::Field,
+    circuit::Layouter,
+    circuit::{Cell, Value},
+    halo2curves::bn256::Fr,
+    halo2curves::{
+        bn256::{Bn256, G1Affine, G1},
+        group::cofactor::CofactorCurve,
+    },
+    plonk::Assigned,
+    plonk::{
+        create_proof, keygen_pk, keygen_vk, verify_proof, Advice, Column, ConstraintSystem, Error,
+        Fixed, ProvingKey, VerifyingKey,
+    },
+    poly::{
+        kzg::{
+            commitment::{KZGCommitmentScheme, ParamsKZG},
+            multiopen::{ProverGWC, VerifierGWC},
+            strategy::SingleStrategy,
         },
-        plonk::Assigned,
-        plonk::{
-            create_proof, keygen_pk, keygen_vk, verify_proof, Advice, Column, ConstraintSystem,
-            Error, Fixed, ProvingKey, VerifyingKey,
-        },
-        poly::{
-            kzg::{
-                commitment::{KZGCommitmentScheme, ParamsKZG},
-                multiopen::{ProverGWC, VerifierGWC},
-                strategy::SingleStrategy,
-            },
-            Rotation,
-        },
-        transcript::{
-            Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
-        },
+        Rotation,
+    },
+    transcript::{
+        Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
     },
 };
 
 use rand::rngs::OsRng;
 
-use crate::axiom_halo2::circuit_translator::NoirHalo2Translator;
+use crate::pse_halo2::circuit_translator::NoirHalo2Translator;
 
 pub fn halo2_keygen(
     circuit: &NoirHalo2Translator<Fr>,
@@ -94,9 +91,6 @@ pub struct PlonkConfig {
     so: Column<Fixed>,
     sm: Column<Fixed>,
     sc: Column<Fixed>,
-
-    pub(crate) range_chip: RangeChip<Fr>,
-    pub(crate) gate_chip: GateChip<Fr>,
 }
 
 impl PlonkConfig {
@@ -114,9 +108,6 @@ impl PlonkConfig {
         let sr = meta.fixed_column();
         let so = meta.fixed_column();
         let sc = meta.fixed_column();
-
-        let range_chip = RangeChip::default(17);
-        let gate_chip = GateChip::default();
 
         meta.create_gate("Combined add-mult", |meta| {
             let a = meta.query_advice(a, Rotation::cur());
@@ -141,8 +132,6 @@ impl PlonkConfig {
             so,
             sm,
             sc,
-            range_chip,
-            gate_chip,
         }
     }
 }
@@ -228,7 +217,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
         &self,
         layouter: &mut impl Layouter<FF>,
         mut f: F,
-    ) -> Result<(Cell, Cell, Cell), Error>
+    ) -> Result<(Cell, Cell, Cell), pse_halo2_proofs::plonk::Error>
     where
         F: FnMut() -> Value<(Assigned<FF>, Assigned<FF>, Assigned<FF>)>,
     {
@@ -237,18 +226,33 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
             |mut region| {
                 #[allow(unused_assignments)]
                 let mut value = None;
-                let lhs = region.assign_advice(self.config.a, 0, {
-                    value = Some(f());
-                    value.unwrap().map(|v| v.0)
-                });
-                let rhs = region.assign_advice(self.config.b, 0, value.unwrap().map(|v| v.1));
-                let out = region.assign_advice(self.config.c, 0, value.unwrap().map(|v| v.2));
+                let lhs = region.assign_advice(
+                    || "lhs",
+                    self.config.a,
+                    0,
+                    || {
+                        value = Some(f());
+                        value.unwrap().map(|v| v.0)
+                    },
+                )?;
+                let rhs = region.assign_advice(
+                    || "rhs",
+                    self.config.b,
+                    0,
+                    || value.unwrap().map(|v| v.1),
+                )?;
+                let out = region.assign_advice(
+                    || "out",
+                    self.config.c,
+                    0,
+                    || value.unwrap().map(|v| v.2),
+                )?;
 
-                region.assign_fixed(self.config.sl, 0, FF::zero());
-                region.assign_fixed(self.config.sr, 0, FF::zero());
-                region.assign_fixed(self.config.so, 0, FF::one());
-                region.assign_fixed(self.config.sm, 0, FF::one());
-                Ok((*lhs.cell(), *rhs.cell(), *out.cell()))
+                region.assign_fixed(|| "a", self.config.sl, 0, || Value::known(FF::ZERO))?;
+                region.assign_fixed(|| "b", self.config.sr, 0, || Value::known(FF::ZERO))?;
+                region.assign_fixed(|| "c", self.config.so, 0, || Value::known(FF::ONE))?;
+                region.assign_fixed(|| "a*b", self.config.sm, 0, || Value::known(FF::ONE))?;
+                Ok((lhs.cell(), rhs.cell(), out.cell()))
             },
         )
     }
@@ -256,7 +260,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
         &self,
         layouter: &mut impl Layouter<FF>,
         mut f: F,
-    ) -> Result<(Cell, Cell, Cell), Error>
+    ) -> Result<(Cell, Cell, Cell), pse_halo2_proofs::plonk::Error>
     where
         F: FnMut() -> Value<(Assigned<FF>, Assigned<FF>, Assigned<FF>)>,
     {
@@ -265,18 +269,33 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
             |mut region| {
                 #[allow(unused_assignments)]
                 let mut value = None;
-                let lhs = region.assign_advice(self.config.a, 0, {
-                    value = Some(f());
-                    value.unwrap().map(|v| v.0)
-                });
-                let rhs = region.assign_advice(self.config.b, 0, value.unwrap().map(|v| v.1));
-                let out = region.assign_advice(self.config.c, 0, value.unwrap().map(|v| v.2));
+                let lhs = region.assign_advice(
+                    || "lhs",
+                    self.config.a,
+                    0,
+                    || {
+                        value = Some(f());
+                        value.unwrap().map(|v| v.0)
+                    },
+                )?;
+                let rhs = region.assign_advice(
+                    || "rhs",
+                    self.config.b,
+                    0,
+                    || value.unwrap().map(|v| v.1),
+                )?;
+                let out = region.assign_advice(
+                    || "out",
+                    self.config.c,
+                    0,
+                    || value.unwrap().map(|v| v.2),
+                )?;
 
-                region.assign_fixed(self.config.sl, 0, FF::one());
-                region.assign_fixed(self.config.sr, 0, FF::one());
-                region.assign_fixed(self.config.so, 0, FF::one());
-                region.assign_fixed(self.config.sm, 0, FF::zero());
-                Ok((*lhs.cell(), *rhs.cell(), *out.cell()))
+                region.assign_fixed(|| "a", self.config.sl, 0, || Value::known(FF::ONE))?;
+                region.assign_fixed(|| "b", self.config.sr, 0, || Value::known(FF::ONE))?;
+                region.assign_fixed(|| "c", self.config.so, 0, || Value::known(FF::ONE))?;
+                region.assign_fixed(|| "a*b", self.config.sm, 0, || Value::known(FF::ZERO))?;
+                Ok((lhs.cell(), rhs.cell(), out.cell()))
             },
         )
     }
@@ -284,7 +303,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
         &self,
         layouter: &mut impl Layouter<FF>,
         mut f: F,
-    ) -> Result<(Cell, Cell, Cell), Error>
+    ) -> Result<(Cell, Cell, Cell), pse_halo2_proofs::plonk::Error>
     where
         F: FnMut() -> PolyTriple<Assigned<FF>>,
     {
@@ -292,25 +311,30 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
             || "raw_poly",
             |mut region| {
                 let value = f();
-                let lhs = region.assign_advice(self.config.a, 0, value.a);
-                let rhs = region.assign_advice(self.config.b, 0, value.b);
-                let out = region.assign_advice(self.config.c, 0, value.c);
+                let lhs = region.assign_advice(|| "lhs", self.config.a, 0, || value.a)?;
+                let rhs = region.assign_advice(|| "rhs", self.config.b, 0, || value.b)?;
+                let out = region.assign_advice(|| "out", self.config.c, 0, || value.c)?;
 
-                region.assign_fixed(self.config.sl, 0, value.ql);
-                region.assign_fixed(self.config.sr, 0, value.qr);
-                region.assign_fixed(self.config.so, 0, value.qo);
-                region.assign_fixed(self.config.sm, 0, value.qm);
-                region.assign_fixed(self.config.sc, 0, value.qc);
-                Ok((*lhs.cell(), *rhs.cell(), *out.cell()))
+                region.assign_fixed(|| "sl", self.config.sl, 0, || Value::known(value.ql))?;
+                region.assign_fixed(|| "sr", self.config.sr, 0, || Value::known(value.qr))?;
+                region.assign_fixed(|| "so", self.config.so, 0, || Value::known(value.qo))?;
+                region.assign_fixed(|| "sm", self.config.sm, 0, || Value::known(value.qm))?;
+                region.assign_fixed(|| "sc", self.config.sc, 0, || Value::known(value.qc))?;
+                Ok((lhs.cell(), rhs.cell(), out.cell()))
             },
         )
     }
-    fn copy(&self, layouter: &mut impl Layouter<FF>, left: Cell, right: Cell) -> Result<(), Error> {
+    fn copy(
+        &self,
+        layouter: &mut impl Layouter<FF>,
+        left: Cell,
+        right: Cell,
+    ) -> Result<(), pse_halo2_proofs::plonk::Error> {
         layouter.assign_region(
             || "copy",
             |mut region| {
-                region.constrain_equal(&left, &right);
-                Ok(())
+                region.constrain_equal(left, right)?;
+                region.constrain_equal(left, right)
             },
         )
     }

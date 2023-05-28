@@ -11,6 +11,7 @@ pub(crate) enum FeatureError {
     _FieldToArray(usize, usize),
 }
 
+#[cfg(any(feature = "axiom_halo2", feature = "pse_halo2"))]
 #[derive(Debug, Error)]
 pub(crate) enum CRSError {
     #[error("Failed to deserialize CRS")]
@@ -34,6 +35,7 @@ pub(crate) enum Error {
     #[error("The value {0} overflows in the pow2ceil function")]
     _Pow2CeilOverflow(u32),
 
+    #[cfg(feature = "axiom_halo2")]
     #[error("Malformed Black Box Function: {0} - {1}")]
     MalformedBlackBoxFunc(BlackBoxFunc, String),
 
@@ -43,6 +45,7 @@ pub(crate) enum Error {
     #[error(transparent)]
     FromFeature(#[from] FeatureError),
 
+    #[cfg(any(feature = "axiom_halo2", feature = "pse_halo2"))]
     #[error(transparent)]
     CRS(#[from] CRSError),
 }
@@ -57,6 +60,7 @@ impl From<FeatureError> for BackendError {
     }
 }
 
+#[cfg(any(feature = "axiom_halo2", feature = "pse_halo2"))]
 impl From<CRSError> for BackendError {
     fn from(value: CRSError) -> Self {
         value.into()

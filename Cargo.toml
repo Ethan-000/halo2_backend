@@ -19,6 +19,12 @@ futures-util = "0.3.14"
 indicatif = "0.17.3"
 thiserror = "1.0.21"
 
+# zcash
+zcash_halo2_proofs = { package = "halo2_proofs", version = "0.3.0", optional = true }
+
+# pse
+pse_halo2_proofs = { git = "https://github.com/privacy-scaling-explorations/halo2.git", package = "halo2_proofs", tag = "v2023_04_20", optional = true }
+
 # axiom
 halo2-base = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "release-0.3.0", optional = true }
 snark-verifier = { git = "https://github.com/axiom-crypto/snark-verifier.git", branch = "release-0.1.1", optional = true }
@@ -27,4 +33,6 @@ halo2-ecc = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "relea
 
 [features]
 default = ["axiom_halo2"]
+zcash_halo2 = ["zcash_halo2_proofs"]
+pse_halo2 = ["pse_halo2_proofs"]
 axiom_halo2 = ["halo2-base", "snark-verifier", "halo2-ecc"]
