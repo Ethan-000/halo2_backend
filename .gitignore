@@ -6,3 +6,11 @@ examples/9
 node_modules
 pkg/
 
+# Nargo output
+*.proof
+*.acir
+*.acir.sha256
+*.tr
+*.pk
+*.vk
+**/Verifier.toml
