@@ -21,11 +21,15 @@ git clone https://github.com/Ethan-000/noir
 ```
 
 ```text
+cd noir
+```
+
+```text
 git checkout demo
 ```
 
 ```text
-cd noir/crates/nargo_cli
+cd crates/nargo_cli
 ```
 
 ```text
