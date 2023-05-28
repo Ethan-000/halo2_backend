@@ -11,7 +11,7 @@ This crate will not be possible without
 1. [barretenberg backend](https://github.com/noir-lang/acvm-backend-barretenberg)
 2. [halo2-zcash](https://github.com/zcash/halo2)
 3. [halo2-pse](https://github.com/privacy-scaling-explorations/halo2)
-4. [halo2-lib](https://github.com/axiom-crypto/halo2-lib)
+4. [halo2-axiom](https://github.com/axiom-crypto/halo2-lib)
 5. the gadets and educational resources provided by the halo2 community see [awesome-halo2](https://github.com/adria0/awesome-halo2)
 
 ## Installtion
@@ -21,11 +21,15 @@ git clone https://github.com/Ethan-000/noir
 ```
 
 ```text
+cd noir
+```
+
+```text
 git checkout demo
 ```
 
 ```text
-cd noir/crates/nargo_cli
+cd crates/nargo_cli
 ```
 
 ```text
