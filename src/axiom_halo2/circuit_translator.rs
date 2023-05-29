@@ -2,7 +2,10 @@ use core::panic;
 use std::marker::PhantomData;
 
 use crate::{
-    axiom_halo2::halo2_plonk_api::{PlonkConfig, StandardPlonk},
+    axiom_halo2::{
+        halo2_plonk_api::{PlonkConfig, StandardPlonk},
+        assignment_map::AssignmentMap,
+    },
     errors::Error,
 };
 use acvm::acir::{
@@ -11,18 +14,19 @@ use acvm::acir::{
     BlackBoxFunc,
 };
 use halo2_base::halo2_proofs::{
+    arithmetic::Field,
     circuit::SimpleFloorPlanner, halo2curves::bn256::Fr, plonk::Circuit as Halo2PlonkCircuit,
     plonk::ConstraintSystem,
 };
 
 #[derive(Clone, Default)]
-pub struct NoirHalo2Translator<Fr> {
+pub struct NoirHalo2Translator<Fr, F: Field> {
     pub circuit: NoirCircuit,
     pub witness_values: WitnessMap,
-    pub _marker: PhantomData<Fr>,
+    pub witness_assignments: AssignmentMap<Fr, F>,
 }
 
-impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
+impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr, Fr> {
     type Config = PlonkConfig;
     type FloorPlanner = SimpleFloorPlanner;
 

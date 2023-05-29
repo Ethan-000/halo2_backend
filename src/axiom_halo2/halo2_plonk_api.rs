@@ -37,7 +37,7 @@ use serde::{Deserialize, Serialize};
 use crate::axiom_halo2::circuit_translator::NoirHalo2Translator;
 
 pub fn halo2_keygen(
-    circuit: &NoirHalo2Translator<Fr>,
+    circuit: &NoirHalo2Translator<Fr, Fr>,
     params: &ParamsKZG<Bn256>,
 ) -> (
     ProvingKey<<G1 as CofactorCurve>::Affine>,
@@ -50,7 +50,7 @@ pub fn halo2_keygen(
 }
 
 pub fn halo2_prove(
-    circuit: NoirHalo2Translator<Fr>,
+    circuit: NoirHalo2Translator<Fr, Fr>,
     params: &ParamsKZG<Bn256>,
     pk: &ProvingKey<<G1 as CofactorCurve>::Affine>,
 ) -> Vec<u8> {

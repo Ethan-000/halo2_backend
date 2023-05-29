@@ -1,22 +1,29 @@
-use std::marker::PhantomData;
-
-use acvm::acir::circuit::Circuit as NoirCircuit;
-use acvm::acir::circuit::Opcode;
-use acvm::acir::native_types::WitnessMap;
-use acvm::acir::BlackBoxFunc;
-use acvm::{Language, ProofSystemCompiler};
-use halo2_base::halo2_proofs::halo2curves::bn256::Fr;
-use halo2_base::halo2_proofs::halo2curves::bn256::{Bn256, G1Affine};
-use halo2_base::halo2_proofs::plonk::{ProvingKey, VerifyingKey};
-
-use halo2_base::halo2_proofs::poly::kzg::commitment::ParamsKZG;
-use halo2_base::halo2_proofs::SerdeFormat;
-
-use crate::axiom_halo2::circuit_translator::NoirHalo2Translator;
-use crate::axiom_halo2::halo2_plonk_api::{halo2_keygen, halo2_prove, halo2_verify};
-use crate::errors::BackendError;
-
-use crate::axiom_halo2::AxiomHalo2;
+use {
+    crate::{
+        axiom_halo2::{
+            assignment_map::AssignmentMap,
+            circuit_translator::NoirHalo2Translator,
+            halo2_plonk_api::{halo2_keygen, halo2_prove, halo2_verify},
+            AxiomHalo2,
+        },
+        errors::BackendError,
+    },
+    acvm::{
+        acir::{
+            circuit::{Circuit as NoirCircuit, Opcode},
+            native_types::WitnessMap,
+            BlackBoxFunc,
+        },
+        Language, ProofSystemCompiler,
+    },
+    halo2_base::halo2_proofs::{
+        halo2curves::bn256::{Bn256, Fr, G1Affine},
+        plonk::{ProvingKey, VerifyingKey},
+        poly::kzg::commitment::ParamsKZG,
+        SerdeFormat,
+    },
+    std::marker::PhantomData,
+};
 
 impl ProofSystemCompiler for AxiomHalo2 {
     type Error = BackendError;
@@ -30,10 +37,10 @@ impl ProofSystemCompiler for AxiomHalo2 {
         mut common_reference_string: &[u8],
         circuit: &NoirCircuit,
     ) -> Result<(Vec<u8>, Vec<u8>), BackendError> {
-        let translator = NoirHalo2Translator::<Fr> {
+        let translator = NoirHalo2Translator::<Fr, Fr> {
             circuit: circuit.clone(),
             witness_values: WitnessMap::new(),
-            _marker: PhantomData::<Fr>,
+            witness_assignments: AssignmentMap::new(),
         };
 
         let params =
@@ -56,16 +63,16 @@ impl ProofSystemCompiler for AxiomHalo2 {
         let params =
             ParamsKZG::<Bn256>::read_custom(&mut common_reference_string, SerdeFormat::RawBytes);
 
-        let pk = ProvingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr>>(
+        let pk = ProvingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr, Fr>>(
             proving_key,
             SerdeFormat::RawBytes,
         )
         .unwrap();
 
-        let translator = NoirHalo2Translator::<Fr> {
+        let translator = NoirHalo2Translator::<Fr, Fr> {
             circuit: circuit.clone(),
             witness_values,
-            _marker: PhantomData::<Fr>,
+            witness_assignments: AssignmentMap::new(),
         };
 
         let proof = halo2_prove(translator, &params, &pk);
@@ -84,7 +91,7 @@ impl ProofSystemCompiler for AxiomHalo2 {
         let params =
             ParamsKZG::<Bn256>::read_custom(&mut common_reference_string, SerdeFormat::RawBytes);
 
-        let vk = VerifyingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr>>(
+        let vk = VerifyingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr, Fr>>(
             verification_key,
             SerdeFormat::RawBytes,
         )

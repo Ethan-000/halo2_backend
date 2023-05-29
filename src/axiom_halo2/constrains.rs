@@ -28,7 +28,7 @@ use crate::axiom_halo2::circuit_translator::NoirHalo2Translator;
 
 use super::halo2_plonk_api::NoirConstraint;
 
-impl NoirHalo2Translator<Fr> {
+impl NoirHalo2Translator<Fr, Fr> {
     #[allow(non_snake_case)]
     pub(crate) fn add_arithmetic_constrains(
         &self,
@@ -214,7 +214,7 @@ impl NoirHalo2Translator<Fr> {
     }
 }
 
-impl NoirHalo2Translator<Fr> {
+impl NoirHalo2Translator<Fr, Fr> {
     fn noir_field_to_secp255k1_fq_field(&self, limbs: Vec<Witness>) -> Fq {
         let binding: Vec<u8> = limbs
             .into_iter()

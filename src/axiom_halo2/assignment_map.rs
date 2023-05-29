@@ -5,19 +5,19 @@ use std::{
     ops::Index,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Default)]
 pub struct AssignmentMap<V, F: Field>(BTreeMap<Witness, Vec<AssignedCell<V, F>>>);
 
-impl<V, F: Field> AssignmentMap<V, F> {
+impl<V, FF: Field> AssignmentMap<V, FF> {
     pub fn new() -> Self {
         Self(BTreeMap::new())
     }
 
-    pub fn get(&self, witness: &Witness) -> Option<&Vec<AssignedCell<V, F>>> {
+    pub fn get(&self, witness: &Witness) -> Option<&Vec<AssignedCell<V, FF>>> {
         self.0.get(witness)
     }
 
-    pub fn get_index(&self, index: u32) -> Option<&Vec<AssignedCell<V, F>>> {
+    pub fn get_index(&self, index: u32) -> Option<&Vec<AssignedCell<V, FF>>> {
         self.0.get(&index.into())
     }
 
@@ -25,7 +25,7 @@ impl<V, F: Field> AssignmentMap<V, F> {
         self.0.contains_key(witness)
     }
 
-    pub fn insert(&mut self, key: Witness, value: AssignedCell<V, F>) {
+    pub fn insert(&mut self, key: Witness, value: AssignedCell<V, FF>) {
         match self.0.get_mut(&key) {
             Some(vec) => vec.push(value),
             None => {
@@ -36,35 +36,35 @@ impl<V, F: Field> AssignmentMap<V, F> {
     }
 }
 
-impl<V, F: Field> Index<&Witness> for AssignmentMap<V, F> {
-    type Output = Vec<AssignedCell<V, F>>;
+impl<V, FF: Field> Index<&Witness> for AssignmentMap<V, FF> {
+    type Output = Vec<AssignedCell<V, FF>>;
 
     fn index(&self, index: &Witness) -> &Self::Output {
         &self.0[index]
     }
 }
 
-pub struct IntoIter<V, F: Field>(btree_map::IntoIter<Witness, Vec<AssignedCell<V, F>>>);
+pub struct IntoIter<V, FF: Field>(btree_map::IntoIter<Witness, Vec<AssignedCell<V, FF>>>);
 
-impl<V, F: Field> Iterator for IntoIter<V, F> {
-    type Item = (Witness, Vec<AssignedCell<V, F>>);
+impl<V, FF: Field> Iterator for IntoIter<V, FF> {
+    type Item = (Witness, Vec<AssignedCell<V, FF>>);
 
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next().map(|(witness, assigned_cell)| (witness, assigned_cell))
     }
 }
 
-impl<V, F: Field> IntoIterator for AssignmentMap<V, F> {
-    type Item = (Witness, Vec<AssignedCell<V, F>>);
-    type IntoIter = IntoIter<V, F>;
+impl<V, FF: Field> IntoIterator for AssignmentMap<V, FF> {
+    type Item = (Witness, Vec<AssignedCell<V, FF>>);
+    type IntoIter = IntoIter<V, FF>;
 
     fn into_iter(self) -> Self::IntoIter {
         IntoIter(self.0.into_iter())
     }
 }
 
-impl<V, F: Field> From<BTreeMap<Witness, Vec<AssignedCell<V, F>>>> for AssignmentMap<V, F> {
-    fn from(value: BTreeMap<Witness, Vec<AssignedCell<V, F>>>) -> Self {
+impl<V, FF: Field> From<BTreeMap<Witness, Vec<AssignedCell<V, FF>>>> for AssignmentMap<V, FF> {
+    fn from(value: BTreeMap<Witness, Vec<AssignedCell<V, FF>>>) -> Self {
         Self(value)
     }
 }
