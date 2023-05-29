@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use acvm::FieldElement;
 use halo2_base::{
     gates::{GateChip, RangeChip},
     halo2_proofs::{
@@ -31,6 +32,7 @@ use halo2_base::{
 };
 
 use rand::rngs::OsRng;
+use serde::{Deserialize, Serialize};
 
 use crate::axiom_halo2::circuit_translator::NoirHalo2Translator;
 
@@ -205,6 +207,50 @@ impl<F> PolyTriple<F> {
             qr,
             qo,
             qc,
+        }
+    }
+}
+
+#[derive(Clone, Hash, Debug, Serialize, Deserialize)]
+pub(crate) struct NoirConstraint {
+    pub(crate) a: i32,
+    pub(crate) b: i32,
+    pub(crate) c: i32,
+    pub(crate) qm: FieldElement,
+    pub(crate) ql: FieldElement,
+    pub(crate) qr: FieldElement,
+    pub(crate) qo: FieldElement,
+    pub(crate) qc: FieldElement,
+}
+
+impl Default for NoirConstraint {
+    fn default() -> Self {
+        NoirConstraint {
+            a: 0,
+            b: 0,
+            c: 0,
+            qm: FieldElement::zero(),
+            ql: FieldElement::zero(),
+            qr: FieldElement::zero(),
+            qo: FieldElement::zero(),
+            qc: FieldElement::zero(),
+        }
+    }
+}
+
+impl NoirConstraint {
+    pub(crate) fn set_linear_term(&mut self, x: FieldElement, witness: i32) {
+        if self.a == 0 || self.a == witness {
+            self.a = witness;
+            self.ql = x;
+        } else if self.b == 0 || self.b == witness {
+            self.b = witness;
+            self.qr = x;
+        } else if self.c == 0 || self.c == witness {
+            self.c = witness;
+            self.qo = x;
+        } else {
+            unreachable!("Cannot assign linear term to a constrain of width 3");
         }
     }
 }

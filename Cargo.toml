@@ -14,6 +14,7 @@ rand = "0.8"
 ark-std = "0.4"
 dirs = "3.0"
 reqwest = { version = "0.11.16", default-features = false, features = ["stream", "rustls-tls"] }
+serde = { version = "1.0.136", features = ["derive"] }
 tokio = "1.0"
 futures-util = "0.3.14"
 indicatif = "0.17.3"
@@ -32,7 +33,7 @@ halo2-ecc = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "relea
 # zkevm-keccak = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "release-0.3.0", optional = true }
 
 [features]
-default = ["axiom_halo2"]
+default = ["zcash_halo2"]
 zcash_halo2 = ["zcash_halo2_proofs"]
 pse_halo2 = ["pse_halo2_proofs"]
 axiom_halo2 = ["halo2-base", "snark-verifier", "halo2-ecc"]

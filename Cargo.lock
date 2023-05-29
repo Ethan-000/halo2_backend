@@ -883,6 +883,7 @@ dependencies = [
  "indicatif",
  "rand",
  "reqwest",
+ "serde",
  "snark-verifier",
  "thiserror",
  "tokio",

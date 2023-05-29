@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use acvm::FieldElement;
 use pse_halo2_proofs::{
     arithmetic::Field,
     circuit::Layouter,
@@ -28,6 +29,7 @@ use pse_halo2_proofs::{
 };
 
 use rand::rngs::OsRng;
+use serde::{Deserialize, Serialize};
 
 use crate::pse_halo2::circuit_translator::NoirHalo2Translator;
 
@@ -198,6 +200,50 @@ impl<F> PolyTriple<F> {
     }
 }
 
+#[derive(Clone, Hash, Debug, Serialize, Deserialize)]
+pub(crate) struct NoirConstraint {
+    pub(crate) a: i32,
+    pub(crate) b: i32,
+    pub(crate) c: i32,
+    pub(crate) qm: FieldElement,
+    pub(crate) ql: FieldElement,
+    pub(crate) qr: FieldElement,
+    pub(crate) qo: FieldElement,
+    pub(crate) qc: FieldElement,
+}
+
+impl Default for NoirConstraint {
+    fn default() -> Self {
+        NoirConstraint {
+            a: 0,
+            b: 0,
+            c: 0,
+            qm: FieldElement::zero(),
+            ql: FieldElement::zero(),
+            qr: FieldElement::zero(),
+            qo: FieldElement::zero(),
+            qc: FieldElement::zero(),
+        }
+    }
+}
+
+impl NoirConstraint {
+    pub(crate) fn set_linear_term(&mut self, x: FieldElement, witness: i32) {
+        if self.a == 0 || self.a == witness {
+            self.a = witness;
+            self.ql = x;
+        } else if self.b == 0 || self.b == witness {
+            self.b = witness;
+            self.qr = x;
+        } else if self.c == 0 || self.c == witness {
+            self.c = witness;
+            self.qo = x;
+        } else {
+            unreachable!("Cannot assign linear term to a constrain of width 3");
+        }
+    }
+}
+
 pub struct StandardPlonk<F: Field> {
     config: PlonkConfig,
     _marker: PhantomData<F>,
@@ -294,7 +340,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
                 region.assign_fixed(|| "a", self.config.sl, 0, || Value::known(FF::ONE))?;
                 region.assign_fixed(|| "b", self.config.sr, 0, || Value::known(FF::ONE))?;
                 region.assign_fixed(|| "c", self.config.so, 0, || Value::known(FF::ONE))?;
-                region.assign_fixed(|| "a*b", self.config.sm, 0, || Value::known(FF::ZERO))?;
+                region.assign_fixed(|| "a + b", self.config.sm, 0, || Value::known(FF::ZERO))?;
                 Ok((lhs.cell(), rhs.cell(), out.cell()))
             },
         )
@@ -315,11 +361,11 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
                 let rhs = region.assign_advice(|| "rhs", self.config.b, 0, || value.b)?;
                 let out = region.assign_advice(|| "out", self.config.c, 0, || value.c)?;
 
-                region.assign_fixed(|| "sl", self.config.sl, 0, || Value::known(value.ql))?;
-                region.assign_fixed(|| "sr", self.config.sr, 0, || Value::known(value.qr))?;
-                region.assign_fixed(|| "so", self.config.so, 0, || Value::known(value.qo))?;
-                region.assign_fixed(|| "sm", self.config.sm, 0, || Value::known(value.qm))?;
-                region.assign_fixed(|| "sc", self.config.sc, 0, || Value::known(value.qc))?;
+                region.assign_fixed(|| "a", self.config.sl, 0, || Value::known(value.ql))?;
+                region.assign_fixed(|| "b", self.config.sr, 0, || Value::known(value.qr))?;
+                region.assign_fixed(|| "c", self.config.so, 0, || Value::known(value.qo))?;
+                region.assign_fixed(|| "a * b", self.config.sm, 0, || Value::known(value.qm))?;
+                region.assign_fixed(|| "qc", self.config.sc, 0, || Value::known(value.qc))?;
                 Ok((lhs.cell(), rhs.cell(), out.cell()))
             },
         )

@@ -1,6 +1,5 @@
 use acvm::acir::native_types::Witness;
 
-use acvm::pwg::signature;
 use acvm::OpcodeResolutionError;
 use acvm::PartialWitnessGenerator;
 
@@ -107,12 +106,12 @@ impl PartialWitnessGenerator for ZcashHalo2 {
 
     fn ecdsa_secp256k1(
         &self,
-        initial_witness: &mut acvm::acir::native_types::WitnessMap,
-        public_key_x: &[acvm::acir::circuit::opcodes::FunctionInput],
-        public_key_y: &[acvm::acir::circuit::opcodes::FunctionInput],
-        signature: &[acvm::acir::circuit::opcodes::FunctionInput],
-        message: &[acvm::acir::circuit::opcodes::FunctionInput],
-        outputs: &Witness,
+        _initial_witness: &mut acvm::acir::native_types::WitnessMap,
+        _public_key_x: &[acvm::acir::circuit::opcodes::FunctionInput],
+        _public_key_y: &[acvm::acir::circuit::opcodes::FunctionInput],
+        _signature: &[acvm::acir::circuit::opcodes::FunctionInput],
+        _message: &[acvm::acir::circuit::opcodes::FunctionInput],
+        _outputs: &Witness,
     ) -> Result<acvm::pwg::OpcodeResolution, OpcodeResolutionError> {
         todo!()
     }
