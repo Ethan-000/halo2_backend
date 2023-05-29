@@ -118,7 +118,10 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                 Opcode::Directive(_) | Opcode::Oracle(_) => {
                     // Directives are only needed by the pwg
                 }
-                Opcode::Block(_) | Opcode::RAM(_) | Opcode::ROM(_) => {
+                Opcode::Block(_) => {
+                    // Block is managed by ACVM
+                }
+                Opcode::RAM(_) | Opcode::ROM(_) => {
                     todo!()
                 }
             }

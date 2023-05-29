@@ -56,7 +56,7 @@ impl ProofSystemCompiler for ZcashHalo2 {
 
         let params = Params::<EqAffine>::read(&mut common_reference_string).unwrap();
 
-        let (pk, _) = halo2_keygen(&translator, &params);
+        let (pk, vk) = halo2_keygen(&translator, &params);
 
         let proof = halo2_prove(translator, &params, &pk);
 

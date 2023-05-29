@@ -8,6 +8,8 @@ use pse_halo2_proofs::{
 
 use crate::pse_halo2::circuit_translator::NoirHalo2Translator;
 
+use super::halo2_plonk_api::NoirConstraint;
+
 impl NoirHalo2Translator<Fr> {
     #[allow(non_snake_case)]
     pub(crate) fn add_arithmetic_constrains(
@@ -16,103 +18,63 @@ impl NoirHalo2Translator<Fr> {
         cs: &impl StandardCs<Fr>,
         layouter: &mut impl Layouter<Fr>,
     ) {
-        let mut a: Value<Assigned<_>> = Value::known(Fr::zero()).into();
-        let mut b: Value<Assigned<_>> = Value::known(Fr::zero()).into();
-        let mut c: Value<Assigned<_>> = Value::known(Fr::zero()).into();
-        let mut qm = Fr::zero();
-        let mut ql = Fr::zero();
-        let mut qr = Fr::zero();
-        let mut qo = Fr::zero();
-
+        let mut noir_cs = NoirConstraint::default();
         // check mul gate
         if !gate.mul_terms.is_empty() {
             let mul_term = &gate.mul_terms[0];
-            qm = noir_field_to_halo2_field(mul_term.0);
+            noir_cs.qm = mul_term.0;
 
             // Get wL term
             let wL = &mul_term.1;
-            a = Value::known(noir_field_to_halo2_field(
-                *self.witness_values.get(wL).unwrap_or(&FieldElement::zero()),
-            ))
-            .into();
+            noir_cs.a = wL.witness_index() as i32;
 
             // Get wR term
             let wR = &mul_term.2;
-            b = Value::known(noir_field_to_halo2_field(
-                *self.witness_values.get(wR).unwrap_or(&FieldElement::zero()),
-            ))
-            .into();
+            noir_cs.b = wR.witness_index() as i32;
         }
 
-        // If there is only one simplified fan term,
-        // then put it in qO * wO
-        // This is in case, the qM term is non-zero
-        if gate.linear_combinations.len() == 1 {
-            let qO_wO_term = &gate.linear_combinations[0];
-            qo = noir_field_to_halo2_field(qO_wO_term.0);
-
-            let wO = &qO_wO_term.1;
-            c = Value::known(noir_field_to_halo2_field(
-                *self.witness_values.get(wO).unwrap_or(&FieldElement::zero()),
-            ))
-            .into();
-        }
-
-        // XXX: This is a code smell. Refactor to be better. Maybe change Barretenberg to take vectors
-        // If there is more than one term,
-        // Then add normally
-        if gate.linear_combinations.len() == 2 {
-            let qL_wL_term = &gate.linear_combinations[0];
-            ql = noir_field_to_halo2_field(qL_wL_term.0);
-
-            let wL = &qL_wL_term.1;
-            a = Value::known(noir_field_to_halo2_field(
-                *self.witness_values.get(wL).unwrap_or(&FieldElement::zero()),
-            ))
-            .into();
-
-            let qR_wR_term = &gate.linear_combinations[1];
-            qr = noir_field_to_halo2_field(qR_wR_term.0);
-
-            let wR = &qR_wR_term.1;
-            b = Value::known(noir_field_to_halo2_field(
-                *self.witness_values.get(wR).unwrap_or(&FieldElement::zero()),
-            ))
-            .into();
-        }
-
-        if gate.linear_combinations.len() == 3 {
-            let qL_wL_term = &gate.linear_combinations[0];
-            ql = noir_field_to_halo2_field(qL_wL_term.0);
-
-            let wL = &qL_wL_term.1;
-            a = Value::known(noir_field_to_halo2_field(
-                *self.witness_values.get(wL).unwrap_or(&FieldElement::zero()),
-            ))
-            .into();
-
-            let qR_wR_term = &gate.linear_combinations[1];
-            qr = noir_field_to_halo2_field(qR_wR_term.0);
-
-            let wR = &qR_wR_term.1;
-            b = Value::known(noir_field_to_halo2_field(
-                *self.witness_values.get(wR).unwrap_or(&FieldElement::zero()),
-            ))
-            .into();
-
-            let qO_wO_term = &gate.linear_combinations[2];
-            qo = noir_field_to_halo2_field(qO_wO_term.0);
-
-            let wO = &qO_wO_term.1;
-            c = Value::known(noir_field_to_halo2_field(
-                *self.witness_values.get(wO).unwrap_or(&FieldElement::zero()),
-            ))
-            .into();
+        for term in &gate.linear_combinations {
+            noir_cs.set_linear_term(term.0, term.1.witness_index() as i32);
         }
 
         // Add the qc term
-        let qc = noir_field_to_halo2_field(gate.q_c);
-        let poly_triple = PolyTriple::new(
+        noir_cs.qc = gate.q_c;
+
+        let a: Value<Assigned<_>> = Value::known(noir_field_to_halo2_field(
+            *self
+                .witness_values
+                .get_index(noir_cs.a as u32)
+                .unwrap_or(&FieldElement::zero()),
+        ))
+        .into();
+
+        let b: Value<Assigned<_>> = Value::known(noir_field_to_halo2_field(
+            *self
+                .witness_values
+                .get_index(noir_cs.b as u32)
+                .unwrap_or(&FieldElement::zero()),
+        ))
+        .into();
+
+        let c: Value<Assigned<_>> = Value::known(noir_field_to_halo2_field(
+            *self
+                .witness_values
+                .get_index(noir_cs.c as u32)
+                .unwrap_or(&FieldElement::zero()),
+        ))
+        .into();
+
+        let qm = noir_field_to_halo2_field(noir_cs.qm);
+
+        let ql = noir_field_to_halo2_field(noir_cs.ql);
+
+        let qr = noir_field_to_halo2_field(noir_cs.qr);
+
+        let qo = noir_field_to_halo2_field(noir_cs.qo);
+
+        let qc = noir_field_to_halo2_field(noir_cs.qc);
+
+        let poly_gate = PolyTriple::new(
             a,
             b,
             c,
@@ -123,7 +85,7 @@ impl NoirHalo2Translator<Fr> {
             qc.into(),
         );
 
-        cs.raw_poly(layouter, || poly_triple).unwrap();
+        cs.raw_poly(layouter, || poly_gate).unwrap();
     }
 }
 

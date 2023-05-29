@@ -7,11 +7,14 @@ use acvm::acir::{
     native_types::WitnessMap,
 };
 use zcash_halo2_proofs::{
-    circuit::{Layouter, SimpleFloorPlanner},
+    arithmetic::Field,
+    circuit::{Layouter, SimpleFloorPlanner, Value},
     pasta::Fp,
-    plonk::Circuit as Halo2PlonkCircuit,
     plonk::ConstraintSystem,
+    plonk::{Assigned, Circuit as Halo2PlonkCircuit},
 };
+
+use super::halo2_plonk_api::StandardCs;
 
 #[derive(Clone, Default)]
 pub struct NoirHalo2Translator<Fr> {
@@ -120,7 +123,10 @@ impl Halo2PlonkCircuit<Fp> for NoirHalo2Translator<Fp> {
                 Opcode::Directive(_) | Opcode::Oracle(_) => {
                     // Directives are only needed by the pwg
                 }
-                Opcode::Block(_) | Opcode::RAM(_) | Opcode::ROM(_) => {
+                Opcode::Block(_) => {
+                    // Block is managed by ACVM
+                }
+                Opcode::RAM(_) | Opcode::ROM(_) => {
                     todo!()
                 }
             }
