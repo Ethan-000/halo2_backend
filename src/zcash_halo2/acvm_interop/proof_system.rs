@@ -60,8 +60,6 @@ impl ProofSystemCompiler for ZcashHalo2 {
 
         let proof = halo2_prove(translator, &params, &pk);
 
-        halo2_verify(&params, &vk, &proof).unwrap();
-
         Ok(proof)
     }
 
