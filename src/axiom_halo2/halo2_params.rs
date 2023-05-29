@@ -1,18 +1,19 @@
-use std::io::Write;
-
-use crate::{aztec_crs::get_aztec_crs, errors::Error};
-use ark_std::log2;
-use halo2_base::halo2_proofs::{
-    arithmetic::g_to_lagrange,
-    halo2curves::{
-        bn256::{Bn256, Fq, Fq2, G1Affine, G2Affine},
-        group::prime::PrimeCurveAffine,
-        pairing::Engine,
-        serde::SerdeObject,
-        CurveAffine,
+use {
+    crate::{aztec_crs::get_aztec_crs, errors::Error},
+    ark_std::log2,
+    halo2_base::halo2_proofs::{
+        arithmetic::g_to_lagrange,
+        halo2curves::{
+            bn256::{Bn256, Fq, Fq2, G1Affine, G2Affine},
+            group::prime::PrimeCurveAffine,
+            pairing::Engine,
+            serde::SerdeObject,
+            CurveAffine,
+        },
+        poly::kzg::commitment::ParamsKZG,
+        SerdeFormat,
     },
-    poly::kzg::commitment::ParamsKZG,
-    SerdeFormat,
+    std::io::Write,
 };
 
 pub(crate) async fn constuct_halo2_params_from_aztec_crs(

@@ -1,22 +1,21 @@
-use core::panic;
-use std::marker::PhantomData;
-
-use crate::{
-    axiom_halo2::{
-        halo2_plonk_api::{PlonkConfig, StandardPlonk},
-        assignment_map::AssignmentMap,
+use {
+    crate::{
+        axiom_halo2::{
+            assignment_map::AssignmentMap,
+            halo2_plonk_api::{PlonkConfig, StandardPlonk},
+        },
+        errors::Error,
     },
-    errors::Error,
-};
-use acvm::acir::{
-    circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
-    native_types::WitnessMap,
-    BlackBoxFunc,
-};
-use halo2_base::halo2_proofs::{
-    arithmetic::Field,
-    circuit::SimpleFloorPlanner, halo2curves::bn256::Fr, plonk::Circuit as Halo2PlonkCircuit,
-    plonk::ConstraintSystem,
+    acvm::acir::{
+        circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
+        native_types::WitnessMap,
+        BlackBoxFunc,
+    },
+    core::panic,
+    halo2_base::halo2_proofs::{
+        arithmetic::Field, circuit::SimpleFloorPlanner, halo2curves::bn256::Fr,
+        plonk::Circuit as Halo2PlonkCircuit, plonk::ConstraintSystem,
+    },
 };
 
 #[derive(Clone, Default)]

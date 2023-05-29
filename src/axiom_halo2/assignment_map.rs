@@ -1,8 +1,10 @@
-use acvm::acir::native_types::{Witness, WitnessMap};
-use halo2_base::halo2_proofs::{arithmetic::Field, circuit::AssignedCell};
-use std::{
-    collections::{btree_map, BTreeMap},
-    ops::Index,
+use {
+    acvm::acir::native_types::Witness,
+    halo2_base::halo2_proofs::{arithmetic::Field, circuit::AssignedCell},
+    std::{
+        collections::{btree_map, BTreeMap},
+        ops::Index,
+    },
 };
 
 #[derive(Debug, Clone, Default)]
@@ -50,7 +52,9 @@ impl<V, FF: Field> Iterator for IntoIter<V, FF> {
     type Item = (Witness, Vec<AssignedCell<V, FF>>);
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.0.next().map(|(witness, assigned_cell)| (witness, assigned_cell))
+        self.0
+            .next()
+            .map(|(witness, assigned_cell)| (witness, assigned_cell))
     }
 }
 
