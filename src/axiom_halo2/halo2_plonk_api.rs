@@ -1,40 +1,44 @@
-use std::marker::PhantomData;
-
-use acvm::FieldElement;
-use halo2_base::{
-    gates::{GateChip, RangeChip},
-    halo2_proofs::{
-        arithmetic::Field,
-        circuit::Layouter,
-        circuit::{Cell, Value},
-        halo2curves::bn256::Fr,
-        halo2curves::{
-            bn256::{Bn256, G1Affine, G1},
-            group::cofactor::CofactorCurve,
-        },
-        plonk::Assigned,
-        plonk::{
-            create_proof, keygen_pk, keygen_vk, verify_proof, Advice, Column, ConstraintSystem,
-            Error, Fixed, ProvingKey, VerifyingKey,
-        },
-        poly::{
-            kzg::{
-                commitment::{KZGCommitmentScheme, ParamsKZG},
-                multiopen::{ProverGWC, VerifierGWC},
-                strategy::SingleStrategy,
+use {
+    crate::axiom_halo2::circuit_translator::NoirHalo2Translator,
+    acvm::FieldElement,
+    halo2_base::{
+        gates::{GateChip, RangeChip},
+        halo2_proofs::{
+            arithmetic::Field,
+            circuit::{AssignedCell, Cell, Layouter, Value},
+            halo2curves::{
+                bn256::{Bn256, Fr, G1Affine, G1},
+                group::cofactor::CofactorCurve,
             },
-            Rotation,
-        },
-        transcript::{
-            Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
+            plonk::{
+                create_proof, keygen_pk, keygen_vk, verify_proof, Advice, Assigned, Column,
+                ConstraintSystem, Error, Fixed, ProvingKey, VerifyingKey,
+            },
+            poly::{
+                kzg::{
+                    commitment::{KZGCommitmentScheme, ParamsKZG},
+                    multiopen::{ProverGWC, VerifierGWC},
+                    strategy::SingleStrategy,
+                },
+                Rotation,
+            },
+            transcript::{
+                Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer,
+                TranscriptWriterBuffer,
+            },
         },
     },
+    rand::rngs::OsRng,
+    serde::{Deserialize, Serialize},
+    std::marker::PhantomData,
 };
 
-use rand::rngs::OsRng;
-use serde::{Deserialize, Serialize};
-
-use crate::axiom_halo2::circuit_translator::NoirHalo2Translator;
+// stores reference to assigned a, b, c values
+pub struct AssignmentTriple<FF: Field>(
+    AssignedCell<&'static Assigned<FF>, FF>,
+    AssignedCell<&'static Assigned<FF>, FF>,
+    AssignedCell<&'static Assigned<FF>, FF>,
+);
 
 pub fn halo2_keygen(
     circuit: &NoirHalo2Translator<Fr, Fr>,
@@ -154,23 +158,26 @@ pub trait StandardCs<FF: Field> {
         &self,
         layouter: &mut impl Layouter<FF>,
         f: F,
-    ) -> Result<(Cell, Cell, Cell), Error>
+    ) -> Result<AssignmentTriple<FF>, Error>
     where
         F: FnMut() -> Value<(Assigned<FF>, Assigned<FF>, Assigned<FF>)>;
+
     fn raw_add<F>(
         &self,
         layouter: &mut impl Layouter<FF>,
         f: F,
-    ) -> Result<(Cell, Cell, Cell), Error>
+    ) -> Result<AssignmentTriple<FF>, Error>
     where
         F: FnMut() -> Value<(Assigned<FF>, Assigned<FF>, Assigned<FF>)>;
+
     fn raw_poly<F>(
         &self,
         layouter: &mut impl Layouter<FF>,
         f: F,
-    ) -> Result<(Cell, Cell, Cell), Error>
+    ) -> Result<AssignmentTriple<FF>, Error>
     where
         F: FnMut() -> PolyTriple<Assigned<FF>>;
+
     fn copy(&self, layouter: &mut impl Layouter<FF>, a: Cell, b: Cell) -> Result<(), Error>;
 }
 
@@ -274,7 +281,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
         &self,
         layouter: &mut impl Layouter<FF>,
         mut f: F,
-    ) -> Result<(Cell, Cell, Cell), Error>
+    ) -> Result<AssignmentTriple<FF>, Error>
     where
         F: FnMut() -> Value<(Assigned<FF>, Assigned<FF>, Assigned<FF>)>,
     {
@@ -294,7 +301,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
                 region.assign_fixed(self.config.sr, 0, FF::zero());
                 region.assign_fixed(self.config.so, 0, FF::one());
                 region.assign_fixed(self.config.sm, 0, FF::one());
-                Ok((*lhs.cell(), *rhs.cell(), *out.cell()))
+                Ok(AssignmentTriple(lhs, rhs, out))
             },
         )
     }
@@ -302,7 +309,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
         &self,
         layouter: &mut impl Layouter<FF>,
         mut f: F,
-    ) -> Result<(Cell, Cell, Cell), Error>
+    ) -> Result<AssignmentTriple<FF>, Error>
     where
         F: FnMut() -> Value<(Assigned<FF>, Assigned<FF>, Assigned<FF>)>,
     {
@@ -322,7 +329,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
                 region.assign_fixed(self.config.sr, 0, FF::one());
                 region.assign_fixed(self.config.so, 0, FF::one());
                 region.assign_fixed(self.config.sm, 0, FF::zero());
-                Ok((*lhs.cell(), *rhs.cell(), *out.cell()))
+                Ok(AssignmentTriple(lhs, rhs, out))
             },
         )
     }
@@ -330,7 +337,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
         &self,
         layouter: &mut impl Layouter<FF>,
         mut f: F,
-    ) -> Result<(Cell, Cell, Cell), Error>
+    ) -> Result<AssignmentTriple<FF>, Error>
     where
         F: FnMut() -> PolyTriple<Assigned<FF>>,
     {
@@ -347,7 +354,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
                 region.assign_fixed(self.config.so, 0, value.qo);
                 region.assign_fixed(self.config.sm, 0, value.qm);
                 region.assign_fixed(self.config.sc, 0, value.qc);
-                Ok((*lhs.cell(), *rhs.cell(), *out.cell()))
+                Ok(AssignmentTriple(lhs, rhs, out))
             },
         )
     }
