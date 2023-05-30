@@ -24,7 +24,9 @@ thiserror = "1.0.21"
 zcash_halo2_proofs = { package = "halo2_proofs", version = "0.3.0", optional = true }
 
 # pse
-pse_halo2_proofs = { git = "https://github.com/privacy-scaling-explorations/halo2.git", package = "halo2_proofs", tag = "v2023_04_20", optional = true }
+# pse_halo2_proofs = { git = "https://github.com/privacy-scaling-explorations/halo2.git", package = "halo2_proofs", tag = "v2023_04_20", optional = true }
+pse_halo2wrong = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "halo2wrong", tag = "v2023_02_02", optional = true }
+pse_maingate = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "maingate", tag = "v2023_02_02", optional = true }
 
 # axiom
 halo2-base = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "release-0.3.0", optional = true }
@@ -33,7 +35,7 @@ halo2-ecc = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "relea
 # zkevm-keccak = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "release-0.3.0", optional = true }
 
 [features]
-default = ["axiom_halo2"]
-zcash_halo2 = ["zcash_halo2_proofs"]
-pse_halo2 = ["pse_halo2_proofs"]
-axiom_halo2 = ["halo2-base", "snark-verifier", "halo2-ecc"]
+default = ["pse_halo2"]
+zcash_halo2 = ["dep:zcash_halo2_proofs"]
+pse_halo2 = ["dep:pse_halo2wrong", "dep:pse_maingate"]
+axiom_halo2 = ["dep:halo2-base", "dep:snark-verifier", "dep:halo2-ecc"]
