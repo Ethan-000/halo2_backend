@@ -11,7 +11,6 @@ use pse_halo2wrong::halo2::{
     plonk::ConstraintSystem,
 };
 
-
 #[derive(Clone, Default)]
 pub struct NoirHalo2Translator<Fr> {
     pub circuit: NoirCircuit,

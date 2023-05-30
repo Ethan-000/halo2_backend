@@ -144,7 +144,7 @@ impl NoirHalo2Translator<Fr> {
                 let ctx = &mut RegionCtx::new(region, offset);
 
                 let value = Value::known(input);
-                let limb_bit_len = 17;
+                let limb_bit_len = 8;
                 let bit_len = num_bits as usize;
 
                 let a_0 = main_gate.assign_value(ctx, value)?;

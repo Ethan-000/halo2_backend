@@ -97,7 +97,7 @@ impl ProofSystemCompiler for PseHalo2 {
     }
 
     fn np_language(&self) -> Language {
-        Language::PLONKCSat { width: 3 }
+        Language::PLONKCSat { width: 5 }
     }
 
     fn supports_opcode(&self, opcode: &acvm::acir::circuit::Opcode) -> bool {
@@ -109,9 +109,10 @@ impl ProofSystemCompiler for PseHalo2 {
             Opcode::RAM(_) => false,
             Opcode::Oracle(_) => false,
             Opcode::BlackBoxFuncCall(func) => match func.get_black_box_func() {
-                BlackBoxFunc::AND | BlackBoxFunc::RANGE => false,
+                BlackBoxFunc::RANGE => true,
 
                 BlackBoxFunc::XOR
+                | BlackBoxFunc::AND
                 | BlackBoxFunc::SHA256
                 | BlackBoxFunc::Blake2s
                 | BlackBoxFunc::Pedersen
