@@ -878,9 +878,10 @@ dependencies = [
  "futures-util",
  "halo2-base",
  "halo2-ecc",
- "halo2_proofs 0.2.0 (git+https://github.com/privacy-scaling-explorations/halo2.git?tag=v2023_04_20)",
  "halo2_proofs 0.3.0",
+ "halo2wrong",
  "indicatif",
+ "maingate",
  "rand",
  "reqwest",
  "serde",
@@ -906,13 +907,12 @@ dependencies = [
 [[package]]
 name = "halo2_proofs"
 version = "0.2.0"
-source = "git+https://github.com/privacy-scaling-explorations/halo2.git?tag=v2023_04_20#be955686f86eb618f55d2320c0e042485b313d22"
+source = "git+https://github.com/privacy-scaling-explorations/halo2.git?tag=v2023_02_02#0a8646b78286a13d320759b1c585262d6536dce4"
 dependencies = [
  "blake2b_simd",
- "ff 0.13.0",
- "group 0.13.0",
- "halo2curves 0.3.2",
- "rand_chacha",
+ "ff 0.12.1",
+ "group 0.12.1",
+ "halo2curves 0.3.1 (git+https://github.com/privacy-scaling-explorations/halo2curves.git?tag=0.3.1)",
  "rand_core 0.6.4",
  "rayon",
  "sha3 0.9.1",
@@ -928,7 +928,7 @@ dependencies = [
  "crossbeam",
  "ff 0.12.1",
  "group 0.12.1",
- "halo2curves 0.3.1",
+ "halo2curves 0.3.1 (git+https://github.com/axiom-crypto/halo2.git?branch=axiom/dev)",
  "rand",
  "rand_core 0.6.4",
  "rayon",
@@ -972,6 +972,23 @@ dependencies = [
 [[package]]
 name = "halo2curves"
 version = "0.3.1"
+source = "git+https://github.com/privacy-scaling-explorations/halo2curves.git?tag=0.3.1#9b67e19bca30a35208b0c1b41c1723771e2c9f49"
+dependencies = [
+ "ff 0.12.1",
+ "group 0.12.1",
+ "lazy_static",
+ "num-bigint",
+ "num-traits",
+ "pasta_curves 0.4.1",
+ "rand",
+ "rand_core 0.6.4",
+ "static_assertions",
+ "subtle",
+]
+
+[[package]]
+name = "halo2curves"
+version = "0.3.1"
 source = "git+https://github.com/axiom-crypto/halo2.git?branch=axiom/dev#2e9c8724604c926efff139d7d44dbeebfd8d960b"
 dependencies = [
  "ff 0.12.1",
@@ -988,21 +1005,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "halo2curves"
-version = "0.3.2"
-source = "git+https://github.com/privacy-scaling-explorations/halo2curves?tag=0.3.2#9f5c50810bbefe779ee5cf1d852b2fe85dc35d5e"
+name = "halo2wrong"
+version = "0.1.0"
+source = "git+https://github.com/privacy-scaling-explorations/halo2wrong?tag=v2023_02_02#5905a20b62fcd9f6c269416a39c80de7ced8fb02"
 dependencies = [
- "ff 0.13.0",
- "group 0.13.0",
- "lazy_static",
+ "group 0.12.1",
+ "halo2_proofs 0.2.0 (git+https://github.com/privacy-scaling-explorations/halo2.git?tag=v2023_02_02)",
  "num-bigint",
+ "num-integer",
  "num-traits",
- "pasta_curves 0.5.1",
- "paste",
- "rand",
- "rand_core 0.6.4",
- "static_assertions",
- "subtle",
 ]
 
 [[package]]
@@ -1270,6 +1281,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "abb12e687cfb44aa40f41fc3978ef76448f9b6038cad6aef4259d3c095a2382e"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "maingate"
+version = "0.1.0"
+source = "git+https://github.com/privacy-scaling-explorations/halo2wrong?tag=v2023_02_02#5905a20b62fcd9f6c269416a39c80de7ced8fb02"
+dependencies = [
+ "group 0.12.1",
+ "halo2wrong",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "rand",
+ "subtle",
 ]
 
 [[package]]

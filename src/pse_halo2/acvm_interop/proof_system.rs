@@ -5,12 +5,12 @@ use acvm::acir::circuit::Opcode;
 use acvm::acir::native_types::WitnessMap;
 use acvm::acir::BlackBoxFunc;
 use acvm::{Language, ProofSystemCompiler};
-use pse_halo2_proofs::halo2curves::bn256::Fr;
-use pse_halo2_proofs::halo2curves::bn256::{Bn256, G1Affine};
-use pse_halo2_proofs::plonk::{ProvingKey, VerifyingKey};
+use pse_halo2wrong::halo2::halo2curves::bn256::Fr;
+use pse_halo2wrong::halo2::halo2curves::bn256::{Bn256, G1Affine};
+use pse_halo2wrong::halo2::plonk::{ProvingKey, VerifyingKey};
 
-use pse_halo2_proofs::poly::kzg::commitment::ParamsKZG;
-use pse_halo2_proofs::SerdeFormat;
+use pse_halo2wrong::halo2::poly::kzg::commitment::ParamsKZG;
+use pse_halo2wrong::halo2::SerdeFormat;
 
 use crate::errors::BackendError;
 use crate::pse_halo2::circuit_translator::NoirHalo2Translator;
