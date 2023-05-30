@@ -55,7 +55,7 @@ impl SmartContract for AxiomHalo2 {
         );
 
         // Deserialize verification key
-        let vk = VerifyingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr, Fr>>(
+        let vk = VerifyingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr>>(
             verification_key,
             SerdeFormat::RawBytes,
         )

@@ -5,14 +5,17 @@ use {
         gates::{GateChip, RangeChip},
         halo2_proofs::{
             arithmetic::Field,
-            circuit::{AssignedCell, Cell, Layouter, Value},
+            circuit::Layouter,
+            circuit::{Cell, Value},
+            halo2curves::bn256::Fr,
             halo2curves::{
-                bn256::{Bn256, Fr, G1Affine, G1},
+                bn256::{Bn256, G1Affine, G1},
                 group::cofactor::CofactorCurve,
             },
+            plonk::Assigned,
             plonk::{
-                create_proof, keygen_pk, keygen_vk, verify_proof, Advice, Assigned, Column,
-                ConstraintSystem, Error, Fixed, ProvingKey, VerifyingKey,
+                create_proof, keygen_pk, keygen_vk, verify_proof, Advice, Column, ConstraintSystem,
+                Error, Fixed, ProvingKey, VerifyingKey,
             },
             poly::{
                 kzg::{
@@ -33,15 +36,8 @@ use {
     std::marker::PhantomData,
 };
 
-// stores reference to assigned a, b, c values
-pub struct AssignmentTriple<FF: Field>(
-    AssignedCell<&'static Assigned<FF>, FF>,
-    AssignedCell<&'static Assigned<FF>, FF>,
-    AssignedCell<&'static Assigned<FF>, FF>,
-);
-
 pub fn halo2_keygen(
-    circuit: &NoirHalo2Translator<Fr, Fr>,
+    circuit: &NoirHalo2Translator<Fr>,
     params: &ParamsKZG<Bn256>,
 ) -> (
     ProvingKey<<G1 as CofactorCurve>::Affine>,
@@ -54,7 +50,7 @@ pub fn halo2_keygen(
 }
 
 pub fn halo2_prove(
-    circuit: NoirHalo2Translator<Fr, Fr>,
+    circuit: NoirHalo2Translator<Fr>,
     params: &ParamsKZG<Bn256>,
     pk: &ProvingKey<<G1 as CofactorCurve>::Affine>,
 ) -> Vec<u8> {
@@ -158,26 +154,23 @@ pub trait StandardCs<FF: Field> {
         &self,
         layouter: &mut impl Layouter<FF>,
         f: F,
-    ) -> Result<AssignmentTriple<FF>, Error>
+    ) -> Result<(Cell, Cell, Cell), Error>
     where
         F: FnMut() -> Value<(Assigned<FF>, Assigned<FF>, Assigned<FF>)>;
-
     fn raw_add<F>(
         &self,
         layouter: &mut impl Layouter<FF>,
         f: F,
-    ) -> Result<AssignmentTriple<FF>, Error>
+    ) -> Result<(Cell, Cell, Cell), Error>
     where
         F: FnMut() -> Value<(Assigned<FF>, Assigned<FF>, Assigned<FF>)>;
-
     fn raw_poly<F>(
         &self,
         layouter: &mut impl Layouter<FF>,
         f: F,
-    ) -> Result<AssignmentTriple<FF>, Error>
+    ) -> Result<(Cell, Cell, Cell), Error>
     where
         F: FnMut() -> PolyTriple<Assigned<FF>>;
-
     fn copy(&self, layouter: &mut impl Layouter<FF>, a: Cell, b: Cell) -> Result<(), Error>;
 }
 
@@ -281,7 +274,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
         &self,
         layouter: &mut impl Layouter<FF>,
         mut f: F,
-    ) -> Result<AssignmentTriple<FF>, Error>
+    ) -> Result<(Cell, Cell, Cell), Error>
     where
         F: FnMut() -> Value<(Assigned<FF>, Assigned<FF>, Assigned<FF>)>,
     {
@@ -301,7 +294,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
                 region.assign_fixed(self.config.sr, 0, FF::zero());
                 region.assign_fixed(self.config.so, 0, FF::one());
                 region.assign_fixed(self.config.sm, 0, FF::one());
-                Ok(AssignmentTriple(lhs, rhs, out))
+                Ok((*lhs.cell(), *rhs.cell(), *out.cell()))
             },
         )
     }
@@ -309,7 +302,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
         &self,
         layouter: &mut impl Layouter<FF>,
         mut f: F,
-    ) -> Result<AssignmentTriple<FF>, Error>
+    ) -> Result<(Cell, Cell, Cell), Error>
     where
         F: FnMut() -> Value<(Assigned<FF>, Assigned<FF>, Assigned<FF>)>,
     {
@@ -329,7 +322,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
                 region.assign_fixed(self.config.sr, 0, FF::one());
                 region.assign_fixed(self.config.so, 0, FF::one());
                 region.assign_fixed(self.config.sm, 0, FF::zero());
-                Ok(AssignmentTriple(lhs, rhs, out))
+                Ok((*lhs.cell(), *rhs.cell(), *out.cell()))
             },
         )
     }
@@ -337,7 +330,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
         &self,
         layouter: &mut impl Layouter<FF>,
         mut f: F,
-    ) -> Result<AssignmentTriple<FF>, Error>
+    ) -> Result<(Cell, Cell, Cell), Error>
     where
         F: FnMut() -> PolyTriple<Assigned<FF>>,
     {
@@ -354,7 +347,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
                 region.assign_fixed(self.config.so, 0, value.qo);
                 region.assign_fixed(self.config.sm, 0, value.qm);
                 region.assign_fixed(self.config.sc, 0, value.qc);
-                Ok(AssignmentTriple(lhs, rhs, out))
+                Ok((*lhs.cell(), *rhs.cell(), *out.cell()))
             },
         )
     }

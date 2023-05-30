@@ -37,10 +37,10 @@ impl ProofSystemCompiler for AxiomHalo2 {
         mut common_reference_string: &[u8],
         circuit: &NoirCircuit,
     ) -> Result<(Vec<u8>, Vec<u8>), BackendError> {
-        let translator = NoirHalo2Translator::<Fr, Fr> {
+        let translator = NoirHalo2Translator::<Fr> {
             circuit: circuit.clone(),
             witness_values: WitnessMap::new(),
-            witness_assignments: AssignmentMap::new(),
+            _marker: PhantomData::<Fr>
         };
 
         let params =
@@ -63,16 +63,16 @@ impl ProofSystemCompiler for AxiomHalo2 {
         let params =
             ParamsKZG::<Bn256>::read_custom(&mut common_reference_string, SerdeFormat::RawBytes);
 
-        let pk = ProvingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr, Fr>>(
+        let pk = ProvingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr>>(
             proving_key,
             SerdeFormat::RawBytes,
         )
         .unwrap();
 
-        let translator = NoirHalo2Translator::<Fr, Fr> {
+        let translator = NoirHalo2Translator::<Fr> {
             circuit: circuit.clone(),
             witness_values,
-            witness_assignments: AssignmentMap::new(),
+            _marker: PhantomData::<Fr>
         };
 
         let proof = halo2_prove(translator, &params, &pk);
@@ -91,7 +91,7 @@ impl ProofSystemCompiler for AxiomHalo2 {
         let params =
             ParamsKZG::<Bn256>::read_custom(&mut common_reference_string, SerdeFormat::RawBytes);
 
-        let vk = VerifyingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr, Fr>>(
+        let vk = VerifyingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr>>(
             verification_key,
             SerdeFormat::RawBytes,
         )

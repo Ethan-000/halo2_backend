@@ -1,6 +1,6 @@
 use {
     acvm::acir::native_types::Witness,
-    halo2_base::halo2_proofs::{arithmetic::Field, circuit::AssignedCell},
+    halo2_base::halo2_proofs::{arithmetic::Field, circuit::Cell},
     std::{
         collections::{btree_map, BTreeMap},
         ops::Index,
@@ -8,18 +8,18 @@ use {
 };
 
 #[derive(Debug, Clone, Default)]
-pub struct AssignmentMap<V, F: Field>(BTreeMap<Witness, Vec<AssignedCell<V, F>>>);
+pub struct AssignmentMap(BTreeMap<Witness, Vec<Cell>>);
 
-impl<V, FF: Field> AssignmentMap<V, FF> {
+impl AssignmentMap {
     pub fn new() -> Self {
         Self(BTreeMap::new())
     }
 
-    pub fn get(&self, witness: &Witness) -> Option<&Vec<AssignedCell<V, FF>>> {
+    pub fn get(&self, witness: &Witness) -> Option<&Vec<Cell>> {
         self.0.get(witness)
     }
 
-    pub fn get_index(&self, index: u32) -> Option<&Vec<AssignedCell<V, FF>>> {
+    pub fn get_index(&self, index: u32) -> Option<&Vec<Cell>> {
         self.0.get(&index.into())
     }
 
@@ -27,7 +27,7 @@ impl<V, FF: Field> AssignmentMap<V, FF> {
         self.0.contains_key(witness)
     }
 
-    pub fn insert(&mut self, key: Witness, value: AssignedCell<V, FF>) {
+    pub fn insert(&mut self, key: Witness, value: Cell) {
         match self.0.get_mut(&key) {
             Some(vec) => vec.push(value),
             None => {
@@ -38,18 +38,18 @@ impl<V, FF: Field> AssignmentMap<V, FF> {
     }
 }
 
-impl<V, FF: Field> Index<&Witness> for AssignmentMap<V, FF> {
-    type Output = Vec<AssignedCell<V, FF>>;
+impl Index<&Witness> for AssignmentMap {
+    type Output = Vec<Cell>;
 
     fn index(&self, index: &Witness) -> &Self::Output {
         &self.0[index]
     }
 }
 
-pub struct IntoIter<V, FF: Field>(btree_map::IntoIter<Witness, Vec<AssignedCell<V, FF>>>);
+pub struct IntoIter(btree_map::IntoIter<Witness, Vec<Cell>>);
 
-impl<V, FF: Field> Iterator for IntoIter<V, FF> {
-    type Item = (Witness, Vec<AssignedCell<V, FF>>);
+impl Iterator for IntoIter {
+    type Item = (Witness, Vec<Cell>);
 
     fn next(&mut self) -> Option<Self::Item> {
         self.0
@@ -58,17 +58,17 @@ impl<V, FF: Field> Iterator for IntoIter<V, FF> {
     }
 }
 
-impl<V, FF: Field> IntoIterator for AssignmentMap<V, FF> {
-    type Item = (Witness, Vec<AssignedCell<V, FF>>);
-    type IntoIter = IntoIter<V, FF>;
+impl IntoIterator for AssignmentMap {
+    type Item = (Witness, Vec<Cell>);
+    type IntoIter = IntoIter;
 
     fn into_iter(self) -> Self::IntoIter {
         IntoIter(self.0.into_iter())
     }
 }
 
-impl<V, FF: Field> From<BTreeMap<Witness, Vec<AssignedCell<V, FF>>>> for AssignmentMap<V, FF> {
-    fn from(value: BTreeMap<Witness, Vec<AssignedCell<V, FF>>>) -> Self {
+impl From<BTreeMap<Witness, Vec<Cell>>> for AssignmentMap {
+    fn from(value: BTreeMap<Witness, Vec<Cell>>) -> Self {
         Self(value)
     }
 }

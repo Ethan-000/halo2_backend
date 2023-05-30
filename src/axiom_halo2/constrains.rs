@@ -16,7 +16,8 @@ use {
     crate::axiom_halo2::{
         halo2_plonk_api::{PlonkConfig, PolyTriple, StandardCs},
         circuit_translator::NoirHalo2Translator,
-        halo2_plonk_api::NoirConstraint
+        halo2_plonk_api::NoirConstraint,
+        assignment_map::AssignmentMap
     },
     acvm::{
         acir::native_types::{Expression, Witness},
@@ -30,13 +31,14 @@ use {
 };
 
 
-impl NoirHalo2Translator<Fr, Fr> {
+impl NoirHalo2Translator<Fr> {
     #[allow(non_snake_case)]
     pub(crate) fn add_arithmetic_constrains(
         &self,
         gate: &Expression,
         cs: &impl StandardCs<Fr>,
         layouter: &mut impl Layouter<Fr>,
+        assignments: &mut AssignmentMap,
     ) {
         let mut noir_cs = NoirConstraint::default();
         // check mul gate
@@ -105,7 +107,12 @@ impl NoirHalo2Translator<Fr, Fr> {
             qc.into(),
         );
 
-        cs.raw_poly(layouter, || poly_gate).unwrap();
+        let cells = cs.raw_poly(layouter, || poly_gate).unwrap();
+
+        // set assigned witness map
+        assignments.insert(Witness(noir_cs.a as u32), cells.0);
+        assignments.insert(Witness(noir_cs.b as u32), cells.1);
+        assignments.insert(Witness(noir_cs.c as u32), cells.2);
     }
 
     pub(crate) fn add_range_constrain(
@@ -113,6 +120,7 @@ impl NoirHalo2Translator<Fr, Fr> {
         witness: Witness,
         num_bits: u32,
         config: &PlonkConfig,
+        assignments: &mut AssignmentMap,
     ) {
         let mut ctx = Context::<Fr>::new(true, 0);
 
@@ -128,6 +136,9 @@ impl NoirHalo2Translator<Fr, Fr> {
         config
             .range_chip
             .range_check(&mut ctx, x, num_bits as usize);
+        
+        // set assigned witness map
+        // assignments.insert(witness, x.)
     }
 
     pub(crate) fn add_and_constrain(
@@ -136,6 +147,7 @@ impl NoirHalo2Translator<Fr, Fr> {
         rhs: Witness,
         output: Witness,
         config: &PlonkConfig,
+        assignments: &mut AssignmentMap,
     ) {
         let mut ctx = Context::<Fr>::new(true, 0);
         let lhs_v = noir_field_to_halo2_field(
@@ -165,7 +177,7 @@ impl NoirHalo2Translator<Fr, Fr> {
 
         let and_out = config.gate_chip.and(&mut ctx, a, b);
 
-        config.gate_chip.is_equal(&mut ctx, c, and_out);
+        config.gate_chip.is_equal(&mut ctx, c, and_out.clone());
     }
 
     pub(crate) fn add_ecdsa_secp256k1_constrain(
@@ -216,7 +228,7 @@ impl NoirHalo2Translator<Fr, Fr> {
     }
 }
 
-impl NoirHalo2Translator<Fr, Fr> {
+impl NoirHalo2Translator<Fr> {
     fn noir_field_to_secp255k1_fq_field(&self, limbs: Vec<Witness>) -> Fq {
         let binding: Vec<u8> = limbs
             .into_iter()
