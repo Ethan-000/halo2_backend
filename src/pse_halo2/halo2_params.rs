@@ -21,7 +21,7 @@ pub(crate) async fn constuct_halo2_params_from_aztec_crs(
     // TODO:
     // this is a temporary fix.
     // Investigate how to count gates properly
-    let points_needed = pow2ceil(num_points + 512);
+    let points_needed = pow2ceil(num_points + 2048);
     let (g1_data, g2_data) = get_aztec_crs(points_needed).await?;
 
     let k = log2(points_needed as usize);
