@@ -6,7 +6,7 @@ use acvm::acir::{
     circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
     native_types::WitnessMap,
 };
-use pse_halo2_proofs::{
+use pse_halo2wrong::halo2::{
     circuit::SimpleFloorPlanner, halo2curves::bn256::Fr, plonk::Circuit as Halo2PlonkCircuit,
     plonk::ConstraintSystem,
 };
@@ -35,8 +35,8 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
     fn synthesize(
         &self,
         config: Self::Config,
-        mut layouter: impl pse_halo2_proofs::circuit::Layouter<Fr>,
-    ) -> Result<(), pse_halo2_proofs::plonk::Error> {
+        mut layouter: impl pse_halo2wrong::halo2::circuit::Layouter<Fr>,
+    ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
         let cs: StandardPlonk<Fr> = StandardPlonk::new(config);
         for gate in self.circuit.opcodes.iter() {
             match gate {
@@ -45,9 +45,13 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                 }
                 Opcode::BlackBoxFuncCall(gadget_call) => {
                     match gadget_call {
-                        BlackBoxFuncCall::RANGE { input: _ } => {
-                            panic!("range constraint has not yet been implemented")
-                        }
+                        BlackBoxFuncCall::RANGE { input: _ } => {}
+                        // self.add_range_constrain(
+                        //     input.witness,
+                        //     input.num_bits,
+                        //     &config,
+                        //     &mut layouter,
+                        // )?,
                         BlackBoxFuncCall::AND {
                             lhs,
                             rhs,

@@ -18,7 +18,7 @@ impl CommonReferenceString for PseHalo2 {
             .await?
             .write_custom(
                 &mut common_reference_string,
-                pse_halo2_proofs::SerdeFormat::RawBytes,
+                pse_halo2wrong::halo2::SerdeFormat::RawBytes,
             )
             .unwrap();
         // Separated to have nicer coercion on error types
@@ -36,7 +36,7 @@ impl CommonReferenceString for PseHalo2 {
             .await?
             .write_custom(
                 &mut common_reference_string,
-                pse_halo2_proofs::SerdeFormat::RawBytes,
+                pse_halo2wrong::halo2::SerdeFormat::RawBytes,
             )
             .unwrap();
 

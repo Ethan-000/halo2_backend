@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use acvm::FieldElement;
-use pse_halo2_proofs::{
+use pse_halo2wrong::halo2::{
     arithmetic::Field,
     circuit::Layouter,
     circuit::{Cell, Value},
@@ -27,6 +27,7 @@ use pse_halo2_proofs::{
         Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
     },
 };
+
 
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
@@ -84,56 +85,71 @@ pub fn halo2_verify(
 
 #[derive(Clone)]
 pub struct PlonkConfig {
-    a: Column<Advice>,
-    b: Column<Advice>,
-    c: Column<Advice>,
+    arith_a: Column<Advice>,
+    arith_b: Column<Advice>,
+    arith_c: Column<Advice>,
 
-    sl: Column<Fixed>,
-    sr: Column<Fixed>,
-    so: Column<Fixed>,
-    sm: Column<Fixed>,
-    sc: Column<Fixed>,
+    arith_sl: Column<Fixed>,
+    arith_sr: Column<Fixed>,
+    arith_so: Column<Fixed>,
+    arith_sm: Column<Fixed>,
+    arith_sc: Column<Fixed>,
+    // pub(crate) range_config: RangeConfig,
+    // pub(crate) main_gate_config: MainGateConfig,
+    // pub(crate) range_chip: RangeChip<Fr>,
 }
 
 impl PlonkConfig {
     pub fn configure(meta: &mut ConstraintSystem<Fr>) -> Self {
-        let a = meta.advice_column();
-        let b = meta.advice_column();
-        let c = meta.advice_column();
+        let arith_a = meta.advice_column();
+        let arith_b = meta.advice_column();
+        let arith_c = meta.advice_column();
 
-        meta.enable_equality(a);
-        meta.enable_equality(b);
-        meta.enable_equality(c);
+        meta.enable_equality(arith_a);
+        meta.enable_equality(arith_b);
+        meta.enable_equality(arith_c);
 
-        let sm = meta.fixed_column();
-        let sl = meta.fixed_column();
-        let sr = meta.fixed_column();
-        let so = meta.fixed_column();
-        let sc = meta.fixed_column();
+        let arith_sm = meta.fixed_column();
+        let arith_sl = meta.fixed_column();
+        let arith_sr = meta.fixed_column();
+        let arith_so = meta.fixed_column();
+        let arith_sc = meta.fixed_column();
+
+        // let main_gate_config = MainGate::<Fr>::configure(meta);
+        // let range_config = RangeChip::<Fr>::configure(meta, &main_gate_config, vec![8], vec![3]);
 
         meta.create_gate("Combined add-mult", |meta| {
-            let a = meta.query_advice(a, Rotation::cur());
-            let b = meta.query_advice(b, Rotation::cur());
-            let c = meta.query_advice(c, Rotation::cur());
+            let arith_a = meta.query_advice(arith_a, Rotation::cur());
+            let arith_b = meta.query_advice(arith_b, Rotation::cur());
+            let arith_c = meta.query_advice(arith_c, Rotation::cur());
 
-            let sl = meta.query_fixed(sl, Rotation::cur());
-            let sr = meta.query_fixed(sr, Rotation::cur());
-            let so = meta.query_fixed(so, Rotation::cur());
-            let sm = meta.query_fixed(sm, Rotation::cur());
-            let sc = meta.query_fixed(sc, Rotation::cur());
+            let arith_sl = meta.query_fixed(arith_sl, Rotation::cur());
+            let arith_sr = meta.query_fixed(arith_sr, Rotation::cur());
+            let arith_so = meta.query_fixed(arith_so, Rotation::cur());
+            let arith_sm = meta.query_fixed(arith_sm, Rotation::cur());
+            let arith_sc = meta.query_fixed(arith_sc, Rotation::cur());
 
-            vec![a.clone() * sl + b.clone() * sr + a * b * sm + (c * so) + sc]
+            vec![
+                arith_a.clone() * arith_sl
+                    + arith_b.clone() * arith_sr
+                    + arith_a * arith_b * arith_sm
+                    + (arith_c * arith_so)
+                    + arith_sc,
+            ]
         });
 
         PlonkConfig {
-            a,
-            b,
-            c,
-            sl,
-            sr,
-            so,
-            sm,
-            sc,
+            arith_a,
+            arith_b,
+            arith_c,
+            arith_sl,
+            arith_sr,
+            arith_so,
+            arith_sm,
+            arith_sc,
+            // range_config,
+            // main_gate_config,
+            // range_chip,
         }
     }
 }
@@ -263,7 +279,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
         &self,
         layouter: &mut impl Layouter<FF>,
         mut f: F,
-    ) -> Result<(Cell, Cell, Cell), pse_halo2_proofs::plonk::Error>
+    ) -> Result<(Cell, Cell, Cell), pse_halo2wrong::halo2::plonk::Error>
     where
         F: FnMut() -> Value<(Assigned<FF>, Assigned<FF>, Assigned<FF>)>,
     {
@@ -274,7 +290,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
                 let mut value = None;
                 let lhs = region.assign_advice(
                     || "lhs",
-                    self.config.a,
+                    self.config.arith_a,
                     0,
                     || {
                         value = Some(f());
@@ -283,21 +299,36 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
                 )?;
                 let rhs = region.assign_advice(
                     || "rhs",
-                    self.config.b,
+                    self.config.arith_b,
                     0,
                     || value.unwrap().map(|v| v.1),
                 )?;
                 let out = region.assign_advice(
                     || "out",
-                    self.config.c,
+                    self.config.arith_c,
                     0,
                     || value.unwrap().map(|v| v.2),
                 )?;
 
-                region.assign_fixed(|| "a", self.config.sl, 0, || Value::known(FF::ZERO))?;
-                region.assign_fixed(|| "b", self.config.sr, 0, || Value::known(FF::ZERO))?;
-                region.assign_fixed(|| "c", self.config.so, 0, || Value::known(FF::ONE))?;
-                region.assign_fixed(|| "a*b", self.config.sm, 0, || Value::known(FF::ONE))?;
+                region.assign_fixed(
+                    || "a",
+                    self.config.arith_sl,
+                    0,
+                    || Value::known(FF::zero()),
+                )?;
+                region.assign_fixed(
+                    || "b",
+                    self.config.arith_sr,
+                    0,
+                    || Value::known(FF::zero()),
+                )?;
+                region.assign_fixed(|| "c", self.config.arith_so, 0, || Value::known(FF::one()))?;
+                region.assign_fixed(
+                    || "a*b",
+                    self.config.arith_sm,
+                    0,
+                    || Value::known(FF::one()),
+                )?;
                 Ok((lhs.cell(), rhs.cell(), out.cell()))
             },
         )
@@ -306,7 +337,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
         &self,
         layouter: &mut impl Layouter<FF>,
         mut f: F,
-    ) -> Result<(Cell, Cell, Cell), pse_halo2_proofs::plonk::Error>
+    ) -> Result<(Cell, Cell, Cell), pse_halo2wrong::halo2::plonk::Error>
     where
         F: FnMut() -> Value<(Assigned<FF>, Assigned<FF>, Assigned<FF>)>,
     {
@@ -317,7 +348,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
                 let mut value = None;
                 let lhs = region.assign_advice(
                     || "lhs",
-                    self.config.a,
+                    self.config.arith_a,
                     0,
                     || {
                         value = Some(f());
@@ -326,21 +357,26 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
                 )?;
                 let rhs = region.assign_advice(
                     || "rhs",
-                    self.config.b,
+                    self.config.arith_b,
                     0,
                     || value.unwrap().map(|v| v.1),
                 )?;
                 let out = region.assign_advice(
                     || "out",
-                    self.config.c,
+                    self.config.arith_c,
                     0,
                     || value.unwrap().map(|v| v.2),
                 )?;
 
-                region.assign_fixed(|| "a", self.config.sl, 0, || Value::known(FF::ONE))?;
-                region.assign_fixed(|| "b", self.config.sr, 0, || Value::known(FF::ONE))?;
-                region.assign_fixed(|| "c", self.config.so, 0, || Value::known(FF::ONE))?;
-                region.assign_fixed(|| "a + b", self.config.sm, 0, || Value::known(FF::ZERO))?;
+                region.assign_fixed(|| "a", self.config.arith_sl, 0, || Value::known(FF::one()))?;
+                region.assign_fixed(|| "b", self.config.arith_sr, 0, || Value::known(FF::one()))?;
+                region.assign_fixed(|| "c", self.config.arith_so, 0, || Value::known(FF::one()))?;
+                region.assign_fixed(
+                    || "a + b",
+                    self.config.arith_sm,
+                    0,
+                    || Value::known(FF::zero()),
+                )?;
                 Ok((lhs.cell(), rhs.cell(), out.cell()))
             },
         )
@@ -349,7 +385,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
         &self,
         layouter: &mut impl Layouter<FF>,
         mut f: F,
-    ) -> Result<(Cell, Cell, Cell), pse_halo2_proofs::plonk::Error>
+    ) -> Result<(Cell, Cell, Cell), pse_halo2wrong::halo2::plonk::Error>
     where
         F: FnMut() -> PolyTriple<Assigned<FF>>,
     {
@@ -357,15 +393,20 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
             || "raw_poly",
             |mut region| {
                 let value = f();
-                let lhs = region.assign_advice(|| "lhs", self.config.a, 0, || value.a)?;
-                let rhs = region.assign_advice(|| "rhs", self.config.b, 0, || value.b)?;
-                let out = region.assign_advice(|| "out", self.config.c, 0, || value.c)?;
+                let lhs = region.assign_advice(|| "lhs", self.config.arith_a, 0, || value.a)?;
+                let rhs = region.assign_advice(|| "rhs", self.config.arith_b, 0, || value.b)?;
+                let out = region.assign_advice(|| "out", self.config.arith_c, 0, || value.c)?;
 
-                region.assign_fixed(|| "a", self.config.sl, 0, || Value::known(value.ql))?;
-                region.assign_fixed(|| "b", self.config.sr, 0, || Value::known(value.qr))?;
-                region.assign_fixed(|| "c", self.config.so, 0, || Value::known(value.qo))?;
-                region.assign_fixed(|| "a * b", self.config.sm, 0, || Value::known(value.qm))?;
-                region.assign_fixed(|| "qc", self.config.sc, 0, || Value::known(value.qc))?;
+                region.assign_fixed(|| "a", self.config.arith_sl, 0, || Value::known(value.ql))?;
+                region.assign_fixed(|| "b", self.config.arith_sr, 0, || Value::known(value.qr))?;
+                region.assign_fixed(|| "c", self.config.arith_so, 0, || Value::known(value.qo))?;
+                region.assign_fixed(
+                    || "a * b",
+                    self.config.arith_sm,
+                    0,
+                    || Value::known(value.qm),
+                )?;
+                region.assign_fixed(|| "qc", self.config.arith_sc, 0, || Value::known(value.qc))?;
                 Ok((lhs.cell(), rhs.cell(), out.cell()))
             },
         )
@@ -375,7 +416,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
         layouter: &mut impl Layouter<FF>,
         left: Cell,
         right: Cell,
-    ) -> Result<(), pse_halo2_proofs::plonk::Error> {
+    ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
         layouter.assign_region(
             || "copy",
             |mut region| {
