@@ -35,7 +35,8 @@ pub(crate) enum Error {
     #[error("The value {0} overflows in the pow2ceil function")]
     _Pow2CeilOverflow(u32),
 
-    #[cfg(feature = "axiom_halo2")]
+    #[allow(dead_code)]
+    #[cfg(any(feature = "axiom_halo2", feature = "pse_halo2"))]
     #[error("Malformed Black Box Function: {0} - {1}")]
     MalformedBlackBoxFunc(BlackBoxFunc, String),
 

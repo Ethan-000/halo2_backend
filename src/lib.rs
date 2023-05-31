@@ -2,9 +2,11 @@
 mod axiom_halo2;
 #[cfg(any(feature = "axiom_halo2", feature = "pse_halo2"))]
 mod aztec_crs;
+mod dimension_measure;
 mod errors;
 #[cfg(feature = "pse_halo2")]
 mod pse_halo2;
+mod utils;
 #[cfg(feature = "zcash_halo2")]
 mod zcash_halo2;
 

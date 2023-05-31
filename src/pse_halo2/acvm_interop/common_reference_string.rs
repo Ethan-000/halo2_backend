@@ -1,6 +1,11 @@
-use acvm::{acir::circuit::Circuit, async_trait, CommonReferenceString, ProofSystemCompiler};
+use std::marker::PhantomData;
+
+use acvm::acir::native_types::WitnessMap;
+use acvm::{acir::circuit::Circuit, async_trait, CommonReferenceString};
+use pse_halo2wrong::curves::bn256::Fr;
 
 use crate::errors::BackendError;
+use crate::pse_halo2::circuit_translator::NoirHalo2Translator;
 use crate::pse_halo2::halo2_params::constuct_halo2_params_from_aztec_crs;
 use crate::pse_halo2::PseHalo2;
 
@@ -14,7 +19,13 @@ impl CommonReferenceString for PseHalo2 {
         circuit: &Circuit,
     ) -> Result<Vec<u8>, Self::Error> {
         let mut common_reference_string = Vec::new();
-        constuct_halo2_params_from_aztec_crs(self.get_exact_circuit_size(circuit)?)
+
+        let translator = NoirHalo2Translator::<Fr> {
+            circuit: circuit.clone(),
+            witness_values: WitnessMap::new(),
+            _marker: PhantomData::<Fr>,
+        };
+        constuct_halo2_params_from_aztec_crs(translator)
             .await?
             .write_custom(
                 &mut common_reference_string,
@@ -32,7 +43,13 @@ impl CommonReferenceString for PseHalo2 {
         circuit: &Circuit,
     ) -> Result<Vec<u8>, Self::Error> {
         let mut common_reference_string = Vec::new();
-        constuct_halo2_params_from_aztec_crs(self.get_exact_circuit_size(circuit)?)
+
+        let translator = NoirHalo2Translator::<Fr> {
+            circuit: circuit.clone(),
+            witness_values: WitnessMap::new(),
+            _marker: PhantomData::<Fr>,
+        };
+        constuct_halo2_params_from_aztec_crs(translator)
             .await?
             .write_custom(
                 &mut common_reference_string,

@@ -1,6 +1,7 @@
 use acvm::acir::native_types::Witness;
 
 use acvm::pwg::range;
+use acvm::pwg::signature;
 use acvm::OpcodeResolutionError;
 use acvm::PartialWitnessGenerator;
 
@@ -107,14 +108,21 @@ impl PartialWitnessGenerator for PseHalo2 {
 
     fn ecdsa_secp256k1(
         &self,
-        _initial_witness: &mut acvm::acir::native_types::WitnessMap,
-        _public_key_x: &[acvm::acir::circuit::opcodes::FunctionInput],
-        _public_key_y: &[acvm::acir::circuit::opcodes::FunctionInput],
-        _signature: &[acvm::acir::circuit::opcodes::FunctionInput],
-        _message: &[acvm::acir::circuit::opcodes::FunctionInput],
-        _outputs: &Witness,
+        initial_witness: &mut acvm::acir::native_types::WitnessMap,
+        public_key_x: &[acvm::acir::circuit::opcodes::FunctionInput],
+        public_key_y: &[acvm::acir::circuit::opcodes::FunctionInput],
+        signature: &[acvm::acir::circuit::opcodes::FunctionInput],
+        message: &[acvm::acir::circuit::opcodes::FunctionInput],
+        outputs: &Witness,
     ) -> Result<acvm::pwg::OpcodeResolution, OpcodeResolutionError> {
-        todo!()
+        signature::ecdsa::secp256k1_prehashed(
+            initial_witness,
+            public_key_x,
+            public_key_y,
+            signature,
+            message,
+            *outputs,
+        )
     }
 
     fn fixed_base_scalar_mul(
