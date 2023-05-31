@@ -42,12 +42,13 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                 }
                 Opcode::BlackBoxFuncCall(gadget_call) => {
                     match gadget_call {
-                        BlackBoxFuncCall::RANGE { input } => self.add_range_constrain(
-                            input.witness,
-                            input.num_bits,
-                            &config,
-                            &mut layouter,
-                        )?,
+                        BlackBoxFuncCall::RANGE { input } => {}
+                        // self.add_range_constrain(
+                        //     input.witness,
+                        //     input.num_bits,
+                        //     &config,
+                        //     &mut layouter,
+                        // )?,
                         BlackBoxFuncCall::AND {
                             lhs,
                             rhs,

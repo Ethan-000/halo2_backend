@@ -76,17 +76,17 @@ pub fn halo2_verify(
 
 #[derive(Clone)]
 pub struct PlonkConfig {
-    pub(crate) range_config: RangeConfig,
+    // pub(crate) range_config: RangeConfig,
     pub(crate) main_gate_config: MainGateConfig,
 }
 
 impl PlonkConfig {
     pub fn configure(meta: &mut ConstraintSystem<Fr>) -> Self {
         let main_gate_config = MainGate::<Fr>::configure(meta);
-        let range_config = RangeChip::<Fr>::configure(meta, &main_gate_config, vec![8], vec![3]);
+        // let range_config = RangeChip::<Fr>::configure(meta, &main_gate_config, vec![8], vec![3]);
 
         PlonkConfig {
-            range_config,
+            // range_config,
             main_gate_config,
         }
     }

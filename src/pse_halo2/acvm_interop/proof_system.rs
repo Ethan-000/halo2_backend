@@ -97,7 +97,7 @@ impl ProofSystemCompiler for PseHalo2 {
     }
 
     fn np_language(&self) -> Language {
-        Language::PLONKCSat { width: 5 }
+        Language::PLONKCSat { width: 3 }
     }
 
     fn supports_opcode(&self, opcode: &acvm::acir::circuit::Opcode) -> bool {
