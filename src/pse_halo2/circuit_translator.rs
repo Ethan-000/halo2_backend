@@ -2,14 +2,17 @@ use core::panic;
 use std::marker::PhantomData;
 
 use crate::pse_halo2::halo2_plonk_api::PlonkConfig;
-use acvm::acir::{
-    circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
-    native_types::WitnessMap,
+use acvm::{
+    acir::{
+        circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
+        native_types::WitnessMap,
+    },
 };
 use pse_halo2wrong::halo2::{
     circuit::SimpleFloorPlanner, halo2curves::bn256::Fr, plonk::Circuit as Halo2PlonkCircuit,
     plonk::ConstraintSystem,
 };
+use pse_maingate::{RangeChip, RangeInstructions};
 
 #[derive(Clone, Default)]
 pub struct NoirHalo2Translator<Fr> {
@@ -35,6 +38,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
         config: Self::Config,
         mut layouter: impl pse_halo2wrong::halo2::circuit::Layouter<Fr>,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
+        let range_chip = RangeChip::<Fr>::new(config.range_config.clone());
         for gate in self.circuit.opcodes.iter() {
             match gate {
                 Opcode::Arithmetic(expression) => {
@@ -42,13 +46,12 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                 }
                 Opcode::BlackBoxFuncCall(gadget_call) => {
                     match gadget_call {
-                        BlackBoxFuncCall::RANGE { input } => {}
-                        // self.add_range_constrain(
-                        //     input.witness,
-                        //     input.num_bits,
-                        //     &config,
-                        //     &mut layouter,
-                        // )?,
+                        BlackBoxFuncCall::RANGE { input } => self.add_range_constrain(
+                            input.witness,
+                            input.num_bits,
+                            &range_chip,
+                            &mut layouter,
+                        )?,
                         BlackBoxFuncCall::AND {
                             lhs,
                             rhs,
@@ -127,6 +130,8 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                 }
             }
         }
+
+        range_chip.load_table(&mut layouter)?;
         Ok(())
     }
 }
