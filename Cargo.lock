@@ -560,6 +560,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "ecc"
+version = "0.1.0"
+source = "git+https://github.com/privacy-scaling-explorations/halo2wrong?tag=v2023_02_02#5905a20b62fcd9f6c269416a39c80de7ced8fb02"
+dependencies = [
+ "group 0.12.1",
+ "integer",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "rand",
+ "subtle",
+]
+
+[[package]]
+name = "ecdsa"
+version = "0.1.0"
+source = "git+https://github.com/privacy-scaling-explorations/halo2wrong?tag=v2023_02_02#5905a20b62fcd9f6c269416a39c80de7ced8fb02"
+dependencies = [
+ "ecc",
+ "group 0.12.1",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "rand",
+ "subtle",
+]
+
+[[package]]
 name = "ecdsa"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -871,10 +899,11 @@ name = "halo2_backend"
 version = "0.1.0"
 dependencies = [
  "acvm",
- "ark-std",
  "bincode",
  "bytesize",
  "dirs",
+ "ecc",
+ "ecdsa 0.1.0",
  "futures-util",
  "halo2-base",
  "halo2-ecc",
@@ -1189,6 +1218,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "integer"
+version = "0.1.0"
+source = "git+https://github.com/privacy-scaling-explorations/halo2wrong?tag=v2023_02_02#5905a20b62fcd9f6c269416a39c80de7ced8fb02"
+dependencies = [
+ "group 0.12.1",
+ "maingate",
+ "num-bigint",
+ "num-integer",
+ "num-traits",
+ "rand",
+ "subtle",
+]
+
+[[package]]
 name = "ipnet"
 version = "2.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1245,7 +1288,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4476a0808212a9e81ce802eb1a0cfc60e73aea296553bacc0fac7e1268bc572a"
 dependencies = [
  "cfg-if",
- "ecdsa",
+ "ecdsa 0.10.2",
  "elliptic-curve",
  "sha2 0.9.9",
 ]

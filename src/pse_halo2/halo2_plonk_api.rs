@@ -1,4 +1,5 @@
 use acvm::FieldElement;
+
 use pse_halo2wrong::halo2::{
     halo2curves::bn256::Fr,
     halo2curves::{
@@ -78,20 +79,35 @@ pub fn halo2_verify(
 pub struct PlonkConfig {
     pub(crate) main_gate_config: MainGateConfig,
     pub(crate) range_config: RangeConfig,
+    // pub(crate) ecc_config: EccConfig,
 }
 
 impl PlonkConfig {
     pub fn configure(meta: &mut ConstraintSystem<Fr>) -> Self {
+        // let (rns_base, rns_scalar) = GeneralEccChip::<Secp256k1Affine, Fr, 4, 68>::rns();
         let main_gate_config = MainGate::<Fr>::configure(meta);
 
-        // this configuration supports up to 4*8+7 = 39 bits lookup
-        // change these parameters if more bits are needed
-        let range_config =
-            RangeChip::<Fr>::configure(meta, &main_gate_config, vec![8], vec![1, 2, 3, 4, 5, 6, 7]);
+        // let mut overflow_bit_lens: Vec<usize> =
+        //     vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+        // overflow_bit_lens.extend(rns_base.overflow_lengths());
+        // overflow_bit_lens.extend(rns_scalar.overflow_lengths());
+        // let composition_bit_lens = vec![8, 68 / 4];
+
+        let overflow_bit_lens: Vec<usize> = vec![1, 2, 3, 4, 5, 6, 7];
+        let composition_bit_lens = vec![8];
+
+        let range_config = RangeChip::<Fr>::configure(
+            meta,
+            &main_gate_config,
+            composition_bit_lens,
+            overflow_bit_lens,
+        );
+        // let ecc_config = EccConfig::new(range_config.clone(), main_gate_config.clone());
 
         PlonkConfig {
             main_gate_config,
             range_config,
+            // ecc_config,
         }
     }
 }
