@@ -71,23 +71,27 @@ pub fn halo2_verify(
         Challenge255<G1Affine>,
         Blake2bRead<&[u8], G1Affine, Challenge255<G1Affine>>,
         SingleStrategy<'_, Bn256>,
-    >(params, vk, strategy, &[&[]], &mut transcript)
+    >(params, vk, strategy, &[&[&[]]], &mut transcript)
 }
 
 #[derive(Clone)]
 pub struct PlonkConfig {
-    pub(crate) range_config: RangeConfig,
     pub(crate) main_gate_config: MainGateConfig,
+    pub(crate) range_config: RangeConfig,
 }
 
 impl PlonkConfig {
     pub fn configure(meta: &mut ConstraintSystem<Fr>) -> Self {
         let main_gate_config = MainGate::<Fr>::configure(meta);
-        let range_config = RangeChip::<Fr>::configure(meta, &main_gate_config, vec![8], vec![3]);
+
+        // this configuration supports up to 4*8+7 = 39 bits lookup
+        // change these parameters if more bits are needed
+        let range_config =
+            RangeChip::<Fr>::configure(meta, &main_gate_config, vec![8], vec![1, 2, 3, 4, 5, 6, 7]);
 
         PlonkConfig {
-            range_config,
             main_gate_config,
+            range_config,
         }
     }
 }

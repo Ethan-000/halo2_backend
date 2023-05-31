@@ -3,7 +3,6 @@ use acvm::{
     FieldElement,
 };
 use pse_halo2wrong::{
-    curves::{group::ff::PrimeField, FieldExt},
     halo2::{
         circuit::{Layouter, Value},
         halo2curves::bn256::Fr,
@@ -98,7 +97,7 @@ impl NoirHalo2Translator<Fr> {
                     main_gate.assign_to_column(ctx, Value::known(Fr::zero()), MainGateColumn::D)?;
                 terms.push(Term::Assigned(&d, Fr::zero()));
                 let e =
-                    main_gate.assign_to_column(ctx, Value::known(Fr::zero()), MainGateColumn::D)?;
+                    main_gate.assign_to_column(ctx, Value::known(Fr::zero()), MainGateColumn::E)?;
                 terms.push(Term::Assigned(&e, Fr::zero()));
 
                 main_gate.apply(
@@ -107,8 +106,8 @@ impl NoirHalo2Translator<Fr> {
                     qc,
                     CombinationOption::Common(
                         pse_maingate::CombinationOptionCommon::CombineToNextScaleMul(
-                            qm,
                             Fr::zero(),
+                            qm,
                         ),
                     ),
                 )?;
@@ -124,12 +123,9 @@ impl NoirHalo2Translator<Fr> {
         &self,
         witness: Witness,
         num_bits: u32,
-        config: &PlonkConfig,
+        range_chip: &RangeChip<Fr>,
         layouter: &mut impl Layouter<Fr>,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
-        let range_chip = RangeChip::<Fr>::new(config.range_config.clone());
-        let main_gate = MainGate::<Fr>::new(config.main_gate_config.clone());
-
         let input = noir_field_to_halo2_field(
             *self
                 .witness_values
@@ -138,37 +134,20 @@ impl NoirHalo2Translator<Fr> {
         );
 
         layouter.assign_region(
-            || "region 0",
+            || "region 1",
             |region| {
                 let offset = 0;
                 let ctx = &mut RegionCtx::new(region, offset);
 
                 let value = Value::known(input);
-                let limb_bit_len = 17;
+                let limb_bit_len = 8;
                 let bit_len = num_bits as usize;
 
-                let a_0 = main_gate.assign_value(ctx, value)?;
-                let (a_1, decomposed) = range_chip.decompose(ctx, value, limb_bit_len, bit_len)?;
-
-                main_gate.assert_equal(ctx, &a_0, &a_1)?;
-
-                let bases: Vec<Fr> = (0..Fr::NUM_BITS as usize / bit_len)
-                    .map(|i| Fr::from(2).pow(&[(bit_len * i) as u64, 0, 0, 0]))
-                    .collect();
-
-                let terms: Vec<Term<Fr>> = decomposed
-                    .iter()
-                    .zip(bases)
-                    .map(|(limb, base)| Term::Assigned(limb, base))
-                    .collect();
-                let a_1 = main_gate.compose(ctx, &terms[..], Fr::zero())?;
-                main_gate.assert_equal(ctx, &a_0, &a_1)?;
+                range_chip.assign(ctx, value, limb_bit_len, bit_len)?;
 
                 Ok(())
             },
         )?;
-
-        range_chip.load_table(layouter)?;
 
         Ok(())
     }
