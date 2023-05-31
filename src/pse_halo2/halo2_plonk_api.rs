@@ -84,8 +84,8 @@ impl PlonkConfig {
     pub fn configure(meta: &mut ConstraintSystem<Fr>) -> Self {
         let main_gate_config = MainGate::<Fr>::configure(meta);
 
-        // this configuration can support up to 4*8+7 = 39 bits lookup
-        // if larger bits lookup is required, these parameters need to be changed
+        // this configuration supports up to 4*8+7 = 39 bits lookup
+        // change these parameters if more bits are needed
         let range_config =
             RangeChip::<Fr>::configure(meta, &main_gate_config, vec![8], vec![1, 2, 3, 4, 5, 6, 7]);
 
