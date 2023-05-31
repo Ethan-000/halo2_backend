@@ -1,24 +1,22 @@
 use acvm::FieldElement;
 
-use pse_halo2wrong::{
-    halo2::{
-        halo2curves::bn256::Fr,
-        halo2curves::{
-            bn256::{Bn256, G1Affine, G1},
-            group::cofactor::CofactorCurve,
-        },
-        plonk::{
-            create_proof, keygen_pk, keygen_vk, verify_proof, ConstraintSystem, Error, ProvingKey,
-            VerifyingKey,
-        },
-        poly::kzg::{
-            commitment::{KZGCommitmentScheme, ParamsKZG},
-            multiopen::{ProverGWC, VerifierGWC},
-            strategy::SingleStrategy,
-        },
-        transcript::{
-            Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
-        },
+use pse_halo2wrong::halo2::{
+    halo2curves::bn256::Fr,
+    halo2curves::{
+        bn256::{Bn256, G1Affine, G1},
+        group::cofactor::CofactorCurve,
+    },
+    plonk::{
+        create_proof, keygen_pk, keygen_vk, verify_proof, ConstraintSystem, Error, ProvingKey,
+        VerifyingKey,
+    },
+    poly::kzg::{
+        commitment::{KZGCommitmentScheme, ParamsKZG},
+        multiopen::{ProverGWC, VerifierGWC},
+        strategy::SingleStrategy,
+    },
+    transcript::{
+        Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
     },
 };
 

@@ -1,17 +1,15 @@
 use core::panic;
 use std::marker::PhantomData;
 
-use crate::{pse_halo2::halo2_plonk_api::PlonkConfig};
+use crate::pse_halo2::halo2_plonk_api::PlonkConfig;
 use acvm::acir::{
     circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
     native_types::WitnessMap,
 };
 
-use pse_halo2wrong::{
-    halo2::{
-        circuit::SimpleFloorPlanner, halo2curves::bn256::Fr, plonk::Circuit as Halo2PlonkCircuit,
-        plonk::ConstraintSystem,
-    },
+use pse_halo2wrong::halo2::{
+    circuit::SimpleFloorPlanner, halo2curves::bn256::Fr, plonk::Circuit as Halo2PlonkCircuit,
+    plonk::ConstraintSystem,
 };
 use pse_maingate::{RangeChip, RangeInstructions};
 
