@@ -166,6 +166,56 @@ impl NoirHalo2Translator<Fr> {
         Ok(())
     }
 
+    pub(crate) fn add_and_constrain(
+        &self,
+        lhs: Witness,
+        rhs: Witness,
+        output: Witness,
+        config: &PlonkConfig,
+        layouter: &mut impl Layouter<Fr>,
+    ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
+        let lhs_v = Value::known(noir_field_to_halo2_field(
+            *self
+                .witness_values
+                .get(&lhs)
+                .unwrap_or(&FieldElement::zero()),
+        ));
+
+        let rhs_v = Value::known(noir_field_to_halo2_field(
+            *self
+                .witness_values
+                .get(&rhs)
+                .unwrap_or(&FieldElement::zero()),
+        ));
+
+        let output_v = Value::known(noir_field_to_halo2_field(
+            *self
+                .witness_values
+                .get(&output)
+                .unwrap_or(&FieldElement::zero()),
+        ));
+
+        layouter.assign_region(
+            || "region 0",
+            |region| {
+                let offset = 0;
+                let ctx = &mut RegionCtx::new(region, offset);
+                let main_gate = MainGate::<Fr>::new(config.main_gate_config.clone());
+
+                let c1 = main_gate.assign_to_column(ctx, lhs_v, MainGateColumn::A)?;
+                let c2 = main_gate.assign_to_column(ctx, rhs_v, MainGateColumn::B)?;
+                let out = main_gate.assign_to_column(ctx, output_v, MainGateColumn::C)?;
+                let result = main_gate.and(ctx, &c1, &c2)?;
+
+                main_gate.assert_equal(ctx, &out, &result)?;
+
+                Ok(())
+            },
+        )?;
+
+        Ok(())
+    }
+
     pub(crate) fn _add_ecdsa_secp256k1_constrain(
         &self,
         hashed_message: Vec<Witness>,
