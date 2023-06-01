@@ -51,25 +51,18 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                             &range_chip,
                             &mut layouter,
                         )?,
-                        BlackBoxFuncCall::AND {
-                            lhs,
-                            rhs,
-                            output: _,
-                        }
-                        | BlackBoxFuncCall::XOR {
-                            lhs,
-                            rhs,
-                            output: _,
-                        } => {
-                            let _witness_lhs = lhs.witness;
-                            let _witness_rhs = rhs.witness;
-
+                        BlackBoxFuncCall::AND { lhs, rhs, output }
+                        | BlackBoxFuncCall::XOR { lhs, rhs, output } => {
                             assert_eq!(lhs.num_bits, rhs.num_bits);
 
                             match gadget_call {
-                                BlackBoxFuncCall::AND { .. } => {
-                                    panic!("and has not yet been implemented")
-                                }
+                                BlackBoxFuncCall::AND { .. } => self.add_and_constrain(
+                                    lhs.witness,
+                                    rhs.witness,
+                                    *output,
+                                    &config,
+                                    &mut layouter,
+                                )?,
                                 BlackBoxFuncCall::XOR { .. } => {
                                     panic!("xor has not yet been implemented")
                                 }

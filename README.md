@@ -33,6 +33,14 @@ git checkout demo
 cd crates/nargo_cli
 ```
 
+To install pse's halo2 as backend:
+
+```text
+cargo install --path . --locked --features pse_halo2_backend --no-default-features
+```
+
+To install axioms's halo2 as backend:
+
 ```text
 cargo install --path . --locked --features axiom_halo2_backend --no-default-features
 ```
@@ -60,8 +68,25 @@ nargo verify add
 ## Features
 
 - [ ] [halo2-zcash](https://github.com/zcash/halo2)
-- [ ] [halo2-pse](https://github.com/privacy-scaling-explorations/halo2)
+- [x] [halo2-pse](https://github.com/privacy-scaling-explorations/halo2)
 - [x] [halo2-axiom](https://github.com/axiom-crypto/halo2-lib)
+
+### halo2-pse features
+
+- [x] arithmetic gates
+- [x] range proofs
+- [x] and gates
+
+- [ ] xor
+- [ ] sha256 
+- [ ] blake2s 
+- [ ] compute_merkle_root 
+- [ ] schnorr_verify
+- [ ] pedersen
+- [ ] hash_to_field
+- [ ] ecdsa_secp256k1
+- [ ] fixed_base_scalar_mul
+- [ ] keccak256
 
 ### halo2-axiom features
 
