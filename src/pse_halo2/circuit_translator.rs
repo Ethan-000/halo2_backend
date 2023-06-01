@@ -53,9 +53,6 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                         )?,
                         BlackBoxFuncCall::AND { lhs, rhs, output }
                         | BlackBoxFuncCall::XOR { lhs, rhs, output } => {
-                            let _witness_lhs = lhs.witness;
-                            let _witness_rhs = rhs.witness;
-
                             assert_eq!(lhs.num_bits, rhs.num_bits);
 
                             match gadget_call {
