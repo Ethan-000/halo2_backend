@@ -1,26 +1,34 @@
-use acvm::FieldElement;
+use acvm::{
+    acir::circuit::{opcodes::BlackBoxFuncCall, Opcode},
+    FieldElement,
+};
 
-use pse_halo2wrong::halo2::{
-    halo2curves::bn256::Fr,
-    halo2curves::{
-        bn256::{Bn256, G1Affine, G1},
-        group::cofactor::CofactorCurve,
-    },
-    plonk::{
-        create_proof, keygen_pk, keygen_vk, verify_proof, ConstraintSystem, Error, ProvingKey,
-        VerifyingKey,
-    },
-    poly::kzg::{
-        commitment::{KZGCommitmentScheme, ParamsKZG},
-        multiopen::{ProverGWC, VerifierGWC},
-        strategy::SingleStrategy,
-    },
-    transcript::{
-        Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
+use pse_ecc::{EccConfig, GeneralEccChip};
+use pse_halo2wrong::{
+    curves::secp256k1::Secp256k1Affine,
+    halo2::{
+        halo2curves::bn256::Fr,
+        halo2curves::{
+            bn256::{Bn256, G1Affine, G1},
+            group::cofactor::CofactorCurve,
+        },
+        plonk::{
+            create_proof, keygen_pk, keygen_vk, verify_proof, ConstraintSystem, Error, ProvingKey,
+            VerifyingKey,
+        },
+        poly::kzg::{
+            commitment::{KZGCommitmentScheme, ParamsKZG},
+            multiopen::{ProverGWC, VerifierGWC},
+            strategy::SingleStrategy,
+        },
+        transcript::{
+            Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
+        },
     },
 };
 
 use pse_maingate::{MainGate, MainGateConfig, RangeChip, RangeConfig};
+
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 
@@ -79,7 +87,7 @@ pub fn halo2_verify(
 pub struct PlonkConfig {
     pub(crate) main_gate_config: MainGateConfig,
     pub(crate) range_config: RangeConfig,
-    // pub(crate) ecc_config: EccConfig,
+    pub(crate) ecc_config: Option<EccConfig>,
 }
 
 impl PlonkConfig {
@@ -107,7 +115,44 @@ impl PlonkConfig {
         PlonkConfig {
             main_gate_config,
             range_config,
-            // ecc_config,
+            ecc_config: None,
+        }
+    }
+
+    pub(crate) fn configure_with_params(
+        meta: &mut ConstraintSystem<Fr>,
+        opcodes_flags: OpcodeFlags,
+    ) -> Self {
+        let main_gate_config = MainGate::<Fr>::configure(meta);
+
+        let mut overflow_bit_lens: Vec<usize> = vec![1, 2, 3, 4, 5, 6, 7];
+        let mut composition_bit_lens = vec![8];
+
+        if opcodes_flags.ecdsa_secp256k1 {
+            let (rns_base, rns_scalar) = GeneralEccChip::<Secp256k1Affine, Fr, 4, 68>::rns();
+            overflow_bit_lens.extend(rns_base.overflow_lengths());
+            overflow_bit_lens.extend(rns_scalar.overflow_lengths());
+            composition_bit_lens.extend(vec![68 / 4]);
+        }
+
+        let range_config = RangeChip::<Fr>::configure(
+            meta,
+            &main_gate_config,
+            composition_bit_lens,
+            overflow_bit_lens,
+        );
+
+        PlonkConfig {
+            ecc_config: if opcodes_flags.ecdsa_secp256k1 {
+                Some(EccConfig::new(
+                    range_config.clone(),
+                    main_gate_config.clone(),
+                ))
+            } else {
+                None
+            },
+            main_gate_config,
+            range_config,
         }
     }
 }
@@ -152,6 +197,85 @@ impl NoirConstraint {
             self.qo = x;
         } else {
             unreachable!("Cannot assign linear term to a constrain of width 3");
+        }
+    }
+}
+
+#[allow(dead_code)]
+#[derive(Default)]
+pub struct OpcodeFlags {
+    pub(crate) arithmetic: bool,
+    pub(crate) range: bool,
+    pub(crate) and: bool,
+    pub(crate) xor: bool,
+    pub(crate) sha256: bool,
+    pub(crate) blake2s: bool,
+    pub(crate) compute_merkle_root: bool,
+    pub(crate) schnorr_verify: bool,
+    pub(crate) pedersen: bool,
+    pub(crate) hash_to_field: bool,
+    pub(crate) ecdsa_secp256k1: bool,
+    pub(crate) fixed_base_scalar_mul: bool,
+    pub(crate) keccak256: bool,
+}
+
+impl OpcodeFlags {
+    pub(crate) fn new(opcodes: Vec<Opcode>) -> OpcodeFlags {
+        let mut arithmetic = false;
+        let mut range = false;
+        let mut and = false;
+        let mut xor = false;
+        let mut sha256 = false;
+        let mut blake2s = false;
+        let mut compute_merkle_root = false;
+        let mut schnorr_verify = false;
+        let mut pedersen = false;
+        let mut hash_to_field = false;
+        let mut ecdsa_secp256k1 = false;
+        let mut fixed_base_scalar_mul = false;
+        let mut keccak256 = false;
+        for opcode in opcodes {
+            match opcode {
+                Opcode::Arithmetic(..) => arithmetic = true,
+                Opcode::BlackBoxFuncCall(gadget_call) => match gadget_call {
+                    BlackBoxFuncCall::RANGE { .. } => range = true,
+                    BlackBoxFuncCall::AND { .. } => and = true,
+                    BlackBoxFuncCall::XOR { .. } => xor = true,
+                    BlackBoxFuncCall::SHA256 { .. } => sha256 = true,
+                    BlackBoxFuncCall::Blake2s { .. } => blake2s = true,
+                    BlackBoxFuncCall::SchnorrVerify { .. } => schnorr_verify = true,
+                    BlackBoxFuncCall::Pedersen { .. } => pedersen = true,
+                    BlackBoxFuncCall::HashToField128Security { .. } => hash_to_field = true,
+                    BlackBoxFuncCall::EcdsaSecp256k1 { .. } => ecdsa_secp256k1 = true,
+                    BlackBoxFuncCall::AES { .. } => {}
+                    BlackBoxFuncCall::ComputeMerkleRoot { .. } => compute_merkle_root = true,
+                    BlackBoxFuncCall::FixedBaseScalarMul { .. } => fixed_base_scalar_mul = true,
+                    BlackBoxFuncCall::Keccak256 { .. } => keccak256 = true,
+                },
+                Opcode::Directive(_) | Opcode::Oracle(_) => {
+                    // Directives are only needed by the pwg
+                }
+                Opcode::Block(_) => {
+                    // Block is managed by ACVM
+                }
+                Opcode::RAM(_) | Opcode::ROM(_) => {}
+            }
+        }
+
+        OpcodeFlags {
+            arithmetic,
+            range,
+            and,
+            xor,
+            sha256,
+            blake2s,
+            compute_merkle_root,
+            schnorr_verify,
+            pedersen,
+            hash_to_field,
+            ecdsa_secp256k1,
+            fixed_base_scalar_mul,
+            keccak256,
         }
     }
 }

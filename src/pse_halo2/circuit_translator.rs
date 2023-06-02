@@ -1,17 +1,24 @@
 use core::panic;
 use std::marker::PhantomData;
 
-use crate::pse_halo2::halo2_plonk_api::PlonkConfig;
+use crate::{errors::Error, pse_halo2::halo2_plonk_api::PlonkConfig};
 use acvm::acir::{
     circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
     native_types::WitnessMap,
+    BlackBoxFunc,
 };
 
-use pse_halo2wrong::halo2::{
-    circuit::SimpleFloorPlanner, halo2curves::bn256::Fr, plonk::Circuit as Halo2PlonkCircuit,
-    plonk::ConstraintSystem,
+use pse_ecc::GeneralEccChip;
+use pse_halo2wrong::{
+    curves::secp256k1::Secp256k1Affine,
+    halo2::{
+        circuit::SimpleFloorPlanner, halo2curves::bn256::Fr, plonk::Circuit as Halo2PlonkCircuit,
+        plonk::ConstraintSystem,
+    },
 };
 use pse_maingate::{RangeChip, RangeInstructions};
+
+use super::halo2_plonk_api::OpcodeFlags;
 
 #[derive(Clone, Default)]
 pub struct NoirHalo2Translator<Fr> {
@@ -23,9 +30,21 @@ pub struct NoirHalo2Translator<Fr> {
 impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
     type Config = PlonkConfig;
     type FloorPlanner = SimpleFloorPlanner;
+    type Params = OpcodeFlags;
 
     fn without_witnesses(&self) -> Self {
         Self::default()
+    }
+
+    fn params(&self) -> Self::Params {
+        Self::Params::default()
+    }
+
+    fn configure_with_params(
+        meta: &mut ConstraintSystem<Fr>,
+        opcode_flags: Self::Params,
+    ) -> Self::Config {
+        PlonkConfig::configure_with_params(meta, opcode_flags)
     }
 
     fn configure(meta: &mut ConstraintSystem<Fr>) -> PlonkConfig {
@@ -85,72 +104,77 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                             panic!("hash to field has not yet been implemented")
                         }
                         BlackBoxFuncCall::EcdsaSecp256k1 {
-                            public_key_x: _public_key_x_inputs,
-                            public_key_y: _public_key_y_inputs,
-                            signature: _signature_inputs,
-                            hashed_message: _hashed_message_inputs,
+                            public_key_x: public_key_x_inputs,
+                            public_key_y: public_key_y_inputs,
+                            signature: signature_inputs,
+                            hashed_message: hashed_message_inputs,
                             output: _,
                         } => {
-                            // let ecc_chip = GeneralEccChip::<Secp256k1Affine, Fr, 4, 68>::new(
-                            //     config.ecc_config.clone(),
-                            // );
+                            match config.ecc_config {
+                                Some(ref ecc_config) => {
+                                    let ecc_chip =
+                                        GeneralEccChip::<Secp256k1Affine, Fr, 4, 68>::new(
+                                            ecc_config.clone(),
+                                        );
+                                    // public key x
+                                    let mut public_key_x_inputs = public_key_x_inputs.iter();
+                                    let mut public_key_x = Vec::new();
+                                    for (i, pkx) in public_key_x.iter_mut().enumerate() {
+                                        let x_byte = public_key_x_inputs
+                                    .next()
+                                    .ok_or_else(|| Error::MalformedBlackBoxFunc(
+                                        BlackBoxFunc::EcdsaSecp256k1,
+                                        format!("Missing rest of `x` component for public key. Tried to get byte {i} but failed"),
+                                    )).unwrap();
+                                        let x_byte_index = x_byte.witness;
+                                        *pkx = x_byte_index;
+                                    }
 
-                            // // public key x
-                            // let mut public_key_x_inputs = public_key_x_inputs.iter();
-                            // let mut public_key_x = Vec::new();
-                            // for (i, pkx) in public_key_x.iter_mut().enumerate() {
-                            //     let x_byte = public_key_x_inputs
-                            //         .next()
-                            //         .ok_or_else(|| Error::MalformedBlackBoxFunc(
-                            //             BlackBoxFunc::EcdsaSecp256k1,
-                            //             format!("Missing rest of `x` component for public key. Tried to get byte {i} but failed"),
-                            //         )).unwrap();
-                            //     let x_byte_index = x_byte.witness;
-                            //     *pkx = x_byte_index;
-                            // }
+                                    // public key y
+                                    let mut public_key_y_inputs = public_key_y_inputs.iter();
+                                    let mut public_key_y = Vec::new();
+                                    for (i, pky) in public_key_y.iter_mut().enumerate() {
+                                        let y_byte = public_key_y_inputs
+                                    .next()
+                                    .ok_or_else(|| Error::MalformedBlackBoxFunc(
+                                        BlackBoxFunc::EcdsaSecp256k1,
+                                        format!("Missing rest of `y` component for public key. Tried to get byte {i} but failed"),
+                                    )).unwrap();
+                                        let y_byte_index = y_byte.witness;
+                                        *pky = y_byte_index;
+                                    }
 
-                            // // public key y
-                            // let mut public_key_y_inputs = public_key_y_inputs.iter();
-                            // let mut public_key_y = Vec::new();
-                            // for (i, pky) in public_key_y.iter_mut().enumerate() {
-                            //     let y_byte = public_key_y_inputs
-                            //         .next()
-                            //         .ok_or_else(|| Error::MalformedBlackBoxFunc(
-                            //             BlackBoxFunc::EcdsaSecp256k1,
-                            //             format!("Missing rest of `y` component for public key. Tried to get byte {i} but failed"),
-                            //         )).unwrap();
-                            //     let y_byte_index = y_byte.witness;
-                            //     *pky = y_byte_index;
-                            // }
+                                    // signature
+                                    let mut signature_inputs = signature_inputs.iter();
+                                    let mut signature = Vec::new();
+                                    for (i, sig) in signature.iter_mut().enumerate() {
+                                        let sig_byte =
+                                    signature_inputs.next().ok_or_else(|| Error::MalformedBlackBoxFunc(
+                                        BlackBoxFunc::EcdsaSecp256k1,
+                                        format!("Missing rest of signature. Tried to get byte {i} but failed"),
+                                    )).unwrap();
+                                        let sig_byte_index = sig_byte.witness;
+                                        *sig = sig_byte_index;
+                                    }
 
-                            // // signature
-                            // let mut signature_inputs = signature_inputs.iter();
-                            // let mut signature = Vec::new();
-                            // for (i, sig) in signature.iter_mut().enumerate() {
-                            //     let sig_byte =
-                            //         signature_inputs.next().ok_or_else(|| Error::MalformedBlackBoxFunc(
-                            //             BlackBoxFunc::EcdsaSecp256k1,
-                            //             format!("Missing rest of signature. Tried to get byte {i} but failed"),
-                            //         )).unwrap();
-                            //     let sig_byte_index = sig_byte.witness;
-                            //     *sig = sig_byte_index;
-                            // }
+                                    // The rest of the input is the message
+                                    let mut hashed_message = Vec::new();
+                                    for msg in hashed_message_inputs.iter() {
+                                        let msg_byte_index = msg.witness;
+                                        hashed_message.push(msg_byte_index);
+                                    }
 
-                            // // The rest of the input is the message
-                            // let mut hashed_message = Vec::new();
-                            // for msg in hashed_message_inputs.iter() {
-                            //     let msg_byte_index = msg.witness;
-                            //     hashed_message.push(msg_byte_index);
-                            // }
-
-                            // self.add_ecdsa_secp256k1_constrain(
-                            //     hashed_message,
-                            //     signature,
-                            //     public_key_x,
-                            //     public_key_y,
-                            //     &mut layouter,
-                            //     ecc_chip,
-                            // )?;
+                                    self.add_ecdsa_secp256k1_constrain(
+                                        hashed_message,
+                                        signature,
+                                        public_key_x,
+                                        public_key_y,
+                                        &mut layouter,
+                                        ecc_chip,
+                                    )?;
+                                }
+                                None => unreachable!(),
+                            }
                         }
                         BlackBoxFuncCall::FixedBaseScalarMul { .. } => {
                             todo!()

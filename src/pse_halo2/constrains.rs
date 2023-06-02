@@ -216,7 +216,7 @@ impl NoirHalo2Translator<Fr> {
         Ok(())
     }
 
-    pub(crate) fn _add_ecdsa_secp256k1_constrain(
+    pub(crate) fn add_ecdsa_secp256k1_constrain(
         &self,
         hashed_message: Vec<Witness>,
         signature: Vec<Witness>,

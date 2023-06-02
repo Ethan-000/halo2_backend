@@ -14,6 +14,7 @@ use pse_halo2wrong::halo2::SerdeFormat;
 
 use crate::errors::BackendError;
 use crate::pse_halo2::circuit_translator::NoirHalo2Translator;
+use crate::pse_halo2::halo2_plonk_api::OpcodeFlags;
 use crate::pse_halo2::halo2_plonk_api::{halo2_keygen, halo2_prove, halo2_verify};
 
 use crate::pse_halo2::PseHalo2;
@@ -58,9 +59,12 @@ impl ProofSystemCompiler for PseHalo2 {
             ParamsKZG::<Bn256>::read_custom(&mut common_reference_string, SerdeFormat::RawBytes)
                 .unwrap();
 
+        let opcode_flags = OpcodeFlags::new(circuit.opcodes.clone());
+
         let pk = ProvingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr>>(
             proving_key,
             SerdeFormat::RawBytes,
+            opcode_flags,
         )
         .unwrap();
 
@@ -80,16 +84,19 @@ impl ProofSystemCompiler for PseHalo2 {
         mut common_reference_string: &[u8],
         proof: &[u8],
         _public_inputs: WitnessMap,
-        _circuit: &NoirCircuit,
+        circuit: &NoirCircuit,
         verification_key: &[u8],
     ) -> Result<bool, BackendError> {
         let params =
             ParamsKZG::<Bn256>::read_custom(&mut common_reference_string, SerdeFormat::RawBytes)
                 .unwrap();
 
+        let opcode_flags = OpcodeFlags::new(circuit.opcodes.clone());
+
         let vk = VerifyingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr>>(
             verification_key,
             SerdeFormat::RawBytes,
+            opcode_flags,
         )
         .unwrap();
 
