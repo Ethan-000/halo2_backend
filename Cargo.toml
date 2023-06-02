@@ -24,11 +24,11 @@ zcash_halo2_proofs = { package = "halo2_proofs", version = "0.3.0", optional = t
 
 # pse
 # pse_halo2_proofs = { git = "https://github.com/privacy-scaling-explorations/halo2.git", package = "halo2_proofs", tag = "v2023_04_20", optional = true }
-pse_halo2wrong = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "halo2wrong", tag = "v2023_04_20", optional = true }
-pse_maingate = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "maingate", tag = "v2023_04_20", optional = true }
-pse_ecdsa = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "ecdsa", tag = "v2023_04_20", optional = true }
-pse_ecc = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "ecc", tag = "v2023_04_20", optional = true }
-pse_snark_verifier = { git = "https://github.com/privacy-scaling-explorations/snark-verifier", package = "snark-verifier", tag = "v2023_04_20", optional = true }
+pse_halo2wrong = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "halo2wrong", tag = "v2023_04_20", features = ["circuit-params"], optional = true }
+pse_maingate = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "maingate", tag = "v2023_04_20", features = ["circuit-params"], optional = true }
+pse_ecdsa = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "ecdsa", tag = "v2023_04_20", features = ["circuit-params"], optional = true }
+pse_ecc = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "ecc", tag = "v2023_04_20", features = ["circuit-params"], optional = true }
+pse_snark_verifier = { git = "https://github.com/privacy-scaling-explorations/snark-verifier", package = "snark-verifier", tag = "v2023_04_20", features = ["halo2_circuit_params"], optional = true }
 
 # axiom
 halo2-base = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "release-0.3.0", optional = true }

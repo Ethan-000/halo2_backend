@@ -15,6 +15,7 @@ use pse_snark_verifier::verifier::{self, SnarkVerifier};
 use crate::errors::BackendError;
 
 use crate::pse_halo2::circuit_translator::NoirHalo2Translator;
+use crate::pse_halo2::halo2_plonk_api::OpcodeFlags;
 use crate::pse_halo2::PseHalo2;
 type PlonkVerifier = verifier::plonk::PlonkVerifier<KzgAs<Bn256, Gwc19>>;
 
@@ -52,9 +53,11 @@ impl SmartContract for PseHalo2 {
             ParamsKZG::<Bn256>::read_custom(&mut common_reference_string, SerdeFormat::RawBytes)
                 .unwrap();
 
+        let opcode_flags = OpcodeFlags::default();
         let vk = VerifyingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr>>(
             verification_key,
             SerdeFormat::RawBytes,
+            opcode_flags,
         )
         .unwrap();
 
