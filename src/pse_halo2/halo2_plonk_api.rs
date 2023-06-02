@@ -1,5 +1,5 @@
 use acvm::{
-    acir::circuit::{opcodes::BlackBoxFuncCall, Opcode},
+    acir::circuit::{opcodes::BlackBoxFuncCall, Opcode, Circuit as NoirCircuit},
     FieldElement,
 };
 
@@ -14,7 +14,7 @@ use pse_halo2wrong::{
         },
         plonk::{
             create_proof, keygen_pk, keygen_vk, verify_proof, ConstraintSystem, Error, ProvingKey,
-            VerifyingKey,
+            VerifyingKey, Column, Instance
         },
         poly::kzg::{
             commitment::{KZGCommitmentScheme, ParamsKZG},
@@ -32,7 +32,10 @@ use pse_maingate::{MainGate, MainGateConfig, RangeChip, RangeConfig};
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 
-use crate::pse_halo2::circuit_translator::NoirHalo2Translator;
+use crate::{
+    pse_halo2::circuit_translator::NoirHalo2Translator,
+    cell_map::CellMap
+};
 
 pub fn halo2_keygen(
     circuit: &NoirHalo2Translator<Fr>,
@@ -88,6 +91,7 @@ pub struct PlonkConfig {
     pub(crate) main_gate_config: MainGateConfig,
     pub(crate) range_config: RangeConfig,
     pub(crate) ecc_config: Option<EccConfig>,
+    pub(crate) instance: Option<Column<Instance>>
 }
 
 impl PlonkConfig {
@@ -116,6 +120,7 @@ impl PlonkConfig {
             main_gate_config,
             range_config,
             ecc_config: None,
+            instance: None
         }
     }
 
@@ -148,6 +153,11 @@ impl PlonkConfig {
                     range_config.clone(),
                     main_gate_config.clone(),
                 ))
+            } else {
+                None
+            },
+            instance: if opcodes_flags.public_inputs {
+                Some(meta.instance_column())
             } else {
                 None
             },
@@ -217,10 +227,13 @@ pub struct OpcodeFlags {
     pub(crate) fixed_base_scalar_mul: bool,
     pub(crate) keccak256: bool,
     pub(crate) keccak256_variable_length: bool,
+    // @todo: maybe separate from opcode flags for proper logical separation
+    pub(crate) public_inputs: bool,
 }
 
 impl OpcodeFlags {
-    pub(crate) fn new(opcodes: Vec<Opcode>) -> OpcodeFlags {
+    pub(crate) fn new(circuit: NoirCircuit) -> OpcodeFlags {
+        // opcode params
         let mut arithmetic = false;
         let mut range = false;
         let mut and = false;
@@ -234,7 +247,7 @@ impl OpcodeFlags {
         let mut fixed_base_scalar_mul = false;
         let mut keccak256 = false;
         let mut keccak256_variable_length = false;
-        for opcode in opcodes {
+        for opcode in circuit.opcodes {
             match opcode {
                 Opcode::Arithmetic(..) => arithmetic = true,
                 Opcode::BlackBoxFuncCall(gadget_call) => match gadget_call {
@@ -263,6 +276,8 @@ impl OpcodeFlags {
                 Opcode::Brillig(_) => todo!(),
             }
         }
+        // public IO params
+        let mut public_inputs = circuit.public_inputs().0.len() > 0;
 
         OpcodeFlags {
             arithmetic,
@@ -278,6 +293,7 @@ impl OpcodeFlags {
             fixed_base_scalar_mul,
             keccak256,
             keccak256_variable_length,
+            public_inputs,
         }
     }
 }

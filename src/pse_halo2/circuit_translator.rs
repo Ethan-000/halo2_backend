@@ -1,7 +1,11 @@
 use core::panic;
 use std::marker::PhantomData;
 
-use crate::{errors::Error, pse_halo2::halo2_plonk_api::PlonkConfig};
+use crate::{
+    errors::Error,
+    pse_halo2::halo2_plonk_api::PlonkConfig,
+    cell_map::CellMap,
+};
 use acvm::acir::{
     circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
     native_types::WitnessMap,
@@ -38,13 +42,14 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
 
     fn params(&self) -> Self::Params {
         Self::Params::default()
+    
     }
 
     fn configure_with_params(
         meta: &mut ConstraintSystem<Fr>,
-        opcode_flags: Self::Params,
+        opcode_flags: Self::Params
     ) -> Self::Config {
-        PlonkConfig::configure_with_params(meta, opcode_flags)
+        PlonkConfig::configure_with_params(meta, opcode_flags, public_inputs)
     }
 
     fn configure(meta: &mut ConstraintSystem<Fr>) -> PlonkConfig {
@@ -56,6 +61,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
         config: Self::Config,
         mut layouter: impl pse_halo2wrong::halo2::circuit::Layouter<Fr>,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
+        let mut witness_assignments = CellMap::new();
         let range_chip = RangeChip::<Fr>::new(config.range_config.clone());
         for gate in self.circuit.opcodes.iter() {
             match gate {
