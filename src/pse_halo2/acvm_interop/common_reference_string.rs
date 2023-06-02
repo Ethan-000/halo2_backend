@@ -10,7 +10,7 @@ use crate::pse_halo2::halo2_params::constuct_halo2_params_from_aztec_crs;
 use crate::pse_halo2::PseHalo2;
 
 // TODO(#185): Ensure CRS download works in JS
-#[async_trait]
+#[async_trait(?Send)]
 impl CommonReferenceString for PseHalo2 {
     type Error = BackendError;
 

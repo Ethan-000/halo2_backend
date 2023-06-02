@@ -56,7 +56,7 @@ impl ProofSystemCompiler for ZcashHalo2 {
 
         let params = Params::<EqAffine>::read(&mut common_reference_string).unwrap();
 
-        let (pk, vk) = halo2_keygen(&translator, &params);
+        let (pk, _vk) = halo2_keygen(&translator, &params);
 
         let proof = halo2_prove(translator, &params, &pk);
 
@@ -97,7 +97,7 @@ impl ProofSystemCompiler for ZcashHalo2 {
             Opcode::RAM(_) => false,
             Opcode::Oracle(_) => false,
             Opcode::BlackBoxFuncCall(func) => match func.get_black_box_func() {
-                BlackBoxFunc::AND | BlackBoxFunc::RANGE => false,
+                BlackBoxFunc::AND | BlackBoxFunc::RANGE => true,
 
                 BlackBoxFunc::XOR
                 | BlackBoxFunc::SHA256
@@ -107,10 +107,9 @@ impl ProofSystemCompiler for ZcashHalo2 {
                 | BlackBoxFunc::EcdsaSecp256k1
                 | BlackBoxFunc::Keccak256
                 | BlackBoxFunc::FixedBaseScalarMul
-                | BlackBoxFunc::ComputeMerkleRoot
-                | BlackBoxFunc::SchnorrVerify
-                | BlackBoxFunc::AES => false,
+                | BlackBoxFunc::SchnorrVerify => false,
             },
+            Opcode::Brillig(_) => todo!(),
         }
     }
 }

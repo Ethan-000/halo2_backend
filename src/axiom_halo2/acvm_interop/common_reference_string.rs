@@ -10,7 +10,7 @@ use crate::axiom_halo2::AxiomHalo2;
 use crate::errors::BackendError;
 
 // TODO(#185): Ensure CRS download works in JS
-#[async_trait]
+#[async_trait(?Send)]
 impl CommonReferenceString for AxiomHalo2 {
     type Error = BackendError;
 
