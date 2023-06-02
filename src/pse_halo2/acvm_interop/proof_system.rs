@@ -127,10 +127,9 @@ impl ProofSystemCompiler for PseHalo2 {
                 | BlackBoxFunc::EcdsaSecp256k1
                 | BlackBoxFunc::Keccak256
                 | BlackBoxFunc::FixedBaseScalarMul
-                | BlackBoxFunc::ComputeMerkleRoot
-                | BlackBoxFunc::SchnorrVerify
-                | BlackBoxFunc::AES => false,
+                | BlackBoxFunc::SchnorrVerify => false,
             },
+            Opcode::Brillig(_) => false,
         }
     }
 }

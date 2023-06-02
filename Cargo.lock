@@ -4,11 +4,12 @@ version = 3
 
 [[package]]
 name = "acir"
-version = "0.12.0"
+version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c831802bad8d6810bfdb57cd00913157dfe710a185dc360c9a94eecd043bbf12"
+checksum = "a5b1acebc24fe47a54761470d907a71abb5065c71236e8ad91763f7cfeda91e6"
 dependencies = [
  "acir_field",
+ "brillig_vm",
  "flate2",
  "rmp-serde",
  "serde",
@@ -17,9 +18,9 @@ dependencies = [
 
 [[package]]
 name = "acir_field"
-version = "0.12.0"
+version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d455746f51b4421548e42d34e2ce46b6db637cb048095d78766612d26bf526db"
+checksum = "56a34985546b0dc8148b9f8a4e7388e32924b108bfe6f1fee2886ca9fcd46ce7"
 dependencies = [
  "ark-bn254",
  "ark-ff",
@@ -31,9 +32,9 @@ dependencies = [
 
 [[package]]
 name = "acvm"
-version = "0.12.0"
+version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd8e75cf737b52195a8c109e0ee776e468e1c2ec42f0f88aa4465cd76a09b4ed"
+checksum = "1ef2fb115fd5b52adc06c7a62ce44d19da746d39b858415750eaf72c763e1b88"
 dependencies = [
  "acir",
  "acvm_stdlib",
@@ -50,9 +51,9 @@ dependencies = [
 
 [[package]]
 name = "acvm_stdlib"
-version = "0.12.0"
+version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a2e87549b987593eeb1902990006443f2fe5817db927035f081008e4b8a46a49"
+checksum = "1985da8071de8cc8680eec187b19b31fa19c00439291cd188247429d9f0f9c21"
 dependencies = [
  "acir",
 ]
@@ -320,6 +321,17 @@ name = "block-padding"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
+
+[[package]]
+name = "brillig_vm"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6e6db12d2fa2a555e26513c457bf44154cfb1738ad6a42537089d63ede7f1c1"
+dependencies = [
+ "acir_field",
+ "num-bigint",
+ "serde",
+]
 
 [[package]]
 name = "bumpalo"

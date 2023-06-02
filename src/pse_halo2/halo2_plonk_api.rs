@@ -210,13 +210,13 @@ pub struct OpcodeFlags {
     pub(crate) xor: bool,
     pub(crate) sha256: bool,
     pub(crate) blake2s: bool,
-    pub(crate) compute_merkle_root: bool,
     pub(crate) schnorr_verify: bool,
     pub(crate) pedersen: bool,
     pub(crate) hash_to_field: bool,
     pub(crate) ecdsa_secp256k1: bool,
     pub(crate) fixed_base_scalar_mul: bool,
     pub(crate) keccak256: bool,
+    pub(crate) keccak256_variable_length: bool,
 }
 
 impl OpcodeFlags {
@@ -227,13 +227,13 @@ impl OpcodeFlags {
         let mut xor = false;
         let mut sha256 = false;
         let mut blake2s = false;
-        let mut compute_merkle_root = false;
         let mut schnorr_verify = false;
         let mut pedersen = false;
         let mut hash_to_field = false;
         let mut ecdsa_secp256k1 = false;
         let mut fixed_base_scalar_mul = false;
         let mut keccak256 = false;
+        let mut keccak256_variable_length = false;
         for opcode in opcodes {
             match opcode {
                 Opcode::Arithmetic(..) => arithmetic = true,
@@ -247,10 +247,11 @@ impl OpcodeFlags {
                     BlackBoxFuncCall::Pedersen { .. } => pedersen = true,
                     BlackBoxFuncCall::HashToField128Security { .. } => hash_to_field = true,
                     BlackBoxFuncCall::EcdsaSecp256k1 { .. } => ecdsa_secp256k1 = true,
-                    BlackBoxFuncCall::AES { .. } => {}
-                    BlackBoxFuncCall::ComputeMerkleRoot { .. } => compute_merkle_root = true,
                     BlackBoxFuncCall::FixedBaseScalarMul { .. } => fixed_base_scalar_mul = true,
                     BlackBoxFuncCall::Keccak256 { .. } => keccak256 = true,
+                    BlackBoxFuncCall::Keccak256VariableLength { .. } => {
+                        keccak256_variable_length = true
+                    }
                 },
                 Opcode::Directive(_) | Opcode::Oracle(_) => {
                     // Directives are only needed by the pwg
@@ -259,6 +260,7 @@ impl OpcodeFlags {
                     // Block is managed by ACVM
                 }
                 Opcode::RAM(_) | Opcode::ROM(_) => {}
+                Opcode::Brillig(_) => todo!(),
             }
         }
 
@@ -269,13 +271,13 @@ impl OpcodeFlags {
             xor,
             sha256,
             blake2s,
-            compute_merkle_root,
             schnorr_verify,
             pedersen,
             hash_to_field,
             ecdsa_secp256k1,
             fixed_base_scalar_mul,
             keccak256,
+            keccak256_variable_length,
         }
     }
 }
