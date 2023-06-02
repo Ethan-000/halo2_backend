@@ -3,12 +3,10 @@ use {
         axiom_halo2::{
             assignment_map::AssignmentMap,
             circuit_translator::NoirHalo2Translator,
-            halo2_plonk_api::{
-                ,
-                NoirConstraint, PlonkConfig, PolyTriple, StandardCs,
-            },
+            halo2_plonk_api::{NoirConstraint, PlonkConfig, PolyTriple, StandardCs},
         },
-        utils::{Secp256k1FieldConversion, impl_noir_field_to_secp255k1_field_conversion, noir_field_to_halo2_field}
+        impl_noir_field_to_secp255k1_field_conversion, noir_field_to_halo2_field,
+        utils::Secp256k1FieldConversion,
     },
     acvm::{
         acir::native_types::{Expression, Witness},
