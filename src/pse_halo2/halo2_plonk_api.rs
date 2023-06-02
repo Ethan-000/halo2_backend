@@ -1,32 +1,33 @@
-use std::marker::PhantomData;
+use acvm::{
+    acir::circuit::{opcodes::BlackBoxFuncCall, Opcode},
+    FieldElement,
+};
 
-use acvm::FieldElement;
-use pse_halo2_proofs::{
-    arithmetic::Field,
-    circuit::Layouter,
-    circuit::{Cell, Value},
-    halo2curves::bn256::Fr,
-    halo2curves::{
-        bn256::{Bn256, G1Affine, G1},
-        group::cofactor::CofactorCurve,
-    },
-    plonk::Assigned,
-    plonk::{
-        create_proof, keygen_pk, keygen_vk, verify_proof, Advice, Column, ConstraintSystem, Error,
-        Fixed, ProvingKey, VerifyingKey,
-    },
-    poly::{
-        kzg::{
+use pse_ecc::{EccConfig, GeneralEccChip};
+use pse_halo2wrong::{
+    curves::secp256k1::Secp256k1Affine,
+    halo2::{
+        halo2curves::bn256::Fr,
+        halo2curves::{
+            bn256::{Bn256, G1Affine, G1},
+            group::cofactor::CofactorCurve,
+        },
+        plonk::{
+            create_proof, keygen_pk, keygen_vk, verify_proof, ConstraintSystem, Error, ProvingKey,
+            VerifyingKey,
+        },
+        poly::kzg::{
             commitment::{KZGCommitmentScheme, ParamsKZG},
             multiopen::{ProverGWC, VerifierGWC},
             strategy::SingleStrategy,
         },
-        Rotation,
-    },
-    transcript::{
-        Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
+        transcript::{
+            Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
+        },
     },
 };
+
+use pse_maingate::{MainGate, MainGateConfig, RangeChip, RangeConfig};
 
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
@@ -61,7 +62,7 @@ pub fn halo2_prove(
         _,
         Blake2bWrite<Vec<u8>, G1Affine, Challenge255<_>>,
         _,
-    >(params, pk, &[circuit], &[&[]], rng, &mut transcript)
+    >(params, pk, &[circuit], &[&[&[]]], rng, &mut transcript)
     .expect("proof generation should not fail");
     transcript.finalize()
 }
@@ -79,123 +80,79 @@ pub fn halo2_verify(
         Challenge255<G1Affine>,
         Blake2bRead<&[u8], G1Affine, Challenge255<G1Affine>>,
         SingleStrategy<'_, Bn256>,
-    >(params, vk, strategy, &[&[]], &mut transcript)
+    >(params, vk, strategy, &[&[&[]]], &mut transcript)
 }
 
 #[derive(Clone)]
 pub struct PlonkConfig {
-    a: Column<Advice>,
-    b: Column<Advice>,
-    c: Column<Advice>,
-
-    sl: Column<Fixed>,
-    sr: Column<Fixed>,
-    so: Column<Fixed>,
-    sm: Column<Fixed>,
-    sc: Column<Fixed>,
+    pub(crate) main_gate_config: MainGateConfig,
+    pub(crate) range_config: RangeConfig,
+    pub(crate) ecc_config: Option<EccConfig>,
 }
 
 impl PlonkConfig {
     pub fn configure(meta: &mut ConstraintSystem<Fr>) -> Self {
-        let a = meta.advice_column();
-        let b = meta.advice_column();
-        let c = meta.advice_column();
+        // let (rns_base, rns_scalar) = GeneralEccChip::<Secp256k1Affine, Fr, 4, 68>::rns();
+        let main_gate_config = MainGate::<Fr>::configure(meta);
 
-        meta.enable_equality(a);
-        meta.enable_equality(b);
-        meta.enable_equality(c);
+        // let mut overflow_bit_lens: Vec<usize> =
+        //     vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+        // overflow_bit_lens.extend(rns_base.overflow_lengths());
+        // overflow_bit_lens.extend(rns_scalar.overflow_lengths());
+        // let composition_bit_lens = vec![8, 68 / 4];
 
-        let sm = meta.fixed_column();
-        let sl = meta.fixed_column();
-        let sr = meta.fixed_column();
-        let so = meta.fixed_column();
-        let sc = meta.fixed_column();
+        let overflow_bit_lens: Vec<usize> = vec![1, 2, 3, 4, 5, 6, 7];
+        let composition_bit_lens = vec![8];
 
-        meta.create_gate("Combined add-mult", |meta| {
-            let a = meta.query_advice(a, Rotation::cur());
-            let b = meta.query_advice(b, Rotation::cur());
-            let c = meta.query_advice(c, Rotation::cur());
-
-            let sl = meta.query_fixed(sl, Rotation::cur());
-            let sr = meta.query_fixed(sr, Rotation::cur());
-            let so = meta.query_fixed(so, Rotation::cur());
-            let sm = meta.query_fixed(sm, Rotation::cur());
-            let sc = meta.query_fixed(sc, Rotation::cur());
-
-            vec![a.clone() * sl + b.clone() * sr + a * b * sm + (c * so) + sc]
-        });
+        let range_config = RangeChip::<Fr>::configure(
+            meta,
+            &main_gate_config,
+            composition_bit_lens,
+            overflow_bit_lens,
+        );
+        // let ecc_config = EccConfig::new(range_config.clone(), main_gate_config.clone());
 
         PlonkConfig {
-            a,
-            b,
-            c,
-            sl,
-            sr,
-            so,
-            sm,
-            sc,
+            main_gate_config,
+            range_config,
+            ecc_config: None,
         }
     }
-}
-#[allow(clippy::type_complexity)]
-pub trait StandardCs<FF: Field> {
-    fn raw_multiply<F>(
-        &self,
-        layouter: &mut impl Layouter<FF>,
-        f: F,
-    ) -> Result<(Cell, Cell, Cell), Error>
-    where
-        F: FnMut() -> Value<(Assigned<FF>, Assigned<FF>, Assigned<FF>)>;
-    fn raw_add<F>(
-        &self,
-        layouter: &mut impl Layouter<FF>,
-        f: F,
-    ) -> Result<(Cell, Cell, Cell), Error>
-    where
-        F: FnMut() -> Value<(Assigned<FF>, Assigned<FF>, Assigned<FF>)>;
-    fn raw_poly<F>(
-        &self,
-        layouter: &mut impl Layouter<FF>,
-        f: F,
-    ) -> Result<(Cell, Cell, Cell), Error>
-    where
-        F: FnMut() -> PolyTriple<Assigned<FF>>;
-    fn copy(&self, layouter: &mut impl Layouter<FF>, a: Cell, b: Cell) -> Result<(), Error>;
-}
 
-#[derive(Copy, Clone, Debug)]
-pub struct PolyTriple<F> {
-    a: Value<F>,
-    b: Value<F>,
-    c: Value<F>,
-    qm: F,
-    ql: F,
-    qr: F,
-    qo: F,
-    qc: F,
-}
+    pub(crate) fn configure_with_params(
+        meta: &mut ConstraintSystem<Fr>,
+        opcodes_flags: OpcodeFlags,
+    ) -> Self {
+        let main_gate_config = MainGate::<Fr>::configure(meta);
 
-impl<F> PolyTriple<F> {
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        a: Value<F>,
-        b: Value<F>,
-        c: Value<F>,
-        qm: F,
-        ql: F,
-        qr: F,
-        qo: F,
-        qc: F,
-    ) -> PolyTriple<F> {
-        PolyTriple {
-            a,
-            b,
-            c,
-            qm,
-            ql,
-            qr,
-            qo,
-            qc,
+        let mut overflow_bit_lens: Vec<usize> = vec![1, 2, 3, 4, 5, 6, 7];
+        let mut composition_bit_lens = vec![8];
+
+        if opcodes_flags.ecdsa_secp256k1 {
+            let (rns_base, rns_scalar) = GeneralEccChip::<Secp256k1Affine, Fr, 4, 68>::rns();
+            overflow_bit_lens.extend(rns_base.overflow_lengths());
+            overflow_bit_lens.extend(rns_scalar.overflow_lengths());
+            composition_bit_lens.extend(vec![68 / 4]);
+        }
+
+        let range_config = RangeChip::<Fr>::configure(
+            meta,
+            &main_gate_config,
+            composition_bit_lens,
+            overflow_bit_lens,
+        );
+
+        PlonkConfig {
+            ecc_config: if opcodes_flags.ecdsa_secp256k1 {
+                Some(EccConfig::new(
+                    range_config.clone(),
+                    main_gate_config.clone(),
+                ))
+            } else {
+                None
+            },
+            main_gate_config,
+            range_config,
         }
     }
 }
@@ -244,144 +201,83 @@ impl NoirConstraint {
     }
 }
 
-pub struct StandardPlonk<F: Field> {
-    config: PlonkConfig,
-    _marker: PhantomData<F>,
+#[allow(dead_code)]
+#[derive(Default)]
+pub struct OpcodeFlags {
+    pub(crate) arithmetic: bool,
+    pub(crate) range: bool,
+    pub(crate) and: bool,
+    pub(crate) xor: bool,
+    pub(crate) sha256: bool,
+    pub(crate) blake2s: bool,
+    pub(crate) schnorr_verify: bool,
+    pub(crate) pedersen: bool,
+    pub(crate) hash_to_field: bool,
+    pub(crate) ecdsa_secp256k1: bool,
+    pub(crate) fixed_base_scalar_mul: bool,
+    pub(crate) keccak256: bool,
+    pub(crate) keccak256_variable_length: bool,
 }
 
-impl<FF: Field> StandardPlonk<FF> {
-    pub fn new(config: PlonkConfig) -> Self {
-        StandardPlonk {
-            config,
-            _marker: PhantomData,
+impl OpcodeFlags {
+    pub(crate) fn new(opcodes: Vec<Opcode>) -> OpcodeFlags {
+        let mut arithmetic = false;
+        let mut range = false;
+        let mut and = false;
+        let mut xor = false;
+        let mut sha256 = false;
+        let mut blake2s = false;
+        let mut schnorr_verify = false;
+        let mut pedersen = false;
+        let mut hash_to_field = false;
+        let mut ecdsa_secp256k1 = false;
+        let mut fixed_base_scalar_mul = false;
+        let mut keccak256 = false;
+        let mut keccak256_variable_length = false;
+        for opcode in opcodes {
+            match opcode {
+                Opcode::Arithmetic(..) => arithmetic = true,
+                Opcode::BlackBoxFuncCall(gadget_call) => match gadget_call {
+                    BlackBoxFuncCall::RANGE { .. } => range = true,
+                    BlackBoxFuncCall::AND { .. } => and = true,
+                    BlackBoxFuncCall::XOR { .. } => xor = true,
+                    BlackBoxFuncCall::SHA256 { .. } => sha256 = true,
+                    BlackBoxFuncCall::Blake2s { .. } => blake2s = true,
+                    BlackBoxFuncCall::SchnorrVerify { .. } => schnorr_verify = true,
+                    BlackBoxFuncCall::Pedersen { .. } => pedersen = true,
+                    BlackBoxFuncCall::HashToField128Security { .. } => hash_to_field = true,
+                    BlackBoxFuncCall::EcdsaSecp256k1 { .. } => ecdsa_secp256k1 = true,
+                    BlackBoxFuncCall::FixedBaseScalarMul { .. } => fixed_base_scalar_mul = true,
+                    BlackBoxFuncCall::Keccak256 { .. } => keccak256 = true,
+                    BlackBoxFuncCall::Keccak256VariableLength { .. } => {
+                        keccak256_variable_length = true
+                    }
+                },
+                Opcode::Directive(_) | Opcode::Oracle(_) => {
+                    // Directives are only needed by the pwg
+                }
+                Opcode::Block(_) => {
+                    // Block is managed by ACVM
+                }
+                Opcode::RAM(_) | Opcode::ROM(_) => {}
+                Opcode::Brillig(_) => todo!(),
+            }
         }
-    }
-}
 
-impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
-    fn raw_multiply<F>(
-        &self,
-        layouter: &mut impl Layouter<FF>,
-        mut f: F,
-    ) -> Result<(Cell, Cell, Cell), pse_halo2_proofs::plonk::Error>
-    where
-        F: FnMut() -> Value<(Assigned<FF>, Assigned<FF>, Assigned<FF>)>,
-    {
-        layouter.assign_region(
-            || "raw_multiply",
-            |mut region| {
-                #[allow(unused_assignments)]
-                let mut value = None;
-                let lhs = region.assign_advice(
-                    || "lhs",
-                    self.config.a,
-                    0,
-                    || {
-                        value = Some(f());
-                        value.unwrap().map(|v| v.0)
-                    },
-                )?;
-                let rhs = region.assign_advice(
-                    || "rhs",
-                    self.config.b,
-                    0,
-                    || value.unwrap().map(|v| v.1),
-                )?;
-                let out = region.assign_advice(
-                    || "out",
-                    self.config.c,
-                    0,
-                    || value.unwrap().map(|v| v.2),
-                )?;
-
-                region.assign_fixed(|| "a", self.config.sl, 0, || Value::known(FF::ZERO))?;
-                region.assign_fixed(|| "b", self.config.sr, 0, || Value::known(FF::ZERO))?;
-                region.assign_fixed(|| "c", self.config.so, 0, || Value::known(FF::ONE))?;
-                region.assign_fixed(|| "a*b", self.config.sm, 0, || Value::known(FF::ONE))?;
-                Ok((lhs.cell(), rhs.cell(), out.cell()))
-            },
-        )
-    }
-    fn raw_add<F>(
-        &self,
-        layouter: &mut impl Layouter<FF>,
-        mut f: F,
-    ) -> Result<(Cell, Cell, Cell), pse_halo2_proofs::plonk::Error>
-    where
-        F: FnMut() -> Value<(Assigned<FF>, Assigned<FF>, Assigned<FF>)>,
-    {
-        layouter.assign_region(
-            || "raw_add",
-            |mut region| {
-                #[allow(unused_assignments)]
-                let mut value = None;
-                let lhs = region.assign_advice(
-                    || "lhs",
-                    self.config.a,
-                    0,
-                    || {
-                        value = Some(f());
-                        value.unwrap().map(|v| v.0)
-                    },
-                )?;
-                let rhs = region.assign_advice(
-                    || "rhs",
-                    self.config.b,
-                    0,
-                    || value.unwrap().map(|v| v.1),
-                )?;
-                let out = region.assign_advice(
-                    || "out",
-                    self.config.c,
-                    0,
-                    || value.unwrap().map(|v| v.2),
-                )?;
-
-                region.assign_fixed(|| "a", self.config.sl, 0, || Value::known(FF::ONE))?;
-                region.assign_fixed(|| "b", self.config.sr, 0, || Value::known(FF::ONE))?;
-                region.assign_fixed(|| "c", self.config.so, 0, || Value::known(FF::ONE))?;
-                region.assign_fixed(|| "a + b", self.config.sm, 0, || Value::known(FF::ZERO))?;
-                Ok((lhs.cell(), rhs.cell(), out.cell()))
-            },
-        )
-    }
-    fn raw_poly<F>(
-        &self,
-        layouter: &mut impl Layouter<FF>,
-        mut f: F,
-    ) -> Result<(Cell, Cell, Cell), pse_halo2_proofs::plonk::Error>
-    where
-        F: FnMut() -> PolyTriple<Assigned<FF>>,
-    {
-        layouter.assign_region(
-            || "raw_poly",
-            |mut region| {
-                let value = f();
-                let lhs = region.assign_advice(|| "lhs", self.config.a, 0, || value.a)?;
-                let rhs = region.assign_advice(|| "rhs", self.config.b, 0, || value.b)?;
-                let out = region.assign_advice(|| "out", self.config.c, 0, || value.c)?;
-
-                region.assign_fixed(|| "a", self.config.sl, 0, || Value::known(value.ql))?;
-                region.assign_fixed(|| "b", self.config.sr, 0, || Value::known(value.qr))?;
-                region.assign_fixed(|| "c", self.config.so, 0, || Value::known(value.qo))?;
-                region.assign_fixed(|| "a * b", self.config.sm, 0, || Value::known(value.qm))?;
-                region.assign_fixed(|| "qc", self.config.sc, 0, || Value::known(value.qc))?;
-                Ok((lhs.cell(), rhs.cell(), out.cell()))
-            },
-        )
-    }
-    fn copy(
-        &self,
-        layouter: &mut impl Layouter<FF>,
-        left: Cell,
-        right: Cell,
-    ) -> Result<(), pse_halo2_proofs::plonk::Error> {
-        layouter.assign_region(
-            || "copy",
-            |mut region| {
-                region.constrain_equal(left, right)?;
-                region.constrain_equal(left, right)
-            },
-        )
+        OpcodeFlags {
+            arithmetic,
+            range,
+            and,
+            xor,
+            sha256,
+            blake2s,
+            schnorr_verify,
+            pedersen,
+            hash_to_field,
+            ecdsa_secp256k1,
+            fixed_base_scalar_mul,
+            keccak256,
+            keccak256_variable_length,
+        }
     }
 }

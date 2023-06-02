@@ -1,32 +1,33 @@
 use std::io::Write;
 
-use crate::{aztec_crs::get_aztec_crs, errors::Error};
-use ark_std::log2;
-use pse_halo2_proofs::{
-    arithmetic::g_to_lagrange,
-    halo2curves::{
-        bn256::{Bn256, Fq, Fq2, G1Affine, G2Affine},
-        group::prime::PrimeCurveAffine,
-        pairing::Engine,
-        serde::SerdeObject,
-        CurveAffine,
+use crate::{aztec_crs::get_aztec_crs, dimension_measure::DimensionMeasurement, errors::Error};
+
+use pse_halo2wrong::{
+    curves::bn256::Fr,
+    halo2::{
+        arithmetic::g_to_lagrange,
+        halo2curves::{
+            bn256::{Bn256, Fq, Fq2, G1Affine, G2Affine},
+            group::prime::PrimeCurveAffine,
+            pairing::Engine,
+            serde::SerdeObject,
+            CurveAffine,
+        },
+        poly::kzg::commitment::ParamsKZG,
+        SerdeFormat,
     },
-    poly::kzg::commitment::ParamsKZG,
-    SerdeFormat,
 };
 
 pub(crate) async fn constuct_halo2_params_from_aztec_crs(
-    num_points: u32,
+    translator: impl pse_halo2wrong::halo2::plonk::Circuit<Fr>,
 ) -> Result<ParamsKZG<Bn256>, Error> {
-    // TODO:
-    // this is a temporary fix.
-    // Investigate how to count gates properly
-    let points_needed = pow2ceil(num_points + 512);
-    let (g1_data, g2_data) = get_aztec_crs(points_needed).await?;
+    let dimension = DimensionMeasurement::measure(&translator).unwrap();
 
-    let k = log2(points_needed as usize);
-    let n = points_needed as u64;
+    let k = dimension.k();
+    let n = 1 << k;
     assert!(n == 1 << k);
+
+    let (g1_data, g2_data) = get_aztec_crs(n).await?;
 
     let mut g = vec![<<Bn256 as Engine>::G1Affine as PrimeCurveAffine>::generator()];
 
@@ -126,8 +127,4 @@ fn to_g2_point(point: &[u8]) -> G2Affine {
         Fq2::from_bytes(&second_byte_array).unwrap(),
     )
     .unwrap()
-}
-
-fn pow2ceil(v: u32) -> u32 {
-    v.next_power_of_two()
 }

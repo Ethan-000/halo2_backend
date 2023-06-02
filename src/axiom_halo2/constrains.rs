@@ -1,5 +1,19 @@
 use {
-    std::slice::Iter,
+    crate::{
+        axiom_halo2::{
+            assignment_map::AssignmentMap,
+            circuit_translator::NoirHalo2Translator,
+            halo2_plonk_api::{
+                ,
+                NoirConstraint, PlonkConfig, PolyTriple, StandardCs,
+            },
+        },
+        utils::{Secp256k1FieldConversion, impl_noir_field_to_secp255k1_field_conversion, noir_field_to_halo2_field}
+    },
+    acvm::{
+        acir::native_types::{Expression, Witness},
+        FieldElement,
+    },
     halo2_base::{
         gates::{GateInstructions, RangeChip, RangeInstructions},
         halo2_proofs::{
@@ -13,23 +27,13 @@ use {
         },
         Context,
     },
-    crate::axiom_halo2::{
-        halo2_plonk_api::{PlonkConfig, PolyTriple, StandardCs},
-        circuit_translator::NoirHalo2Translator,
-        halo2_plonk_api::NoirConstraint,
-        assignment_map::AssignmentMap
-    },
-    acvm::{
-        acir::native_types::{Expression, Witness},
-        FieldElement,
-    },
     halo2_ecc::{
         ecc::{ecdsa::ecdsa_verify_no_pubkey_check, EccChip},
         fields::FieldChip,
         secp256k1::{FpChip, FqChip},
-    }
+    },
+    std::slice::Iter,
 };
-
 
 impl NoirHalo2Translator<Fr> {
     #[allow(non_snake_case)]
@@ -136,7 +140,7 @@ impl NoirHalo2Translator<Fr> {
         config
             .range_chip
             .range_check(&mut ctx, x, num_bits as usize);
-        
+
         // set assigned witness map
         // assignments.insert(witness, x.)
     }
@@ -228,44 +232,6 @@ impl NoirHalo2Translator<Fr> {
     }
 }
 
-impl NoirHalo2Translator<Fr> {
-    fn noir_field_to_secp255k1_fq_field(&self, limbs: Vec<Witness>) -> Fq {
-        let binding: Vec<u8> = limbs
-            .into_iter()
-            .map(|w| *self.witness_values.get(&w).unwrap_or(&FieldElement::zero()))
-            .flat_map(|ele| ele.to_be_bytes())
-            .collect::<Vec<u8>>();
+impl_noir_field_to_secp255k1_field_conversion!(NoirHalo2Translator, Fr, Fp, Fq);
 
-        let mut element_bytes = [0u8; 32];
-        let mut element_vec: Iter<u8> = binding.iter();
-        for byte in element_bytes.iter_mut() {
-            *byte = *element_vec.next().unwrap();
-        }
-
-        Fq::from_bytes(&element_bytes).unwrap()
-    }
-
-    fn noir_field_to_secp255k1_fp_field(&self, limbs: Vec<Witness>) -> Fp {
-        let binding: Vec<u8> = limbs
-            .into_iter()
-            .map(|w| *self.witness_values.get(&w).unwrap_or(&FieldElement::zero()))
-            .flat_map(|ele| ele.to_be_bytes())
-            .collect::<Vec<u8>>();
-
-        let mut element_bytes = [0u8; 32];
-        let mut element_vec: Iter<u8> = binding.iter();
-        for byte in element_bytes.iter_mut() {
-            *byte = *element_vec.next().unwrap();
-        }
-
-        Fp::from_bytes(&element_bytes).unwrap()
-    }
-}
-
-fn noir_field_to_halo2_field(noir_ele: FieldElement) -> Fr {
-    let mut bytes = noir_ele.to_be_bytes();
-    bytes.reverse();
-    let mut halo_ele: [u8; 32] = [0; 32];
-    halo_ele[..bytes.len()].copy_from_slice(&bytes[..]);
-    Fr::from_bytes(&halo_ele).unwrap()
-}
+noir_field_to_halo2_field!(Fr);

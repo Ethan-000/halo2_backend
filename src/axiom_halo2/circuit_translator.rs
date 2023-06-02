@@ -59,9 +59,6 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                         }
                         BlackBoxFuncCall::AND { lhs, rhs, output }
                         | BlackBoxFuncCall::XOR { lhs, rhs, output } => {
-                            let _witness_lhs = lhs.witness;
-                            let _witness_rhs = rhs.witness;
-
                             assert_eq!(lhs.num_bits, rhs.num_bits);
 
                             match gadget_call {
@@ -166,12 +163,10 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                         } => {
                             panic!("keccak256 has not yet been implemented")
                         }
-                        BlackBoxFuncCall::AES { .. } => panic!("AES has not yet been implemented"),
-                        BlackBoxFuncCall::ComputeMerkleRoot {
-                            leaf: _,
-                            index: _,
-                            hash_path: _,
-                            output: _,
+                        BlackBoxFuncCall::Keccak256VariableLength {
+                            inputs: _,
+                            var_message_size: _,
+                            outputs: _,
                         } => todo!(),
                     };
                 }
@@ -184,6 +179,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                 Opcode::RAM(_) | Opcode::ROM(_) => {
                     todo!()
                 }
+                Opcode::Brillig(_) => todo!(),
             }
         }
         Ok(())
