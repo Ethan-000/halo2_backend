@@ -122,7 +122,7 @@ impl NoirHalo2Translator<Fr> {
         config: &PlonkConfig,
         assignments: &mut AssignmentMap,
     ) {
-        let mut ctx = Context::<Fr>::new(true, 0);
+        let mut ctx = Context::<Fr>::new(false, 0);
 
         let x = noir_field_to_halo2_field(
             *self
@@ -149,7 +149,7 @@ impl NoirHalo2Translator<Fr> {
         config: &PlonkConfig,
         assignments: &mut AssignmentMap,
     ) {
-        let mut ctx = Context::<Fr>::new(true, 0);
+        let mut ctx = Context::<Fr>::new(false, 0);
         let lhs_v = noir_field_to_halo2_field(
             *self
                 .witness_values
@@ -177,7 +177,7 @@ impl NoirHalo2Translator<Fr> {
 
         let and_out = config.gate_chip.and(&mut ctx, a, b);
 
-        config.gate_chip.is_equal(&mut ctx, c, and_out.clone());
+        config.gate_chip.is_equal(&mut ctx, c, and_out);
     }
 
     pub(crate) fn add_ecdsa_secp256k1_constrain(
@@ -201,7 +201,7 @@ impl NoirHalo2Translator<Fr> {
         // puting them in a struct requires lifetime parameters
         // not sure if theres a way around this
         // this could be okay
-        let mut ctx = Context::<Fr>::new(true, 0);
+        let mut ctx = Context::<Fr>::new(false, 0);
         let ecdsa_range_chip = RangeChip::<Fr>::default(17);
         let ecdsa_fp_chip = FpChip::new(&ecdsa_range_chip, 88, 3);
         let ecdsa_fq_chip = FqChip::new(&ecdsa_range_chip, 88, 3);
