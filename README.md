@@ -80,13 +80,13 @@ nargo verify add
 - [ ] xor
 - [ ] sha256 
 - [ ] blake2s 
-- [ ] compute_merkle_root 
 - [ ] schnorr_verify
 - [ ] pedersen
 - [ ] hash_to_field
 - [ ] ecdsa_secp256k1
 - [ ] fixed_base_scalar_mul
 - [ ] keccak256
+- [ ] keccak256_variable_length 
 
 ### halo2-axiom features
 
@@ -97,13 +97,13 @@ nargo verify add
 - [ ] xor
 - [ ] sha256 
 - [ ] blake2s 
-- [ ] compute_merkle_root 
 - [ ] schnorr_verify
 - [ ] pedersen
 - [ ] hash_to_field
 - [ ] ecdsa_secp256k1
 - [ ] fixed_base_scalar_mul
 - [ ] keccak256
+- [ ] keccak256_variable_length 
 
 ## License
 
