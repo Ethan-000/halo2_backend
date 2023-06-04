@@ -9,7 +9,7 @@ mod errors;
 #[cfg(feature = "pse_halo2")]
 mod pse_halo2;
 mod utils;
-mod cell_map;
+
 #[cfg(feature = "zcash_halo2")]
 mod zcash_halo2;
 

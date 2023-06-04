@@ -13,7 +13,7 @@ use pse_halo2wrong::{
         CurveAffine,
     },
     halo2::{
-        circuit::{Cell, Layouter, Value},
+        circuit::{AssignedCell, Layouter, Value},
         halo2curves::bn256::Fr,
     },
     RegionCtx,
@@ -26,8 +26,9 @@ use pse_maingate::{
 use std::slice::Iter;
 
 use crate::{
-    cell_map::CellMap, impl_noir_field_to_secp255k1_field_conversion, noir_field_to_halo2_field,
-    pse_halo2::circuit_translator::NoirHalo2Translator, utils::Secp256k1FieldConversion,
+    impl_noir_field_to_secp255k1_field_conversion, noir_field_to_halo2_field,
+    pse_halo2::{assigned_map::AssignedMap, circuit_translator::NoirHalo2Translator},
+    utils::Secp256k1FieldConversion,
 };
 
 use super::halo2_plonk_api::{NoirConstraint, PlonkConfig};
@@ -38,7 +39,7 @@ impl NoirHalo2Translator<Fr> {
         gate: &Expression,
         config: &PlonkConfig,
         layouter: &mut impl Layouter<Fr>,
-        witness_assignments: &mut CellMap,
+        witness_assignments: &mut AssignedMap<Fr>,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
         let mut noir_cs = NoirConstraint::default();
         // check mul gate
@@ -97,15 +98,15 @@ impl NoirHalo2Translator<Fr> {
                 let mut terms = Vec::new();
 
                 let a = main_gate.assign_to_column(ctx, a, MainGateColumn::A)?;
-                check_and_copy(ctx, &witness_assignments, noir_cs.a as u32, &a.cell())?;
+                check_and_copy(ctx, &witness_assignments, noir_cs.a as u32, &a)?;
                 terms.push(Term::Assigned(&a, ql));
 
                 let b = main_gate.assign_to_column(ctx, b, MainGateColumn::B)?;
-                check_and_copy(ctx, &witness_assignments, noir_cs.b as u32, &b.cell())?;
+                check_and_copy(ctx, &witness_assignments, noir_cs.b as u32, &b)?;
                 terms.push(Term::Assigned(&b, qr));
 
                 let c = main_gate.assign_to_column(ctx, c, MainGateColumn::C)?;
-                check_and_copy(ctx, &witness_assignments, noir_cs.c as u32, &c.cell())?;
+                check_and_copy(ctx, &witness_assignments, noir_cs.c as u32, &c)?;
                 terms.push(Term::Assigned(&c, qo));
 
                 let d =
@@ -129,9 +130,9 @@ impl NoirHalo2Translator<Fr> {
                 )?;
 
                 // store assignments to a, b, c
-                witness_assignments.insert(Witness(noir_cs.a as u32), a.cell());
-                witness_assignments.insert(Witness(noir_cs.b as u32), b.cell());
-                witness_assignments.insert(Witness(noir_cs.c as u32), c.cell());
+                witness_assignments.insert(Witness(noir_cs.a as u32), a);
+                witness_assignments.insert(Witness(noir_cs.b as u32), b);
+                witness_assignments.insert(Witness(noir_cs.c as u32), c);
 
                 Ok(())
             },
@@ -148,7 +149,7 @@ impl NoirHalo2Translator<Fr> {
         num_bits: u32,
         range_chip: &RangeChip<Fr>,
         layouter: &mut impl Layouter<Fr>,
-        witness_assignments: &mut CellMap,
+        witness_assignments: &mut AssignedMap<Fr>,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
         let input = noir_field_to_halo2_field(
             *self
@@ -168,11 +169,10 @@ impl NoirHalo2Translator<Fr> {
                 let bit_len = num_bits as usize;
 
                 let cell = range_chip.assign(ctx, value, limb_bit_len, bit_len)?;
+                check_and_copy(ctx, &witness_assignments, witness.0, &cell)?;
 
-                // check & potentially copy constrain assigned value that was range checked
-                check_and_copy(ctx, &witness_assignments, witness.0, &cell.cell())?;
                 // add to assignment map
-                witness_assignments.insert(witness, cell.cell());
+                witness_assignments.insert(witness, cell);
 
                 Ok(())
             },
@@ -188,6 +188,7 @@ impl NoirHalo2Translator<Fr> {
         output: Witness,
         config: &PlonkConfig,
         layouter: &mut impl Layouter<Fr>,
+        witness_assignments: &mut AssignedMap<Fr>,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
         let lhs_v = Value::known(noir_field_to_halo2_field(
             *self
@@ -217,12 +218,22 @@ impl NoirHalo2Translator<Fr> {
                 let ctx = &mut RegionCtx::new(region, offset);
                 let main_gate = MainGate::<Fr>::new(config.main_gate_config.clone());
 
-                let c1 = main_gate.assign_to_column(ctx, lhs_v, MainGateColumn::A)?;
-                let c2 = main_gate.assign_to_column(ctx, rhs_v, MainGateColumn::B)?;
-                let out = main_gate.assign_to_column(ctx, output_v, MainGateColumn::C)?;
-                let result = main_gate.and(ctx, &c1, &c2)?;
+                let lhs_cell = main_gate.assign_to_column(ctx, lhs_v, MainGateColumn::A)?;
+                check_and_copy(ctx, &witness_assignments, lhs.0, &lhs_cell);
 
-                main_gate.assert_equal(ctx, &out, &result)?;
+                let rhs_cell = main_gate.assign_to_column(ctx, rhs_v, MainGateColumn::B)?;
+                check_and_copy(ctx, &witness_assignments, rhs.0, &rhs_cell);
+
+                let output_cell = main_gate.assign_to_column(ctx, output_v, MainGateColumn::C)?;
+                check_and_copy(ctx, &witness_assignments, output.0, &output_cell);
+
+                let result = main_gate.and(ctx, &lhs_cell, &rhs_cell)?;
+                main_gate.assert_equal(ctx, &output_cell, &result)?;
+
+                // add to assignment map
+                witness_assignments.insert(lhs, lhs_cell);
+                witness_assignments.insert(rhs, rhs_cell);
+                witness_assignments.insert(output, output_cell);
 
                 Ok(())
             },
@@ -313,13 +324,13 @@ impl NoirHalo2Translator<Fr> {
  */
 pub fn check_and_copy(
     ctx: &mut RegionCtx<Fr>,
-    assignments: &CellMap,
+    assignments: &AssignedMap<Fr>,
     witness: u32,
-    cell: &Cell,
+    cell: &AssignedCell<Fr, Fr>,
 ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
     if assignments.contains_key(&Witness(witness)) {
         let witness_cell = assignments.get_index(witness).unwrap().last().unwrap();
-        ctx.constrain_equal(witness_cell.clone(), cell.clone())
+        ctx.constrain_equal(witness_cell.cell().clone(), cell.cell().clone())
     } else {
         Ok(())
     }

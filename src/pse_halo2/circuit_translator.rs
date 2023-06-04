@@ -3,8 +3,7 @@ use std::marker::PhantomData;
 
 use crate::{
     errors::Error,
-    pse_halo2::halo2_plonk_api::PlonkConfig,
-    cell_map::CellMap,
+    pse_halo2::{halo2_plonk_api::PlonkConfig, assigned_map::AssignedMap},
 };
 use acvm::acir::{
     circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
@@ -61,7 +60,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
         config: Self::Config,
         mut layouter: impl pse_halo2wrong::halo2::circuit::Layouter<Fr>,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
-        let mut witness_assignments = CellMap::new();
+        let mut witness_assignments = AssignedMap::<Fr>::new();
         let range_chip = RangeChip::<Fr>::new(config.range_config.clone());
         for gate in self.circuit.opcodes.iter() {
             match gate {
@@ -88,6 +87,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                                     *output,
                                     &config,
                                     &mut layouter,
+                                    &mut witness_assignments
                                 )?,
                                 BlackBoxFuncCall::XOR { .. } => {
                                     panic!("xor has not yet been implemented")
@@ -213,6 +213,12 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
         }
 
         range_chip.load_table(&mut layouter)?;
+
+        // synthesize public io
+        for witness in self.circuit.public_inputs().indices() {
+            let cell = witness_assignments.get_index(witness).unwrap().last().unwrap();
+            config.main_gate_config.config();
+        }
         Ok(())
     }
 }
