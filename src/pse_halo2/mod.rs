@@ -1,10 +1,10 @@
 mod acvm_interop;
 
+mod assigned_map;
 mod circuit_translator;
 mod constrains;
 mod halo2_params;
 mod halo2_plonk_api;
-mod assigned_map;
 
 #[derive(Debug)]
 pub struct PseHalo2;

@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 
 use crate::{
     errors::Error,
-    pse_halo2::{halo2_plonk_api::PlonkConfig, assigned_map::AssignedMap},
+    pse_halo2::{assigned_map::AssignedMap, halo2_plonk_api::PlonkConfig},
 };
 use acvm::acir::{
     circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
@@ -18,9 +18,9 @@ use pse_halo2wrong::{
         circuit::SimpleFloorPlanner, halo2curves::bn256::Fr, plonk::Circuit as Halo2PlonkCircuit,
         plonk::ConstraintSystem,
     },
-    RegionCtx
+    RegionCtx,
 };
-use pse_maingate::{RangeChip, RangeInstructions, MainGate, MainGateInstructions};
+use pse_maingate::{MainGate, MainGateInstructions, RangeChip, RangeInstructions};
 
 use super::halo2_plonk_api::OpcodeFlags;
 
@@ -42,12 +42,11 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
 
     fn params(&self) -> Self::Params {
         Self::Params::default()
-    
     }
 
     fn configure_with_params(
         meta: &mut ConstraintSystem<Fr>,
-        opcode_flags: Self::Params
+        opcode_flags: Self::Params,
     ) -> Self::Config {
         PlonkConfig::configure_with_params(meta, opcode_flags)
     }
@@ -66,7 +65,12 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
         for gate in self.circuit.opcodes.iter() {
             match gate {
                 Opcode::Arithmetic(expression) => {
-                    self.add_arithmetic_constrains(expression, &config, &mut layouter, &mut witness_assignments)?;
+                    self.add_arithmetic_constrains(
+                        expression,
+                        &config,
+                        &mut layouter,
+                        &mut witness_assignments,
+                    )?;
                 }
                 Opcode::BlackBoxFuncCall(gadget_call) => {
                     match gadget_call {
@@ -75,7 +79,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                             input.num_bits,
                             &range_chip,
                             &mut layouter,
-                            &mut witness_assignments
+                            &mut witness_assignments,
                         )?,
                         BlackBoxFuncCall::AND { lhs, rhs, output }
                         | BlackBoxFuncCall::XOR { lhs, rhs, output } => {
@@ -88,7 +92,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                                     *output,
                                     &config,
                                     &mut layouter,
-                                    &mut witness_assignments
+                                    &mut witness_assignments,
                                 )?,
                                 BlackBoxFuncCall::XOR { .. } => {
                                     panic!("xor has not yet been implemented")
@@ -219,12 +223,16 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
         layouter.assign_region(
             || "public IO",
             |region| {
-                let public_indices =  self.circuit.public_inputs().indices();
+                let public_indices = self.circuit.public_inputs().indices();
                 let ctx = &mut RegionCtx::new(region, 0);
                 let main_gate = MainGate::<Fr>::new(config.main_gate_config.clone());
 
                 for i in 0..public_indices.len() {
-                    let assigned = witness_assignments.get_index(public_indices[i]).unwrap().last().unwrap();
+                    let assigned = witness_assignments
+                        .get_index(public_indices[i])
+                        .unwrap()
+                        .last()
+                        .unwrap();
                     main_gate.expose_public(layouter, assigned.clone(), i)?;
                 }
                 Ok(())

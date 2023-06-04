@@ -1,9 +1,9 @@
 use {
-    crate::{aztec_crs::get_aztec_crs, errors::Error, dimension_measure::DimensionMeasurement},
+    crate::{aztec_crs::get_aztec_crs, dimension_measure::DimensionMeasurement, errors::Error},
     halo2_base::halo2_proofs::{
         arithmetic::g_to_lagrange,
         halo2curves::{
-            bn256::{Bn256, Fr, Fq, Fq2, G1Affine, G2Affine},
+            bn256::{Bn256, Fq, Fq2, Fr, G1Affine, G2Affine},
             group::prime::PrimeCurveAffine,
             pairing::Engine,
             serde::SerdeObject,

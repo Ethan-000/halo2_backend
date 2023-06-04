@@ -11,10 +11,7 @@ use {
 
 // #[cfg(all(feature = "pse_halo2", not(any(feature = "axiom_halo2", feature = "zcash_halo2"))))]
 // use pse_halo2wrong::halo2::circuit::Cell;
-use pse_halo2wrong::halo2::{
-    circuit::AssignedCell,
-    arithmetic::Field
-};
+use pse_halo2wrong::halo2::{arithmetic::Field, circuit::AssignedCell};
 
 // // #[cfg(all(feature = "zcash_halo2", not(any(feature = "axiom_halo2", feature = "pse_halo2"))))]
 // use zcash_halo2_proofs::circuit::Cell;
@@ -67,9 +64,7 @@ impl<F: Field> Iterator for IntoIter<F> {
     type Item = (Witness, Vec<AssignedCell<F, F>>);
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.0
-            .next()
-            .map(|(witness, cell)| (witness, cell))
+        self.0.next().map(|(witness, cell)| (witness, cell))
     }
 }
 

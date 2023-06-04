@@ -40,7 +40,7 @@ impl ProofSystemCompiler for AxiomHalo2 {
         let translator = NoirHalo2Translator::<Fr> {
             circuit: circuit.clone(),
             witness_values: WitnessMap::new(),
-            _marker: PhantomData::<Fr>
+            _marker: PhantomData::<Fr>,
         };
 
         let params =
@@ -72,7 +72,7 @@ impl ProofSystemCompiler for AxiomHalo2 {
         let translator = NoirHalo2Translator::<Fr> {
             circuit: circuit.clone(),
             witness_values,
-            _marker: PhantomData::<Fr>
+            _marker: PhantomData::<Fr>,
         };
 
         let proof = halo2_prove(translator, &params, &pk);

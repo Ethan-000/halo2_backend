@@ -1,5 +1,3 @@
-#![feature(allocator_api)]
-
 #[cfg(feature = "axiom_halo2")]
 mod axiom_halo2;
 #[cfg(any(feature = "axiom_halo2", feature = "pse_halo2"))]
