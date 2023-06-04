@@ -1,5 +1,4 @@
 use {
-    std::marker::PhantomData,
     crate::{
         axiom_halo2::{
             assignment_map::AssignmentMap,
@@ -17,13 +16,14 @@ use {
         arithmetic::Field, circuit::SimpleFloorPlanner, halo2curves::bn256::Fr,
         plonk::Circuit as Halo2PlonkCircuit, plonk::ConstraintSystem,
     },
+    std::marker::PhantomData,
 };
 
 #[derive(Clone, Default)]
 pub struct NoirHalo2Translator<Fr> {
     pub circuit: NoirCircuit,
     pub witness_values: WitnessMap,
-    pub _marker: PhantomData<Fr>
+    pub _marker: PhantomData<Fr>,
 }
 
 impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
@@ -46,16 +46,15 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
         mut layouter: impl halo2_base::halo2_proofs::circuit::Layouter<Fr>,
     ) -> Result<(), halo2_base::halo2_proofs::plonk::Error> {
         let cs: StandardPlonk<Fr> = StandardPlonk::new(config.clone());
-        let mut assignments = AssignmentMap::new();
         for gate in self.circuit.opcodes.iter() {
             match gate {
                 Opcode::Arithmetic(expression) => {
-                    self.add_arithmetic_constrains(expression, &cs, &mut layouter, &mut assignments)
+                    self.add_arithmetic_constrains(expression, &cs, &mut layouter)
                 }
                 Opcode::BlackBoxFuncCall(gadget_call) => {
                     match gadget_call {
                         BlackBoxFuncCall::RANGE { input } => {
-                            self.add_range_constrain(input.witness, input.num_bits, &config, &mut assignments)
+                            self.add_range_constrain(input.witness, input.num_bits, &config)
                         }
                         BlackBoxFuncCall::AND { lhs, rhs, output }
                         | BlackBoxFuncCall::XOR { lhs, rhs, output } => {
@@ -67,7 +66,6 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                                     rhs.witness,
                                     *output,
                                     &config,
-                                    &mut assignments
                                 ),
                                 BlackBoxFuncCall::XOR { .. } => {
                                     panic!("xor has not yet been implemented")

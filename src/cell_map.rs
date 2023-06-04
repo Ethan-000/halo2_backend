@@ -9,7 +9,7 @@ use {
 #[cfg(all(feature = "axiom_halo2", not(any(feature = "pse_halo2", feature = "zcash_halo2"))))]
 use halo2_base::halo2_proofs::circuit::Cell;
 
-// #[cfg(all(feature = "pse_halo2", not(any(feature = "axiom_halo2", feature = "zcash_halo2"))))]
+#[cfg(all(feature = "pse_halo2", not(any(feature = "axiom_halo2", feature = "zcash_halo2"))))]
 use pse_halo2wrong::halo2::circuit::Cell;
 
 #[cfg(all(feature = "zcash_halo2", not(any(feature = "axiom_halo2", feature = "pse_halo2"))))]
