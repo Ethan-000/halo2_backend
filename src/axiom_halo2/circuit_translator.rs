@@ -1,8 +1,6 @@
 use {
     crate::{
-        axiom_halo2::{
-            halo2_plonk_api::{PlonkConfig, StandardPlonk},
-        },
+        axiom_halo2::halo2_plonk_api::{PlonkConfig, StandardPlonk},
         errors::Error,
     },
     acvm::acir::{
@@ -12,8 +10,8 @@ use {
     },
     core::panic,
     halo2_base::halo2_proofs::{
-        circuit::SimpleFloorPlanner, halo2curves::bn256::Fr,
-        plonk::Circuit as Halo2PlonkCircuit, plonk::ConstraintSystem,
+        circuit::SimpleFloorPlanner, halo2curves::bn256::Fr, plonk::Circuit as Halo2PlonkCircuit,
+        plonk::ConstraintSystem,
     },
     std::marker::PhantomData,
 };
