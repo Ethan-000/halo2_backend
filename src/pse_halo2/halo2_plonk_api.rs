@@ -1,5 +1,5 @@
 use acvm::{
-    acir::circuit::{opcodes::BlackBoxFuncCall, Opcode, Circuit as NoirCircuit},
+    acir::circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
     FieldElement,
 };
 
@@ -13,8 +13,8 @@ use pse_halo2wrong::{
             group::cofactor::CofactorCurve,
         },
         plonk::{
-            create_proof, keygen_pk, keygen_vk, verify_proof, ConstraintSystem, Error, ProvingKey,
-            VerifyingKey, Column, Instance
+            create_proof, keygen_pk, keygen_vk, verify_proof, Column, ConstraintSystem, Error,
+            Instance, ProvingKey, VerifyingKey,
         },
         poly::kzg::{
             commitment::{KZGCommitmentScheme, ParamsKZG},
@@ -32,10 +32,7 @@ use pse_maingate::{MainGate, MainGateConfig, RangeChip, RangeConfig};
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    pse_halo2::circuit_translator::NoirHalo2Translator,
-    cell_map::CellMap
-};
+use crate::pse_halo2::circuit_translator::NoirHalo2Translator;
 
 pub fn halo2_keygen(
     circuit: &NoirHalo2Translator<Fr>,
@@ -91,7 +88,7 @@ pub struct PlonkConfig {
     pub(crate) main_gate_config: MainGateConfig,
     pub(crate) range_config: RangeConfig,
     pub(crate) ecc_config: Option<EccConfig>,
-    pub(crate) instance: Option<Column<Instance>>
+    pub(crate) instance: Option<Column<Instance>>,
 }
 
 impl PlonkConfig {
@@ -120,7 +117,7 @@ impl PlonkConfig {
             main_gate_config,
             range_config,
             ecc_config: None,
-            instance: None
+            instance: None,
         }
     }
 

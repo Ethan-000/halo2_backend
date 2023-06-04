@@ -75,6 +75,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                             input.num_bits,
                             &range_chip,
                             &mut layouter,
+                            &mut witness_assignments
                         )?,
                         BlackBoxFuncCall::AND { lhs, rhs, output }
                         | BlackBoxFuncCall::XOR { lhs, rhs, output } => {

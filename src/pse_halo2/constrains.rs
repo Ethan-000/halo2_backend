@@ -13,7 +13,7 @@ use pse_halo2wrong::{
         CurveAffine,
     },
     halo2::{
-        circuit::{Layouter, Value, Cell},
+        circuit::{Cell, Layouter, Value},
         halo2curves::bn256::Fr,
     },
     RegionCtx,
@@ -26,8 +26,7 @@ use pse_maingate::{
 use std::slice::Iter;
 
 use crate::{
-    cell_map::CellMap,
-    impl_noir_field_to_secp255k1_field_conversion, noir_field_to_halo2_field,
+    cell_map::CellMap, impl_noir_field_to_secp255k1_field_conversion, noir_field_to_halo2_field,
     pse_halo2::circuit_translator::NoirHalo2Translator, utils::Secp256k1FieldConversion,
 };
 
@@ -88,8 +87,6 @@ impl NoirHalo2Translator<Fr> {
         let qo = noir_field_to_halo2_field(noir_cs.qo);
         let qc = noir_field_to_halo2_field(noir_cs.qc);
 
-        
-
         layouter.assign_region(
             || "region 0",
             |region| {
@@ -100,15 +97,15 @@ impl NoirHalo2Translator<Fr> {
                 let mut terms = Vec::new();
 
                 let a = main_gate.assign_to_column(ctx, a, MainGateColumn::A)?;
-                check_and_copy_constrain(ctx, &witness_assignments, &noir_cs.a, &a.cell())?;
+                check_and_copy(ctx, &witness_assignments, noir_cs.a as u32, &a.cell())?;
                 terms.push(Term::Assigned(&a, ql));
 
                 let b = main_gate.assign_to_column(ctx, b, MainGateColumn::B)?;
-                check_and_copy_constrain(ctx, &witness_assignments, &noir_cs.b, &b.cell())?;
+                check_and_copy(ctx, &witness_assignments, noir_cs.b as u32, &b.cell())?;
                 terms.push(Term::Assigned(&b, qr));
 
                 let c = main_gate.assign_to_column(ctx, c, MainGateColumn::C)?;
-                check_and_copy_constrain(ctx, &witness_assignments, &noir_cs.c, &c.cell())?;
+                check_and_copy(ctx, &witness_assignments, noir_cs.c as u32, &c.cell())?;
                 terms.push(Term::Assigned(&c, qo));
 
                 let d =
@@ -129,7 +126,8 @@ impl NoirHalo2Translator<Fr> {
                             qm,
                         ),
                     ),
-                )?;                
+                )?;
+
                 // store assignments to a, b, c
                 witness_assignments.insert(Witness(noir_cs.a as u32), a.cell());
                 witness_assignments.insert(Witness(noir_cs.b as u32), b.cell());
@@ -138,8 +136,8 @@ impl NoirHalo2Translator<Fr> {
                 Ok(())
             },
         )?;
-        
-        // 
+
+        //
 
         Ok(())
     }
@@ -150,6 +148,7 @@ impl NoirHalo2Translator<Fr> {
         num_bits: u32,
         range_chip: &RangeChip<Fr>,
         layouter: &mut impl Layouter<Fr>,
+        witness_assignments: &mut CellMap,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
         let input = noir_field_to_halo2_field(
             *self
@@ -168,7 +167,12 @@ impl NoirHalo2Translator<Fr> {
                 let limb_bit_len = 8;
                 let bit_len = num_bits as usize;
 
-                range_chip.assign(ctx, value, limb_bit_len, bit_len)?;
+                let cell = range_chip.assign(ctx, value, limb_bit_len, bit_len)?;
+
+                // check & potentially copy constrain assigned value that was range checked
+                check_and_copy(ctx, &witness_assignments, witness.0, &cell.cell())?;
+                // add to assignment map
+                witness_assignments.insert(witness, cell.cell());
 
                 Ok(())
             },
@@ -300,17 +304,21 @@ impl NoirHalo2Translator<Fr> {
 /**
  * Check if a given acir witness index needs a copy constraint when assigning a witness to a halo2 cell.
  * If so, perform an equality constraint on a given cell if a given witness appears in the assignment map
- * 
+ *
  * @param ctx - the context for the region being assigned to
  * @param assignments - the assignment map of acir witness index to exsiting halo2 cells storing witness assignments
  * @param witness - the acir witness index to check for
  * @param cell - the newly assigned cell to copy constrain with a cell stored in the assignment map
  * @return - success if copy constraint operation succeeds
  */
-pub fn check_and_copy_constrain(ctx: &mut RegionCtx<Fr>, assignments: &CellMap, witness: &i32, cell: &Cell) -> Result<(), pse_halo2wrong::halo2::plonk::Error>{
-    let key = Witness(*witness as u32);
-    if assignments.contains_key(&key) {
-        let witness_cell = assignments.get(&key).unwrap().last().unwrap();
+pub fn check_and_copy(
+    ctx: &mut RegionCtx<Fr>,
+    assignments: &CellMap,
+    witness: u32,
+    cell: &Cell,
+) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
+    if assignments.contains_key(&Witness(witness)) {
+        let witness_cell = assignments.get_index(witness).unwrap().last().unwrap();
         ctx.constrain_equal(witness_cell.clone(), cell.clone())
     } else {
         Ok(())
