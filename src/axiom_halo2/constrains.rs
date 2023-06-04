@@ -1,7 +1,6 @@
 use {
     crate::{
         axiom_halo2::{
-            assignment_map::AssignmentMap,
             circuit_translator::NoirHalo2Translator,
             halo2_plonk_api::{NoirConstraint, PlonkConfig, PolyTriple, StandardCs},
         },
@@ -109,7 +108,7 @@ impl NoirHalo2Translator<Fr> {
             qc.into(),
         );
 
-        let cells = cs.raw_poly(layouter, || poly_gate).unwrap();
+        cs.raw_poly(layouter, || poly_gate).unwrap();
 
         // set assigned witness map
         // assignments.insert(Witness(noir_cs.a as u32), cells.0);

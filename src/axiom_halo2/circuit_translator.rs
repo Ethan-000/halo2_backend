@@ -1,7 +1,6 @@
 use {
     crate::{
         axiom_halo2::{
-            assignment_map::AssignmentMap,
             halo2_plonk_api::{PlonkConfig, StandardPlonk},
         },
         errors::Error,
@@ -13,7 +12,7 @@ use {
     },
     core::panic,
     halo2_base::halo2_proofs::{
-        arithmetic::Field, circuit::SimpleFloorPlanner, halo2curves::bn256::Fr,
+        circuit::SimpleFloorPlanner, halo2curves::bn256::Fr,
         plonk::Circuit as Halo2PlonkCircuit, plonk::ConstraintSystem,
     },
     std::marker::PhantomData,

@@ -1,7 +1,6 @@
 use {
     crate::{
         axiom_halo2::{
-            assignment_map::AssignmentMap,
             circuit_translator::NoirHalo2Translator,
             halo2_plonk_api::{halo2_keygen, halo2_prove, halo2_verify},
             AxiomHalo2,
