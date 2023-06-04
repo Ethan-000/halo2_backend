@@ -49,7 +49,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
         meta: &mut ConstraintSystem<Fr>,
         opcode_flags: Self::Params
     ) -> Self::Config {
-        PlonkConfig::configure_with_params(meta, opcode_flags, public_inputs)
+        PlonkConfig::configure_with_params(meta, opcode_flags)
     }
 
     fn configure(meta: &mut ConstraintSystem<Fr>) -> PlonkConfig {
@@ -66,7 +66,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
         for gate in self.circuit.opcodes.iter() {
             match gate {
                 Opcode::Arithmetic(expression) => {
-                    self.add_arithmetic_constrains(expression, &config, &mut layouter)?;
+                    self.add_arithmetic_constrains(expression, &config, &mut layouter, &mut witness_assignments)?;
                 }
                 Opcode::BlackBoxFuncCall(gadget_call) => {
                     match gadget_call {

@@ -1,19 +1,26 @@
 use {
     acvm::acir::native_types::Witness,
-    halo2_base::halo2_proofs::circuit::Cell,
     std::{
         collections::{btree_map, BTreeMap},
         ops::Index,
     },
 };
 
+#[cfg(all(feature = "axiom_halo2", not(any(feature = "pse_halo2", feature = "zcash_halo2"))))]
+use halo2_base::halo2_proofs::circuit::Cell;
+
+// #[cfg(all(feature = "pse_halo2", not(any(feature = "axiom_halo2", feature = "zcash_halo2"))))]
+use pse_halo2wrong::halo2::circuit::Cell;
+
+#[cfg(all(feature = "zcash_halo2", not(any(feature = "axiom_halo2", feature = "pse_halo2"))))]
+use zcash_halo2_proofs::circuit::Cell;
+
 // @todo: move to src/utils.rs
 
-#[cfg(any(feature = "zcash_halo2", feature = "pse_halo2"))]
 #[derive(Debug, Clone, Default)]
 pub struct CellMap(BTreeMap<Witness, Vec<Cell>>);
 
-#[cfg(any(feature = "zcash_halo2", feature = "pse_halo2"))]
+// #[cfg(any(feature = "zcash_halo2", feature = "pse_halo2"))]
 impl CellMap {
     pub fn new() -> Self {
         Self(BTreeMap::new())
