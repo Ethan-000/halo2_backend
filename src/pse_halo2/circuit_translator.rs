@@ -18,8 +18,9 @@ use pse_halo2wrong::{
         circuit::SimpleFloorPlanner, halo2curves::bn256::Fr, plonk::Circuit as Halo2PlonkCircuit,
         plonk::ConstraintSystem,
     },
+    RegionCtx
 };
-use pse_maingate::{RangeChip, RangeInstructions};
+use pse_maingate::{RangeChip, RangeInstructions, MainGate, MainGateInstructions};
 
 use super::halo2_plonk_api::OpcodeFlags;
 
@@ -215,10 +216,20 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
         range_chip.load_table(&mut layouter)?;
 
         // synthesize public io
-        for witness in self.circuit.public_inputs().indices() {
-            let cell = witness_assignments.get_index(witness).unwrap().last().unwrap();
-            config.main_gate_config.config();
-        }
+        layouter.assign_region(
+            || "public IO",
+            |region| {
+                let public_indices =  self.circuit.public_inputs().indices();
+                let ctx = &mut RegionCtx::new(region, 0);
+                let main_gate = MainGate::<Fr>::new(config.main_gate_config.clone());
+
+                for i in 0..public_indices.len() {
+                    let assigned = witness_assignments.get_index(public_indices[i]).unwrap().last().unwrap();
+                    main_gate.expose_public(layouter, assigned.clone(), i)?;
+                }
+                Ok(())
+            },
+        )?;
         Ok(())
     }
 }
