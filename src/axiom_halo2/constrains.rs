@@ -1,36 +1,34 @@
-use {
-    crate::{
-        axiom_halo2::{
-            circuit_translator::NoirHalo2Translator,
-            halo2_plonk_api::{NoirConstraint, PlonkConfig, PolyTriple, StandardCs},
-        },
-        impl_noir_field_to_secp255k1_field_conversion, noir_field_to_halo2_field,
-        utils::Secp256k1FieldConversion,
+use crate::{
+    axiom_halo2::{
+        circuit_translator::NoirHalo2Translator,
+        halo2_plonk_api::{NoirConstraint, PlonkConfig, PolyTriple, StandardCs},
     },
-    acvm::{
-        acir::native_types::{Expression, Witness},
-        FieldElement,
-    },
-    halo2_base::{
-        gates::{GateInstructions, RangeChip, RangeInstructions},
-        halo2_proofs::{
-            circuit::{Layouter, Value},
-            halo2curves::{
-                bn256::Fr,
-                secp256k1::{Fp, Fq, Secp256k1Affine},
-                CurveAffine,
-            },
-            plonk::Assigned,
-        },
-        Context,
-    },
-    halo2_ecc::{
-        ecc::{ecdsa::ecdsa_verify_no_pubkey_check, EccChip},
-        fields::FieldChip,
-        secp256k1::{FpChip, FqChip},
-    },
-    std::slice::Iter,
+    impl_noir_field_to_secp255k1_field_conversion, noir_field_to_halo2_field,
+    utils::Secp256k1FieldConversion,
 };
+use acvm::{
+    acir::native_types::{Expression, Witness},
+    FieldElement,
+};
+use halo2_base::{
+    gates::{GateInstructions, RangeChip, RangeInstructions},
+    halo2_proofs::{
+        circuit::{Layouter, Value},
+        halo2curves::{
+            bn256::Fr,
+            secp256k1::{Fp, Fq, Secp256k1Affine},
+            CurveAffine,
+        },
+        plonk::Assigned,
+    },
+    Context,
+};
+use halo2_ecc::{
+    ecc::{ecdsa::ecdsa_verify_no_pubkey_check, EccChip},
+    fields::FieldChip,
+    secp256k1::{FpChip, FqChip},
+};
+use std::slice::Iter;
 
 impl NoirHalo2Translator<Fr> {
     #[allow(non_snake_case)]

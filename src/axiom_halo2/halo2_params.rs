@@ -1,19 +1,17 @@
-use {
-    crate::{aztec_crs::get_aztec_crs, dimension_measure::DimensionMeasurement, errors::Error},
-    halo2_base::halo2_proofs::{
-        arithmetic::g_to_lagrange,
-        halo2curves::{
-            bn256::{Bn256, Fq, Fq2, Fr, G1Affine, G2Affine},
-            group::prime::PrimeCurveAffine,
-            pairing::Engine,
-            serde::SerdeObject,
-            CurveAffine,
-        },
-        poly::kzg::commitment::ParamsKZG,
-        SerdeFormat,
+use crate::{aztec_crs::get_aztec_crs, dimension_measure::DimensionMeasurement, errors::Error};
+use halo2_base::halo2_proofs::{
+    arithmetic::g_to_lagrange,
+    halo2curves::{
+        bn256::{Bn256, Fq, Fq2, Fr, G1Affine, G2Affine},
+        group::prime::PrimeCurveAffine,
+        pairing::Engine,
+        serde::SerdeObject,
+        CurveAffine,
     },
-    std::io::Write,
+    poly::kzg::commitment::ParamsKZG,
+    SerdeFormat,
 };
+use std::io::Write;
 
 pub(crate) async fn constuct_halo2_params_from_aztec_crs(
     translator: impl halo2_base::halo2_proofs::plonk::Circuit<Fr>,

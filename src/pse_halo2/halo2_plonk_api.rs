@@ -1,5 +1,5 @@
 use acvm::{
-    acir::circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
+    acir::circuit::{opcodes::BlackBoxFuncCall, Opcode},
     FieldElement,
 };
 
@@ -13,8 +13,8 @@ use pse_halo2wrong::{
             group::cofactor::CofactorCurve,
         },
         plonk::{
-            create_proof, keygen_pk, keygen_vk, verify_proof, Column, ConstraintSystem, Error,
-            Instance, ProvingKey, VerifyingKey,
+            create_proof, keygen_pk, keygen_vk, verify_proof, ConstraintSystem, Error, ProvingKey,
+            VerifyingKey,
         },
         poly::kzg::{
             commitment::{KZGCommitmentScheme, ParamsKZG},

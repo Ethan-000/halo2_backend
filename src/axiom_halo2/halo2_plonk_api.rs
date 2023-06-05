@@ -1,40 +1,37 @@
-use {
-    crate::axiom_halo2::circuit_translator::NoirHalo2Translator,
-    acvm::FieldElement,
-    halo2_base::{
-        gates::{GateChip, RangeChip},
-        halo2_proofs::{
-            arithmetic::Field,
-            circuit::Layouter,
-            circuit::{Cell, Value},
-            halo2curves::bn256::Fr,
-            halo2curves::{
-                bn256::{Bn256, G1Affine, G1},
-                group::cofactor::CofactorCurve,
+use crate::axiom_halo2::circuit_translator::NoirHalo2Translator;
+use acvm::FieldElement;
+use halo2_base::{
+    gates::{GateChip, RangeChip},
+    halo2_proofs::{
+        arithmetic::Field,
+        circuit::Layouter,
+        circuit::{Cell, Value},
+        halo2curves::bn256::Fr,
+        halo2curves::{
+            bn256::{Bn256, G1Affine, G1},
+            group::cofactor::CofactorCurve,
+        },
+        plonk::Assigned,
+        plonk::{
+            create_proof, keygen_pk, keygen_vk, verify_proof, Advice, Column, ConstraintSystem,
+            Error, Fixed, ProvingKey, VerifyingKey,
+        },
+        poly::{
+            kzg::{
+                commitment::{KZGCommitmentScheme, ParamsKZG},
+                multiopen::{ProverGWC, VerifierGWC},
+                strategy::SingleStrategy,
             },
-            plonk::Assigned,
-            plonk::{
-                create_proof, keygen_pk, keygen_vk, verify_proof, Advice, Column, ConstraintSystem,
-                Error, Fixed, ProvingKey, VerifyingKey,
-            },
-            poly::{
-                kzg::{
-                    commitment::{KZGCommitmentScheme, ParamsKZG},
-                    multiopen::{ProverGWC, VerifierGWC},
-                    strategy::SingleStrategy,
-                },
-                Rotation,
-            },
-            transcript::{
-                Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer,
-                TranscriptWriterBuffer,
-            },
+            Rotation,
+        },
+        transcript::{
+            Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
         },
     },
-    rand::rngs::OsRng,
-    serde::{Deserialize, Serialize},
-    std::marker::PhantomData,
 };
+use rand::rngs::OsRng;
+use serde::{Deserialize, Serialize};
+use std::marker::PhantomData;
 
 pub fn halo2_keygen(
     circuit: &NoirHalo2Translator<Fr>,

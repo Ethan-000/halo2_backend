@@ -13,7 +13,7 @@ use pse_halo2wrong::{
         CurveAffine,
     },
     halo2::{
-        circuit::{AssignedCell, Layouter, NamespacedLayouter, Value},
+        circuit::{AssignedCell, Layouter, Value},
         halo2curves::bn256::Fr,
     },
     RegionCtx,

@@ -18,9 +18,8 @@ use pse_halo2wrong::{
         circuit::SimpleFloorPlanner, halo2curves::bn256::Fr, plonk::Circuit as Halo2PlonkCircuit,
         plonk::ConstraintSystem,
     },
-    RegionCtx,
 };
-use pse_maingate::{MainGate, MainGateInstructions, RangeChip, RangeInstructions};
+use pse_maingate::{RangeChip, RangeInstructions};
 
 use super::halo2_plonk_api::OpcodeFlags;
 
