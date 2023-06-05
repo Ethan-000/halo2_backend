@@ -220,7 +220,7 @@ pub struct OpcodeFlags {
 }
 
 impl OpcodeFlags {
-    pub(crate) fn new(circuit: &NoirCircuit) -> OpcodeFlags {
+    pub(crate) fn new(opcodes: Vec<Opcode>) -> OpcodeFlags {
         // opcode params
         let mut arithmetic = false;
         let mut range = false;
@@ -235,7 +235,7 @@ impl OpcodeFlags {
         let mut fixed_base_scalar_mul = false;
         let mut keccak256 = false;
         let mut keccak256_variable_length = false;
-        for opcode in circuit.clone().opcodes {
+        for opcode in opcodes {
             match opcode {
                 Opcode::Arithmetic(..) => arithmetic = true,
                 Opcode::BlackBoxFuncCall(gadget_call) => match gadget_call {

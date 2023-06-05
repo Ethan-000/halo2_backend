@@ -7,14 +7,11 @@ use acvm::acir::{
     native_types::WitnessMap,
 };
 use zcash_halo2_proofs::{
-    arithmetic::Field,
-    circuit::{Layouter, SimpleFloorPlanner, Value},
+    circuit::{Layouter, SimpleFloorPlanner},
     pasta::Fp,
+    plonk::Circuit as Halo2PlonkCircuit,
     plonk::ConstraintSystem,
-    plonk::{Assigned, Circuit as Halo2PlonkCircuit},
 };
-
-use super::halo2_plonk_api::StandardCs;
 
 #[derive(Clone, Default)]
 pub struct NoirHalo2Translator<Fr> {
@@ -63,9 +60,6 @@ impl Halo2PlonkCircuit<Fp> for NoirHalo2Translator<Fp> {
                             rhs,
                             output: _,
                         } => {
-                            let _witness_lhs = lhs.witness;
-                            let _witness_rhs = rhs.witness;
-
                             assert_eq!(lhs.num_bits, rhs.num_bits);
 
                             match gadget_call {
@@ -111,12 +105,10 @@ impl Halo2PlonkCircuit<Fp> for NoirHalo2Translator<Fp> {
                         } => {
                             panic!("keccak256 has not yet been implemented")
                         }
-                        BlackBoxFuncCall::AES { .. } => panic!("AES has not yet been implemented"),
-                        BlackBoxFuncCall::ComputeMerkleRoot {
-                            leaf: _,
-                            index: _,
-                            hash_path: _,
-                            output: _,
+                        BlackBoxFuncCall::Keccak256VariableLength {
+                            inputs: _,
+                            var_message_size: _,
+                            outputs: _,
                         } => todo!(),
                     };
                 }
@@ -129,6 +121,7 @@ impl Halo2PlonkCircuit<Fp> for NoirHalo2Translator<Fp> {
                 Opcode::RAM(_) | Opcode::ROM(_) => {
                     todo!()
                 }
+                Opcode::Brillig(_) => todo!(),
             }
         }
         Ok(())

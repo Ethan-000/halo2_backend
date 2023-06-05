@@ -59,7 +59,7 @@ impl ProofSystemCompiler for PseHalo2 {
             ParamsKZG::<Bn256>::read_custom(&mut common_reference_string, SerdeFormat::RawBytes)
                 .unwrap();
 
-        let opcode_flags = OpcodeFlags::new(circuit);
+        let opcode_flags = OpcodeFlags::new(circuit.opcodes.clone());
 
         let pk = ProvingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr>>(
             proving_key,
@@ -91,7 +91,7 @@ impl ProofSystemCompiler for PseHalo2 {
             ParamsKZG::<Bn256>::read_custom(&mut common_reference_string, SerdeFormat::RawBytes)
                 .unwrap();
 
-        let opcode_flags = OpcodeFlags::new(circuit);
+        let opcode_flags = OpcodeFlags::new(circuit.opcodes.clone());
 
         let vk = VerifyingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr>>(
             verification_key,

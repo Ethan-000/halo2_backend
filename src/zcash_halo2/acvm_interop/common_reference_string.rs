@@ -7,7 +7,7 @@ use crate::zcash_halo2::halo2_params::constuct_halo2_ipa_params;
 use crate::zcash_halo2::ZcashHalo2;
 
 // TODO(#185): Ensure CRS download works in JS
-#[async_trait]
+#[async_trait(?Send)]
 impl CommonReferenceString for ZcashHalo2 {
     type Error = BackendError;
 
