@@ -220,24 +220,8 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
         range_chip.load_table(&mut layouter)?;
 
         // synthesize public io
-        layouter.assign_region(
-            || "public IO",
-            |region| {
-                let public_indices = self.circuit.public_inputs().indices();
-                let ctx = &mut RegionCtx::new(region, 0);
-                let main_gate = MainGate::<Fr>::new(config.main_gate_config.clone());
+        self.expose_public(&config, &mut layouter, &witness_assignments)?;
 
-                for i in 0..public_indices.len() {
-                    let assigned = witness_assignments
-                        .get_index(public_indices[i])
-                        .unwrap()
-                        .last()
-                        .unwrap();
-                    main_gate.expose_public(layouter, assigned.clone(), i)?;
-                }
-                Ok(())
-            },
-        )?;
         Ok(())
     }
 }

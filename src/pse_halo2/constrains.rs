@@ -13,7 +13,7 @@ use pse_halo2wrong::{
         CurveAffine,
     },
     halo2::{
-        circuit::{AssignedCell, Layouter, Value},
+        circuit::{AssignedCell, Layouter, NamespacedLayouter, Value},
         halo2curves::bn256::Fr,
     },
     RegionCtx,
@@ -219,13 +219,13 @@ impl NoirHalo2Translator<Fr> {
                 let main_gate = MainGate::<Fr>::new(config.main_gate_config.clone());
 
                 let lhs_cell = main_gate.assign_to_column(ctx, lhs_v, MainGateColumn::A)?;
-                check_and_copy(ctx, &witness_assignments, lhs.0, &lhs_cell);
+                check_and_copy(ctx, &witness_assignments, lhs.0, &lhs_cell)?;
 
                 let rhs_cell = main_gate.assign_to_column(ctx, rhs_v, MainGateColumn::B)?;
-                check_and_copy(ctx, &witness_assignments, rhs.0, &rhs_cell);
+                check_and_copy(ctx, &witness_assignments, rhs.0, &rhs_cell)?;
 
                 let output_cell = main_gate.assign_to_column(ctx, output_v, MainGateColumn::C)?;
-                check_and_copy(ctx, &witness_assignments, output.0, &output_cell);
+                check_and_copy(ctx, &witness_assignments, output.0, &output_cell)?;
 
                 let result = main_gate.and(ctx, &lhs_cell, &rhs_cell)?;
                 main_gate.assert_equal(ctx, &output_cell, &result)?;
@@ -306,6 +306,32 @@ impl NoirHalo2Translator<Fr> {
             },
         )?;
 
+        Ok(())
+    }
+
+    pub(crate) fn expose_public(
+        &self,
+        config: &PlonkConfig,
+        layouter: &mut impl Layouter<Fr>,
+        witness_assignments: &AssignedMap<Fr>,
+    ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
+        // get public witness indices from noir circuit
+        let public_indices = self.circuit.public_inputs().indices();
+        // instnantiate new main gate
+        let main_gate = MainGate::<Fr>::new(config.main_gate_config.clone());
+        // loop through public witness indices and expose publicly through main gate
+        for i in 0..public_indices.len() {
+            let assigned = witness_assignments
+                .get_index(public_indices[i])
+                .unwrap()
+                .last()
+                .unwrap();
+            main_gate.expose_public(
+                layouter.namespace(|| format!("Public IO #{:?}", i)),
+                assigned.clone(),
+                i,
+            )?;
+        };
         Ok(())
     }
 }
