@@ -37,7 +37,6 @@ impl NoirHalo2Translator<Fr> {
         gate: &Expression,
         cs: &impl StandardCs<Fr>,
         layouter: &mut impl Layouter<Fr>,
-        // assignments: &mut AssignmentMap,
     ) {
         let mut noir_cs = NoirConstraint::default();
         // check mul gate
@@ -107,11 +106,6 @@ impl NoirHalo2Translator<Fr> {
         );
 
         cs.raw_poly(layouter, || poly_gate).unwrap();
-
-        // set assigned witness map
-        // assignments.insert(Witness(noir_cs.a as u32), cells.0);
-        // assignments.insert(Witness(noir_cs.b as u32), cells.1);
-        // assignments.insert(Witness(noir_cs.c as u32), cells.2);
     }
 
     pub(crate) fn add_range_constrain(
@@ -119,7 +113,6 @@ impl NoirHalo2Translator<Fr> {
         witness: Witness,
         num_bits: u32,
         config: &PlonkConfig,
-        // assignments: &mut AssignmentMap,
     ) {
         let mut ctx = Context::<Fr>::new(false, 0);
 
@@ -135,9 +128,6 @@ impl NoirHalo2Translator<Fr> {
         config
             .range_chip
             .range_check(&mut ctx, x, num_bits as usize);
-
-        // set assigned witness map
-        // assignments.insert(witness, x.)
     }
 
     pub(crate) fn add_and_constrain(
@@ -146,7 +136,6 @@ impl NoirHalo2Translator<Fr> {
         rhs: Witness,
         output: Witness,
         config: &PlonkConfig,
-        // assignments: &mut AssignmentMap,
     ) {
         let mut ctx = Context::<Fr>::new(false, 0);
         let lhs_v = noir_field_to_halo2_field(
