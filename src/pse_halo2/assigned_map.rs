@@ -1,9 +1,9 @@
 use acvm::acir::native_types::Witness;
+use pse_halo2wrong::halo2::{arithmetic::Field, circuit::AssignedCell};
 use std::{
     collections::{btree_map, BTreeMap},
     ops::Index,
 };
-use pse_halo2wrong::halo2::{arithmetic::Field, circuit::AssignedCell};
 
 // @todo: move to src/utils.rs
 #[derive(Debug, Clone, Default)]

@@ -331,7 +331,7 @@ impl NoirHalo2Translator<Fr> {
                 assigned.clone(),
                 i,
             )?;
-        };
+        }
         Ok(())
     }
 }
