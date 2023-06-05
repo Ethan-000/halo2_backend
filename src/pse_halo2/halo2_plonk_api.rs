@@ -88,7 +88,6 @@ pub struct PlonkConfig {
     pub(crate) main_gate_config: MainGateConfig,
     pub(crate) range_config: RangeConfig,
     pub(crate) ecc_config: Option<EccConfig>,
-    pub(crate) instance: Option<Column<Instance>>,
 }
 
 impl PlonkConfig {
@@ -117,7 +116,6 @@ impl PlonkConfig {
             main_gate_config,
             range_config,
             ecc_config: None,
-            instance: None,
         }
     }
 
@@ -150,11 +148,6 @@ impl PlonkConfig {
                     range_config.clone(),
                     main_gate_config.clone(),
                 ))
-            } else {
-                None
-            },
-            instance: if opcodes_flags.public_inputs {
-                Some(meta.instance_column())
             } else {
                 None
             },
@@ -224,8 +217,6 @@ pub struct OpcodeFlags {
     pub(crate) fixed_base_scalar_mul: bool,
     pub(crate) keccak256: bool,
     pub(crate) keccak256_variable_length: bool,
-    // @todo: maybe separate from opcode flags for proper logical separation
-    pub(crate) public_inputs: bool,
 }
 
 impl OpcodeFlags {
@@ -273,8 +264,6 @@ impl OpcodeFlags {
                 Opcode::Brillig(_) => todo!(),
             }
         }
-        // public IO params
-        let mut public_inputs = circuit.public_inputs().0.len() > 0;
 
         OpcodeFlags {
             arithmetic,
@@ -290,7 +279,6 @@ impl OpcodeFlags {
             fixed_base_scalar_mul,
             keccak256,
             keccak256_variable_length,
-            public_inputs,
         }
     }
 }
