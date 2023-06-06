@@ -2,6 +2,7 @@ use acvm::{
     acir::native_types::{Expression, Witness},
     FieldElement,
 };
+use halo2wrong_sha256::sha256::{BlockWord, Sha256, Sha256Instructions, Table16Chip};
 use pse_ecc::{
     integer::{IntegerInstructions, Range},
     GeneralEccChip,
@@ -23,7 +24,7 @@ use pse_maingate::{
     RangeInstructions, Term,
 };
 
-use std::slice::Iter;
+use std::{result, slice::Iter};
 
 use crate::{
     impl_noir_field_to_secp255k1_field_conversion, noir_field_to_halo2_field,
@@ -196,6 +197,93 @@ impl NoirHalo2Translator<Fr> {
         ));
 
         layouter.assign_region(
+            || "region 0",
+            |region| {
+                let offset = 0;
+                let ctx = &mut RegionCtx::new(region, offset);
+                let main_gate = MainGate::<Fr>::new(config.main_gate_config.clone());
+
+                let c1 = main_gate.assign_to_column(ctx, lhs_v, MainGateColumn::A)?;
+                let c2 = main_gate.assign_to_column(ctx, rhs_v, MainGateColumn::B)?;
+                let out = main_gate.assign_to_column(ctx, output_v, MainGateColumn::C)?;
+                let result = main_gate.and(ctx, &c1, &c2)?;
+
+                main_gate.assert_equal(ctx, &out, &result)?;
+
+                Ok(())
+            },
+        )?;
+
+        Ok(())
+    }
+
+    pub(crate) fn add_sha256_constrain(
+        &self,
+        sha256_input: Vec<(Witness, u32)>,
+        result: Vec<Witness>,
+        config: &PlonkConfig,
+        layouter: &mut impl Layouter<Fr>,
+    ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
+        Table16Chip::load(config.sha256_config.clone().unwrap(), layouter)?;
+        let table16_chip = Table16Chip::construct(config.sha256_config.clone().unwrap());
+
+        let mut sha256_input: Vec<u8> = sha256_input
+            .into_iter()
+            .flat_map(|(witness, num_bits)| {
+                (*self
+                    .witness_values
+                    .get(&witness)
+                    .unwrap_or(&FieldElement::zero()))
+                .fetch_nearest_bytes(num_bits as usize)
+            })
+            .collect();
+
+        let message_bits = sha256_input.len() * 8;
+        sha256_input.push(128);
+
+        let bytes_per_block = 64;
+        let num_bytes = sha256_input.len() + 8;
+        let num_blocks = num_bytes / bytes_per_block + (num_bytes % bytes_per_block != 0) as usize;
+
+        let num_total_bytes = num_blocks * bytes_per_block;
+        sha256_input.resize(num_total_bytes - num_bytes, 0);
+
+        sha256_input.extend_from_slice([message_bits as u8; 8].as_slice());
+
+        let sha256_input: Vec<u32> = sha256_input
+            .chunks(4)
+            .map(|x| {
+                let mut bytes = [0; 4];
+                bytes.copy_from_slice(x);
+                u32::from_le_bytes(bytes)
+            })
+            .collect();
+
+        let mut block_words = Vec::new();
+
+        for i in sha256_input {
+            let block_word = BlockWord(Value::known(i));
+            block_words.push(block_word)
+        }
+
+        let digest = Sha256::digest(table16_chip, layouter.namespace(|| "sha256"), &block_words)?;
+
+        let digest: Vec<Value<Vec<Fr>>> = digest
+            .0
+            .iter()
+            .map(|x| {
+                x.0.map(|a| {
+                    a.to_le_bytes()
+                        .into_iter()
+                        .map(|byte| Fr::from(byte as u64))
+                        .collect().flatten()
+                })
+            })
+            .collect();
+
+        let digest = digest.into_iter().map(|x| Value::from_iter(x))
+
+        let result = layouter.assign_region(
             || "region 0",
             |region| {
                 let offset = 0;

@@ -1,4 +1,4 @@
-use core::panic;
+use core::{num, panic};
 use std::marker::PhantomData;
 
 use crate::{errors::Error, pse_halo2::halo2_plonk_api::PlonkConfig};
@@ -88,8 +88,36 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                                 _ => unreachable!("expected either an AND or XOR opcode"),
                             }
                         }
-                        BlackBoxFuncCall::SHA256 { .. } => {
-                            panic!("sha256 has not yet been implemented")
+                        BlackBoxFuncCall::SHA256 { inputs, outputs } => {
+                            let mut sha256_inputs = Vec::new();
+                            for input in inputs.iter() {
+                                let witness = input.witness;
+                                let num_bits = input.num_bits;
+                                sha256_inputs.push((witness, num_bits));
+                            }
+
+                            assert_eq!(outputs.len(), 32);
+
+                            let mut outputs_iter = outputs.iter();
+                            let mut result = Vec::new();
+                            for (i, res) in result.iter_mut().enumerate() {
+                                let out_byte = outputs_iter.next().ok_or_else(|| {
+                                    Error::MalformedBlackBoxFunc(
+                                        BlackBoxFunc::SHA256,
+                                        format!("Missing rest of output. Tried to get byte {i} but failed"),
+                                    )
+                                }).unwrap();
+
+                                let out_byte_index = out_byte;
+                                *res = *out_byte_index
+                            }
+
+                            self.add_sha256_constrain(
+                                sha256_inputs,
+                                result,
+                                &config,
+                                &mut layouter,
+                            )?
                         }
                         BlackBoxFuncCall::Blake2s { .. } => {
                             panic!("blake2s has not yet been implemented")

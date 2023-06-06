@@ -3,6 +3,7 @@ use acvm::{
     FieldElement,
 };
 
+use halo2wrong_sha256::sha256::{Table16Chip, Table16Config};
 use pse_ecc::{EccConfig, GeneralEccChip};
 use pse_halo2wrong::{
     curves::secp256k1::Secp256k1Affine,
@@ -87,19 +88,13 @@ pub fn halo2_verify(
 pub struct PlonkConfig {
     pub(crate) main_gate_config: MainGateConfig,
     pub(crate) range_config: RangeConfig,
+    pub(crate) sha256_config: Option<Table16Config>,
     pub(crate) ecc_config: Option<EccConfig>,
 }
 
 impl PlonkConfig {
     pub fn configure(meta: &mut ConstraintSystem<Fr>) -> Self {
-        // let (rns_base, rns_scalar) = GeneralEccChip::<Secp256k1Affine, Fr, 4, 68>::rns();
         let main_gate_config = MainGate::<Fr>::configure(meta);
-
-        // let mut overflow_bit_lens: Vec<usize> =
-        //     vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
-        // overflow_bit_lens.extend(rns_base.overflow_lengths());
-        // overflow_bit_lens.extend(rns_scalar.overflow_lengths());
-        // let composition_bit_lens = vec![8, 68 / 4];
 
         let overflow_bit_lens: Vec<usize> = vec![1, 2, 3, 4, 5, 6, 7];
         let composition_bit_lens = vec![8];
@@ -110,11 +105,11 @@ impl PlonkConfig {
             composition_bit_lens,
             overflow_bit_lens,
         );
-        // let ecc_config = EccConfig::new(range_config.clone(), main_gate_config.clone());
 
         PlonkConfig {
             main_gate_config,
             range_config,
+            sha256_config: None,
             ecc_config: None,
         }
     }
@@ -148,6 +143,11 @@ impl PlonkConfig {
                     range_config.clone(),
                     main_gate_config.clone(),
                 ))
+            } else {
+                None
+            },
+            sha256_config: if opcodes_flags.sha256 {
+                Some(Table16Chip::configure(meta))
             } else {
                 None
             },

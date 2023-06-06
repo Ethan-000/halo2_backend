@@ -27,6 +27,7 @@ pse_maingate = { git = "https://github.com/privacy-scaling-explorations/halo2wro
 pse_ecdsa = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "ecdsa", tag = "v2023_04_20", features = ["circuit-params"], optional = true }
 pse_ecc = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "ecc", tag = "v2023_04_20", features = ["circuit-params"], optional = true }
 pse_snark_verifier = { git = "https://github.com/privacy-scaling-explorations/snark-verifier", package = "snark-verifier", tag = "v2023_04_20", features = ["halo2_circuit_params"], optional = true }
+halo2wrong-sha256 = { git = "https://github.com/Ethan-000/halo2wrong-sha256" }
 
 # axiom
 halo2-base = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "release-0.3.0", optional = true }
