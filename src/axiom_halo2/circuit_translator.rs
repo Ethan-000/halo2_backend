@@ -1,6 +1,3 @@
-use core::panic;
-use std::marker::PhantomData;
-
 use crate::{
     axiom_halo2::halo2_plonk_api::{PlonkConfig, StandardPlonk},
     errors::Error,
@@ -10,10 +7,12 @@ use acvm::acir::{
     native_types::WitnessMap,
     BlackBoxFunc,
 };
+use core::panic;
 use halo2_base::halo2_proofs::{
     circuit::SimpleFloorPlanner, halo2curves::bn256::Fr, plonk::Circuit as Halo2PlonkCircuit,
     plonk::ConstraintSystem,
 };
+use std::marker::PhantomData;
 
 #[derive(Clone, Default)]
 pub struct NoirHalo2Translator<Fr> {

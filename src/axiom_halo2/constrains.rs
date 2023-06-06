@@ -1,7 +1,8 @@
-use std::slice::Iter;
-
 use crate::{
-    axiom_halo2::halo2_plonk_api::{PlonkConfig, PolyTriple, StandardCs},
+    axiom_halo2::{
+        circuit_translator::NoirHalo2Translator,
+        halo2_plonk_api::{NoirConstraint, PlonkConfig, PolyTriple, StandardCs},
+    },
     impl_noir_field_to_secp255k1_field_conversion, noir_field_to_halo2_field,
     utils::Secp256k1FieldConversion,
 };
@@ -27,10 +28,7 @@ use halo2_ecc::{
     fields::FieldChip,
     secp256k1::{FpChip, FqChip},
 };
-
-use crate::axiom_halo2::circuit_translator::NoirHalo2Translator;
-
-use super::halo2_plonk_api::NoirConstraint;
+use std::slice::Iter;
 
 impl NoirHalo2Translator<Fr> {
     #[allow(non_snake_case)]
@@ -116,7 +114,7 @@ impl NoirHalo2Translator<Fr> {
         num_bits: u32,
         config: &PlonkConfig,
     ) {
-        let mut ctx = Context::<Fr>::new(true, 0);
+        let mut ctx = Context::<Fr>::new(false, 0);
 
         let x = noir_field_to_halo2_field(
             *self
@@ -139,7 +137,7 @@ impl NoirHalo2Translator<Fr> {
         output: Witness,
         config: &PlonkConfig,
     ) {
-        let mut ctx = Context::<Fr>::new(true, 0);
+        let mut ctx = Context::<Fr>::new(false, 0);
         let lhs_v = noir_field_to_halo2_field(
             *self
                 .witness_values
@@ -191,7 +189,7 @@ impl NoirHalo2Translator<Fr> {
         // puting them in a struct requires lifetime parameters
         // not sure if theres a way around this
         // this could be okay
-        let mut ctx = Context::<Fr>::new(true, 0);
+        let mut ctx = Context::<Fr>::new(false, 0);
         let ecdsa_range_chip = RangeChip::<Fr>::default(17);
         let ecdsa_fp_chip = FpChip::new(&ecdsa_range_chip, 88, 3);
         let ecdsa_fq_chip = FqChip::new(&ecdsa_range_chip, 88, 3);

@@ -1,5 +1,4 @@
-use std::marker::PhantomData;
-
+use crate::axiom_halo2::circuit_translator::NoirHalo2Translator;
 use acvm::FieldElement;
 use halo2_base::{
     gates::{GateChip, RangeChip},
@@ -30,11 +29,9 @@ use halo2_base::{
         },
     },
 };
-
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
-
-use crate::axiom_halo2::circuit_translator::NoirHalo2Translator;
+use std::marker::PhantomData;
 
 pub fn halo2_keygen(
     circuit: &NoirHalo2Translator<Fr>,
