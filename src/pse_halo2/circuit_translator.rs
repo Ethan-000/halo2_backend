@@ -1,7 +1,10 @@
 use core::panic;
 use std::marker::PhantomData;
 
-use crate::{errors::Error, pse_halo2::halo2_plonk_api::PlonkConfig};
+use crate::{
+    errors::Error,
+    pse_halo2::{assigned_map::AssignedMap, halo2_plonk_api::PlonkConfig},
+};
 use acvm::acir::{
     circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
     native_types::WitnessMap,
@@ -56,11 +59,17 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
         config: Self::Config,
         mut layouter: impl pse_halo2wrong::halo2::circuit::Layouter<Fr>,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
+        let mut witness_assignments = AssignedMap::<Fr>::new();
         let range_chip = RangeChip::<Fr>::new(config.range_config.clone());
         for gate in self.circuit.opcodes.iter() {
             match gate {
                 Opcode::Arithmetic(expression) => {
-                    self.add_arithmetic_constrains(expression, &config, &mut layouter)?;
+                    self.add_arithmetic_constrains(
+                        expression,
+                        &config,
+                        &mut layouter,
+                        &mut witness_assignments,
+                    )?;
                 }
                 Opcode::BlackBoxFuncCall(gadget_call) => {
                     match gadget_call {
@@ -69,6 +78,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                             input.num_bits,
                             &range_chip,
                             &mut layouter,
+                            &mut witness_assignments,
                         )?,
                         BlackBoxFuncCall::AND { lhs, rhs, output }
                         | BlackBoxFuncCall::XOR { lhs, rhs, output } => {
@@ -81,6 +91,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                                     *output,
                                     &config,
                                     &mut layouter,
+                                    &mut witness_assignments,
                                 )?,
                                 BlackBoxFuncCall::XOR { .. } => {
                                     panic!("xor has not yet been implemented")
@@ -206,6 +217,10 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
         }
 
         range_chip.load_table(&mut layouter)?;
+
+        // synthesize public io
+        self.expose_public(&config, &mut layouter, &witness_assignments)?;
+
         Ok(())
     }
 }

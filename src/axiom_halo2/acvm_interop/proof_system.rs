@@ -1,22 +1,28 @@
-use std::marker::PhantomData;
-
-use acvm::acir::circuit::Circuit as NoirCircuit;
-use acvm::acir::circuit::Opcode;
-use acvm::acir::native_types::WitnessMap;
-use acvm::acir::BlackBoxFunc;
-use acvm::{Language, ProofSystemCompiler};
-use halo2_base::halo2_proofs::halo2curves::bn256::Fr;
-use halo2_base::halo2_proofs::halo2curves::bn256::{Bn256, G1Affine};
-use halo2_base::halo2_proofs::plonk::{ProvingKey, VerifyingKey};
-
-use halo2_base::halo2_proofs::poly::kzg::commitment::ParamsKZG;
-use halo2_base::halo2_proofs::SerdeFormat;
-
-use crate::axiom_halo2::circuit_translator::NoirHalo2Translator;
-use crate::axiom_halo2::halo2_plonk_api::{halo2_keygen, halo2_prove, halo2_verify};
-use crate::errors::BackendError;
-
-use crate::axiom_halo2::AxiomHalo2;
+use {
+    crate::{
+        axiom_halo2::{
+            circuit_translator::NoirHalo2Translator,
+            halo2_plonk_api::{halo2_keygen, halo2_prove, halo2_verify},
+            AxiomHalo2,
+        },
+        errors::BackendError,
+    },
+    acvm::{
+        acir::{
+            circuit::{Circuit as NoirCircuit, Opcode},
+            native_types::WitnessMap,
+            BlackBoxFunc,
+        },
+        Language, ProofSystemCompiler,
+    },
+    halo2_base::halo2_proofs::{
+        halo2curves::bn256::{Bn256, Fr, G1Affine},
+        plonk::{ProvingKey, VerifyingKey},
+        poly::kzg::commitment::ParamsKZG,
+        SerdeFormat,
+    },
+    std::marker::PhantomData,
+};
 
 impl ProofSystemCompiler for AxiomHalo2 {
     type Error = BackendError;

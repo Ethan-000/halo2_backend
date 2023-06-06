@@ -35,7 +35,7 @@ halo2-ecc = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "relea
 # zkevm-keccak = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "release-0.3.0", optional = true }
 
 [features]
-default = ["pse_halo2"]
+default = ["axiom_halo2"]
 zcash_halo2 = ["dep:zcash_halo2_proofs"]
 pse_halo2 = ["dep:pse_halo2wrong", "dep:pse_maingate", "dep:pse_ecdsa", "dep:pse_ecc", "dep:pse_snark_verifier"]
 axiom_halo2 = ["dep:halo2-base", "dep:snark-verifier", "dep:halo2-ecc"]
