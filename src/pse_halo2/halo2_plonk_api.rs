@@ -221,7 +221,6 @@ pub struct OpcodeFlags {
 
 impl OpcodeFlags {
     pub(crate) fn new(opcodes: Vec<Opcode>) -> OpcodeFlags {
-        // opcode params
         let mut arithmetic = false;
         let mut range = false;
         let mut and = false;

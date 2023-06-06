@@ -1,6 +1,5 @@
 mod acvm_interop;
 
-mod assigned_map;
 mod circuit_translator;
 mod constrains;
 mod halo2_params;

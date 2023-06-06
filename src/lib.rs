@@ -8,7 +8,6 @@ mod errors;
 #[cfg(feature = "pse_halo2")]
 mod pse_halo2;
 mod utils;
-
 #[cfg(feature = "zcash_halo2")]
 mod zcash_halo2;
 
