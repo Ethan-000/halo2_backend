@@ -1,11 +1,10 @@
-use core::{num, panic};
+use core::{panic};
 use std::marker::PhantomData;
 
-use crate::{errors::Error, pse_halo2::halo2_plonk_api::PlonkConfig};
+use crate::{pse_halo2::halo2_plonk_api::PlonkConfig};
 use acvm::acir::{
     circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
     native_types::WitnessMap,
-    BlackBoxFunc,
 };
 
 use pse_ecc::GeneralEccChip;
@@ -98,23 +97,9 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
 
                             assert_eq!(outputs.len(), 32);
 
-                            let mut outputs_iter = outputs.iter();
-                            let mut result = Vec::new();
-                            for (i, res) in result.iter_mut().enumerate() {
-                                let out_byte = outputs_iter.next().ok_or_else(|| {
-                                    Error::MalformedBlackBoxFunc(
-                                        BlackBoxFunc::SHA256,
-                                        format!("Missing rest of output. Tried to get byte {i} but failed"),
-                                    )
-                                }).unwrap();
-
-                                let out_byte_index = out_byte;
-                                *res = *out_byte_index
-                            }
-
                             self.add_sha256_constrain(
                                 sha256_inputs,
-                                result,
+                                outputs.to_vec(),
                                 &config,
                                 &mut layouter,
                             )?
@@ -145,52 +130,20 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                                             ecc_config.clone(),
                                         );
                                     // public key x
-                                    let mut public_key_x_inputs = public_key_x_inputs.iter();
-                                    let mut public_key_x = Vec::new();
-                                    for (i, pkx) in public_key_x.iter_mut().enumerate() {
-                                        let x_byte = public_key_x_inputs
-                                    .next()
-                                    .ok_or_else(|| Error::MalformedBlackBoxFunc(
-                                        BlackBoxFunc::EcdsaSecp256k1,
-                                        format!("Missing rest of `x` component for public key. Tried to get byte {i} but failed"),
-                                    )).unwrap();
-                                        let x_byte_index = x_byte.witness;
-                                        *pkx = x_byte_index;
-                                    }
+                                    let public_key_x =
+                                        public_key_x_inputs.iter().map(|x| x.witness).collect();
 
                                     // public key y
-                                    let mut public_key_y_inputs = public_key_y_inputs.iter();
-                                    let mut public_key_y = Vec::new();
-                                    for (i, pky) in public_key_y.iter_mut().enumerate() {
-                                        let y_byte = public_key_y_inputs
-                                    .next()
-                                    .ok_or_else(|| Error::MalformedBlackBoxFunc(
-                                        BlackBoxFunc::EcdsaSecp256k1,
-                                        format!("Missing rest of `y` component for public key. Tried to get byte {i} but failed"),
-                                    )).unwrap();
-                                        let y_byte_index = y_byte.witness;
-                                        *pky = y_byte_index;
-                                    }
+                                    let public_key_y =
+                                        public_key_y_inputs.iter().map(|y| y.witness).collect();
 
                                     // signature
-                                    let mut signature_inputs = signature_inputs.iter();
-                                    let mut signature = Vec::new();
-                                    for (i, sig) in signature.iter_mut().enumerate() {
-                                        let sig_byte =
-                                    signature_inputs.next().ok_or_else(|| Error::MalformedBlackBoxFunc(
-                                        BlackBoxFunc::EcdsaSecp256k1,
-                                        format!("Missing rest of signature. Tried to get byte {i} but failed"),
-                                    )).unwrap();
-                                        let sig_byte_index = sig_byte.witness;
-                                        *sig = sig_byte_index;
-                                    }
+                                    let signature =
+                                        signature_inputs.iter().map(|sig| sig.witness).collect();
 
                                     // The rest of the input is the message
-                                    let mut hashed_message = Vec::new();
-                                    for msg in hashed_message_inputs.iter() {
-                                        let msg_byte_index = msg.witness;
-                                        hashed_message.push(msg_byte_index);
-                                    }
+                                    let hashed_message =
+                                        hashed_message_inputs.iter().map(|h| h.witness).collect();
 
                                     self.add_ecdsa_secp256k1_constrain(
                                         hashed_message,

@@ -93,11 +93,16 @@ pub struct PlonkConfig {
 }
 
 impl PlonkConfig {
-    pub fn configure(meta: &mut ConstraintSystem<Fr>) -> Self {
+    pub(crate) fn configure(meta: &mut ConstraintSystem<Fr>) -> Self {
         let main_gate_config = MainGate::<Fr>::configure(meta);
 
-        let overflow_bit_lens: Vec<usize> = vec![1, 2, 3, 4, 5, 6, 7];
-        let composition_bit_lens = vec![8];
+        let mut overflow_bit_lens: Vec<usize> = vec![1, 2, 3, 4, 5, 6, 7];
+        let mut composition_bit_lens = vec![8];
+
+        let (rns_base, rns_scalar) = GeneralEccChip::<Secp256k1Affine, Fr, 4, 68>::rns();
+        overflow_bit_lens.extend(rns_base.overflow_lengths());
+        overflow_bit_lens.extend(rns_scalar.overflow_lengths());
+        composition_bit_lens.extend(vec![68 / 4]);
 
         let range_config = RangeChip::<Fr>::configure(
             meta,
@@ -107,10 +112,13 @@ impl PlonkConfig {
         );
 
         PlonkConfig {
+            ecc_config: Some(EccConfig::new(
+                range_config.clone(),
+                main_gate_config.clone(),
+            )),
+            sha256_config: Some(Table16Chip::configure(meta)),
             main_gate_config,
             range_config,
-            sha256_config: None,
-            ecc_config: None,
         }
     }
 

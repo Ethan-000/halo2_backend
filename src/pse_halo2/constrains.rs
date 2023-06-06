@@ -2,7 +2,7 @@ use acvm::{
     acir::native_types::{Expression, Witness},
     FieldElement,
 };
-use halo2wrong_sha256::sha256::{BlockWord, Sha256, Sha256Instructions, Table16Chip};
+use halo2wrong_sha256::sha256::{BlockWord, Sha256, Table16Chip};
 use pse_ecc::{
     integer::{IntegerInstructions, Range},
     GeneralEccChip,
@@ -24,7 +24,7 @@ use pse_maingate::{
     RangeInstructions, Term,
 };
 
-use std::{result, slice::Iter};
+use std::slice::Iter;
 
 use crate::{
     impl_noir_field_to_secp255k1_field_conversion, noir_field_to_halo2_field,
@@ -246,7 +246,7 @@ impl NoirHalo2Translator<Fr> {
         let num_blocks = num_bytes / bytes_per_block + (num_bytes % bytes_per_block != 0) as usize;
 
         let num_total_bytes = num_blocks * bytes_per_block;
-        sha256_input.resize(num_total_bytes - num_bytes, 0);
+        sha256_input.resize(num_total_bytes, 0);
 
         sha256_input.extend_from_slice([message_bits as u8; 8].as_slice());
 
@@ -267,35 +267,24 @@ impl NoirHalo2Translator<Fr> {
         }
 
         let digest = Sha256::digest(table16_chip, layouter.namespace(|| "sha256"), &block_words)?;
-
-        let digest: Vec<Value<Vec<Fr>>> = digest
-            .0
-            .iter()
-            .map(|x| {
-                x.0.map(|a| {
-                    a.to_le_bytes()
-                        .into_iter()
-                        .map(|byte| Fr::from(byte as u64))
-                        .collect().flatten()
-                })
-            })
+        let output: Vec<Value<Fr>> = self
+            .process_hash_output(result)
+            .into_iter()
+            .map(Value::known)
             .collect();
 
-        let digest = digest.into_iter().map(|x| Value::from_iter(x))
-
-        let result = layouter.assign_region(
+        layouter.assign_region(
             || "region 0",
             |region| {
                 let offset = 0;
                 let ctx = &mut RegionCtx::new(region, offset);
                 let main_gate = MainGate::<Fr>::new(config.main_gate_config.clone());
 
-                let c1 = main_gate.assign_to_column(ctx, lhs_v, MainGateColumn::A)?;
-                let c2 = main_gate.assign_to_column(ctx, rhs_v, MainGateColumn::B)?;
-                let out = main_gate.assign_to_column(ctx, output_v, MainGateColumn::C)?;
-                let result = main_gate.and(ctx, &c1, &c2)?;
-
-                main_gate.assert_equal(ctx, &out, &result)?;
+                for i in 0..digest.len() {
+                    let c1 = main_gate.assign_to_column(ctx, digest[i], MainGateColumn::A)?;
+                    let c2 = main_gate.assign_to_column(ctx, output[i], MainGateColumn::B)?;
+                    main_gate.assert_equal(ctx, &c1, &c2)?;
+                }
 
                 Ok(())
             },
@@ -369,6 +358,35 @@ impl NoirHalo2Translator<Fr> {
         )?;
 
         Ok(())
+    }
+}
+
+impl NoirHalo2Translator<Fr> {
+    fn process_hash_output(&self, witnesses: Vec<Witness>) -> Vec<Fr> {
+        let mut noir_field_elements = Vec::new();
+        for i in witnesses {
+            let element = *self.witness_values.get(&i).unwrap_or(&FieldElement::zero());
+            noir_field_elements.push(element);
+        }
+        let mut halo2_field_elements = Vec::new();
+        noir_field_elements.chunks(4).for_each(|bytes| {
+            let mut first_byte = bytes[0].to_be_bytes();
+            first_byte.reverse();
+            let mut second_byte = bytes[1].to_be_bytes();
+            second_byte.reverse();
+            let mut third_byte = bytes[2].to_be_bytes();
+            third_byte.reverse();
+            let mut fourth_byte = bytes[3].to_be_bytes();
+            fourth_byte.reverse();
+            let mut halo_ele: [u8; 32] = [0; 32];
+            halo_ele[..8].copy_from_slice(&first_byte[..8]);
+            halo_ele[8..16].copy_from_slice(&second_byte[8..16]);
+            halo_ele[16..24].copy_from_slice(&third_byte[16..24]);
+            halo_ele[24..32].copy_from_slice(&fourth_byte[24..32]);
+            halo2_field_elements.push(Fr::from_bytes(&halo_ele).unwrap());
+        });
+
+        halo2_field_elements
     }
 }
 

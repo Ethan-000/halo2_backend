@@ -116,15 +116,13 @@ impl ProofSystemCompiler for PseHalo2 {
             Opcode::RAM(_) => false,
             Opcode::Oracle(_) => false,
             Opcode::BlackBoxFuncCall(func) => match func.get_black_box_func() {
-                BlackBoxFunc::RANGE => true,
+                BlackBoxFunc::RANGE | BlackBoxFunc::SHA256 | BlackBoxFunc::EcdsaSecp256k1 => true,
 
                 BlackBoxFunc::XOR
                 | BlackBoxFunc::AND
-                | BlackBoxFunc::SHA256
                 | BlackBoxFunc::Blake2s
                 | BlackBoxFunc::Pedersen
                 | BlackBoxFunc::HashToField128Security
-                | BlackBoxFunc::EcdsaSecp256k1
                 | BlackBoxFunc::Keccak256
                 | BlackBoxFunc::FixedBaseScalarMul
                 | BlackBoxFunc::SchnorrVerify => false,
