@@ -224,8 +224,8 @@ impl NoirHalo2Translator<Fr> {
         config: &PlonkConfig,
         layouter: &mut impl Layouter<Fr>,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
-        Table16Chip::load(config.sha256_config.clone().unwrap(), layouter)?;
-        let table16_chip = Table16Chip::construct(config.sha256_config.clone().unwrap());
+        Table16Chip::load(config.sha256_config.clone(), layouter)?;
+        let table16_chip = Table16Chip::construct(config.sha256_config.clone());
 
         let mut sha256_input: Vec<u8> = sha256_input
             .into_iter()
