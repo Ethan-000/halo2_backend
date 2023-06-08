@@ -31,7 +31,6 @@ impl<F: Field> AssignedMap<F> {
             Some(vec) => vec.push(value),
             None => {
                 self.0.insert(key, vec![value]);
-                ()
             }
         };
     }
