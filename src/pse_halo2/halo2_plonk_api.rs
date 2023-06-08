@@ -88,7 +88,7 @@ pub fn halo2_verify(
 pub struct PlonkConfig {
     pub(crate) main_gate_config: MainGateConfig,
     pub(crate) range_config: RangeConfig,
-    pub(crate) sha256_config: Table16Config,
+    pub(crate) sha256_config: Option<Table16Config>,
     pub(crate) ecc_config: Option<EccConfig>,
 }
 
@@ -99,11 +99,6 @@ impl PlonkConfig {
         let overflow_bit_lens: Vec<usize> = vec![1, 2, 3, 4, 5, 6, 7];
         let composition_bit_lens = vec![8];
 
-        // let (rns_base, rns_scalar) = GeneralEccChip::<Secp256k1Affine, Fr, 4, 68>::rns();
-        // overflow_bit_lens.extend(rns_base.overflow_lengths());
-        // overflow_bit_lens.extend(rns_scalar.overflow_lengths());
-        // composition_bit_lens.extend(vec![68 / 4]);
-
         let range_config = RangeChip::<Fr>::configure(
             meta,
             &main_gate_config,
@@ -111,11 +106,9 @@ impl PlonkConfig {
             overflow_bit_lens,
         );
 
-        let sha256_config = Table16Chip::configure(meta);
-
         PlonkConfig {
             ecc_config: None,
-            sha256_config,
+            sha256_config: None,
             main_gate_config,
             range_config,
         }
@@ -144,8 +137,6 @@ impl PlonkConfig {
             overflow_bit_lens,
         );
 
-        let sha256_config = Table16Chip::configure(meta);
-
         PlonkConfig {
             ecc_config: if opcodes_flags.ecdsa_secp256k1 {
                 Some(EccConfig::new(
@@ -155,7 +146,11 @@ impl PlonkConfig {
             } else {
                 None
             },
-            sha256_config,
+            sha256_config: if opcodes_flags.sha256 {
+                Some(Table16Chip::configure(meta))
+            } else {
+                None
+            },
             main_gate_config,
             range_config,
         }
@@ -207,7 +202,7 @@ impl NoirConstraint {
 }
 
 #[allow(dead_code)]
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct OpcodeFlags {
     pub(crate) arithmetic: bool,
     pub(crate) range: bool,
@@ -222,6 +217,8 @@ pub struct OpcodeFlags {
     pub(crate) fixed_base_scalar_mul: bool,
     pub(crate) keccak256: bool,
     pub(crate) keccak256_variable_length: bool,
+    pub(crate) ram: bool,
+    pub(crate) rom: bool,
 }
 
 impl OpcodeFlags {
@@ -239,6 +236,8 @@ impl OpcodeFlags {
         let mut fixed_base_scalar_mul = false;
         let mut keccak256 = false;
         let mut keccak256_variable_length = false;
+        let mut ram = false;
+        let mut rom = false;
         for opcode in opcodes {
             match opcode {
                 Opcode::Arithmetic(..) => arithmetic = true,
@@ -264,7 +263,8 @@ impl OpcodeFlags {
                 Opcode::Block(_) => {
                     // Block is managed by ACVM
                 }
-                Opcode::RAM(_) | Opcode::ROM(_) => {}
+                Opcode::RAM(_) => ram = true,
+                Opcode::ROM(_) => rom = true,
                 Opcode::Brillig(_) => todo!(),
             }
         }
@@ -283,6 +283,8 @@ impl OpcodeFlags {
             fixed_base_scalar_mul,
             keccak256,
             keccak256_variable_length,
+            ram,
+            rom,
         }
     }
 }

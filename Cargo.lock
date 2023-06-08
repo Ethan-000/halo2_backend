@@ -747,9 +747,9 @@ dependencies = [
 
 [[package]]
 name = "getrandom"
-version = "0.2.9"
+version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c85e1d9ab2eadba7e5040d4e09cbd6d072b76a557ad64e797c2cb9d4da21d7e4"
+checksum = "be4136b2a15dd319360be1c07d9933517ccf0be8f16bf62a3bee4f0d618df427"
 dependencies = [
  "cfg-if",
  "libc",
@@ -800,7 +800,7 @@ dependencies = [
 [[package]]
 name = "halo2-base"
 version = "0.3.0"
-source = "git+https://github.com/axiom-crypto/halo2-lib?branch=release-0.3.0#282ee8e7cf8ca57172a6e7e121489df1bd027af1"
+source = "git+https://github.com/axiom-crypto/halo2-lib?branch=release-0.3.0#8b9bdc2ba0d1f6f44e6b313847d2f0268e523c36"
 dependencies = [
  "ff 0.12.1",
  "halo2_proofs 0.2.0 (git+https://github.com/axiom-crypto/halo2.git?branch=axiom/dev)",
@@ -820,7 +820,7 @@ dependencies = [
 [[package]]
 name = "halo2-ecc"
 version = "0.3.0"
-source = "git+https://github.com/axiom-crypto/halo2-lib?branch=release-0.3.0#282ee8e7cf8ca57172a6e7e121489df1bd027af1"
+source = "git+https://github.com/axiom-crypto/halo2-lib?branch=release-0.3.0#8b9bdc2ba0d1f6f44e6b313847d2f0268e523c36"
 dependencies = [
  "ff 0.12.1",
  "group 0.12.1",
@@ -857,6 +857,7 @@ dependencies = [
  "rand",
  "reqwest",
  "serde",
+ "sha2",
  "snark-verifier 0.1.0",
  "snark-verifier 0.1.1",
  "thiserror",
@@ -993,7 +994,6 @@ dependencies = [
 [[package]]
 name = "halo2wrong-sha256"
 version = "0.1.0"
-source = "git+https://github.com/Ethan-000/halo2wrong-sha256#207b8077d8b5fb9584c87c3d9160bdfdf6820174"
 dependencies = [
  "halo2wrong",
  "rand",

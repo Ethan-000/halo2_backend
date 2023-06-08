@@ -2,7 +2,7 @@ use acvm::{
     acir::native_types::{Expression, Witness},
     FieldElement,
 };
-use halo2wrong_sha256::sha256::{BlockWord, Sha256, Table16Chip};
+use halo2wrong_sha256::sha256::{BlockWordNew, Sha256, Table16Chip};
 use pse_ecc::{
     integer::{IntegerInstructions, Range},
     GeneralEccChip,
@@ -23,6 +23,7 @@ use pse_maingate::{
     CombinationOption, MainGate, MainGateColumn, MainGateInstructions, RangeChip,
     RangeInstructions, Term,
 };
+use sha2::Digest;
 
 use std::slice::Iter;
 
@@ -224,10 +225,10 @@ impl NoirHalo2Translator<Fr> {
         config: &PlonkConfig,
         layouter: &mut impl Layouter<Fr>,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
-        Table16Chip::load(config.sha256_config.clone(), layouter)?;
-        let table16_chip = Table16Chip::construct(config.sha256_config.clone());
+        Table16Chip::load(config.sha256_config.clone().unwrap(), layouter)?;
+        let table16_chip = Table16Chip::construct(config.sha256_config.clone().unwrap());
 
-        let mut sha256_input: Vec<u8> = sha256_input
+        let sha256_input: Vec<u8> = sha256_input
             .into_iter()
             .flat_map(|(witness, num_bits)| {
                 (*self
@@ -238,57 +239,90 @@ impl NoirHalo2Translator<Fr> {
             })
             .collect();
 
-        let message_bits = sha256_input.len() * 8;
-        sha256_input.push(128);
+        // let message_bits = sha256_input.len() * 8;
+        // sha256_input.push(128);
 
-        let bytes_per_block = 64;
-        let num_bytes = sha256_input.len() + 8;
-        let num_blocks = num_bytes / bytes_per_block + (num_bytes % bytes_per_block != 0) as usize;
+        // let bytes_per_block = 64;
+        // let num_bytes = sha256_input.len() + 8;
+        // let num_blocks = num_bytes / bytes_per_block + (num_bytes % bytes_per_block != 0) as usize;
 
-        let num_total_bytes = num_blocks * bytes_per_block;
-        sha256_input.resize(num_total_bytes, 0);
+        // let num_total_bytes = num_blocks * bytes_per_block;
+        // sha256_input.resize(num_total_bytes, 0);
 
-        sha256_input.extend_from_slice([message_bits as u8; 8].as_slice());
+        // sha256_input.extend_from_slice([message_bits as u8; 8].as_slice());
 
-        let sha256_input: Vec<u32> = sha256_input
-            .chunks(4)
-            .map(|x| {
-                let mut bytes = [0; 4];
-                bytes.copy_from_slice(x);
-                u32::from_le_bytes(bytes)
-            })
-            .collect();
+        // let sha256_input: Vec<u32> = sha256_input
+        //     .chunks(4)
+        //     .map(|x| {
+        //         let mut bytes = [0; 4];
+        //         bytes.copy_from_slice(x);
+        //         u32::from_le_bytes(bytes)
+        //     })
+        //     .collect();
 
         let mut block_words = Vec::new();
 
         for i in sha256_input {
-            let block_word = BlockWord(Value::known(i));
+            let block_word = BlockWordNew(Value::known(i));
             block_words.push(block_word)
         }
 
-        let digest = Sha256::digest(table16_chip, layouter.namespace(|| "sha256"), &block_words)?;
-        let output: Vec<Value<Fr>> = self
-            .process_hash_output(result)
-            .into_iter()
-            .map(Value::known)
-            .collect();
+        let test = vec![BlockWordNew(Value::known(1))];
+        let digest = Sha256::digest(table16_chip, layouter.namespace(|| "sha256"), &test)?;
+        // let output: Vec<Value<Fr>> = self
+        //     .process_hash_output(result)
+        //     .into_iter()
+        //     .map(Value::known)
+        //     .collect();
 
-        layouter.assign_region(
-            || "region 0",
-            |region| {
-                let offset = 0;
-                let ctx = &mut RegionCtx::new(region, offset);
-                let main_gate = MainGate::<Fr>::new(config.main_gate_config.clone());
+        let test = 1 as u8;
 
-                for i in 0..digest.len() {
-                    let c1 = main_gate.assign_to_column(ctx, digest[i], MainGateColumn::A)?;
-                    let c2 = main_gate.assign_to_column(ctx, output[i], MainGateColumn::B)?;
-                    main_gate.assert_equal(ctx, &c1, &c2)?;
-                }
+        let mut hasher = sha2::Sha256::new();
 
-                Ok(())
-            },
-        )?;
+        hasher.update([test]);
+
+        let output = hasher.finalize();
+
+        println!(
+            "digest: {:?}",
+            digest
+                .into_iter()
+                .map(|x| x.map(|u| u.to_bytes()))
+                .collect::<Vec<Value<[u8; 32]>>>()
+        );
+
+        println!("{:?}", output);
+
+        // let mut noir_field_elements = Vec::new();
+        // for i in result {
+        //     let element = *self.witness_values.get(&i).unwrap_or(&FieldElement::zero());
+        //     noir_field_elements.push(element);
+        // }
+
+        // println!(
+        //     "output: {:?}",
+        //     noir_field_elements
+        //         .into_iter()
+        //         .map(|x| x.to_be_bytes())
+        //         .collect::<Vec<Vec<u8>>>()
+        // );
+
+        // layouter.assign_region(
+        //     || "region 0",
+        //     |region| {
+        //         let offset = 0;
+        //         let ctx = &mut RegionCtx::new(region, offset);
+        //         let main_gate = MainGate::<Fr>::new(config.main_gate_config.clone());
+
+        //         for i in 0..digest.len() {
+        //             let c1 = main_gate.assign_to_column(ctx, digest[i], MainGateColumn::A)?;
+        //             let c2 = main_gate.assign_to_column(ctx, output[i], MainGateColumn::B)?;
+        //             main_gate.assert_equal(ctx, &c1, &c2)?;
+        //         }
+
+        //         Ok(())
+        //     },
+        // )?;
 
         Ok(())
     }

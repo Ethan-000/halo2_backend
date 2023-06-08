@@ -3,6 +3,7 @@
 
 use std::{cell::RefCell, ops::RangeInclusive};
 
+use bincode::config;
 #[cfg(feature = "axiom_halo2")]
 use halo2_base::halo2_proofs::{
     circuit::Value,
@@ -73,6 +74,11 @@ impl DimensionMeasurement {
 
     pub fn measure<F: PrimeField, C: Circuit<F>>(circuit: &C) -> Result<Dimension, Error> {
         let mut cs = ConstraintSystem::default();
+        #[cfg(feature = "pse_halo2")]
+        let params = C::params(circuit);
+        #[cfg(feature = "pse_halo2")]
+        let config = C::configure_with_params(&mut cs, params);
+        #[cfg(not(feature = "pse_halo2"))]
         let config = C::configure(&mut cs);
         let mut measurement = Self::default();
         C::FloorPlanner::synthesize(&mut measurement, circuit, config, cs.constants().to_vec())?;

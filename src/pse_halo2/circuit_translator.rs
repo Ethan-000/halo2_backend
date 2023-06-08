@@ -1,7 +1,7 @@
-use core::{panic};
+use core::panic;
 use std::marker::PhantomData;
 
-use crate::{pse_halo2::halo2_plonk_api::PlonkConfig};
+use crate::pse_halo2::halo2_plonk_api::PlonkConfig;
 use acvm::acir::{
     circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
     native_types::WitnessMap,
@@ -36,7 +36,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
     }
 
     fn params(&self) -> Self::Params {
-        Self::Params::default()
+        Self::Params::new(self.circuit.opcodes.clone())
     }
 
     fn configure_with_params(
