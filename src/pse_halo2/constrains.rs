@@ -221,7 +221,7 @@ impl NoirHalo2Translator<Fr> {
     pub(crate) fn add_sha256_constrain(
         &self,
         sha256_input: Vec<(Witness, u32)>,
-        result: Vec<Witness>,
+        _result: Vec<Witness>,
         config: &PlonkConfig,
         layouter: &mut impl Layouter<Fr>,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
@@ -275,7 +275,7 @@ impl NoirHalo2Translator<Fr> {
         //     .map(Value::known)
         //     .collect();
 
-        let test = 1 as u8;
+        let test = 1_u8;
 
         let mut hasher = sha2::Sha256::new();
 
@@ -291,7 +291,7 @@ impl NoirHalo2Translator<Fr> {
                 .collect::<Vec<Value<[u8; 32]>>>()
         );
 
-        println!("{:?}", output);
+        println!("{output:?}");
 
         // let mut noir_field_elements = Vec::new();
         // for i in result {
@@ -396,7 +396,7 @@ impl NoirHalo2Translator<Fr> {
 }
 
 impl NoirHalo2Translator<Fr> {
-    fn process_hash_output(&self, witnesses: Vec<Witness>) -> Vec<Fr> {
+    fn _process_hash_output(&self, witnesses: Vec<Witness>) -> Vec<Fr> {
         let mut noir_field_elements = Vec::new();
         for i in witnesses {
             let element = *self.witness_values.get(&i).unwrap_or(&FieldElement::zero());

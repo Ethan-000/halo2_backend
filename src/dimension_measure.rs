@@ -3,7 +3,7 @@
 
 use std::{cell::RefCell, ops::RangeInclusive};
 
-use bincode::config;
+
 #[cfg(feature = "axiom_halo2")]
 use halo2_base::halo2_proofs::{
     circuit::Value,
