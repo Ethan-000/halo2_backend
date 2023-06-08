@@ -59,6 +59,11 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
         config: Self::Config,
         mut layouter: impl pse_halo2wrong::halo2::circuit::Layouter<Fr>,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
+        let mut bytes = Vec::new();
+        self.circuit.write(&mut bytes).unwrap();
+        println!("circuit: {:?}", bytes);
+        // println!("Circuit: {:?}", self.circuit);
+        // println!("Witness_values: {:?}", self.witness_values);
         let mut witness_assignments = AssignedMap::<Fr>::new();
         let range_chip = RangeChip::<Fr>::new(config.range_config.clone());
         for gate in self.circuit.opcodes.iter() {

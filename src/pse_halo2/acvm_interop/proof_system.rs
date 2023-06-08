@@ -31,6 +31,7 @@ impl ProofSystemCompiler for PseHalo2 {
         mut common_reference_string: &[u8],
         circuit: &NoirCircuit,
     ) -> Result<(Vec<u8>, Vec<u8>), BackendError> {
+        println!("ACIR: {:?}", circuit.opcodes);
         let translator = NoirHalo2Translator::<Fr> {
             circuit: circuit.clone(),
             witness_values: WitnessMap::new(),

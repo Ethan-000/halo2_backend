@@ -138,8 +138,6 @@ impl NoirHalo2Translator<Fr> {
             },
         )?;
 
-        //
-
         Ok(())
     }
 

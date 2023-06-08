@@ -5,6 +5,7 @@ mod circuit_translator;
 mod constrains;
 mod halo2_params;
 mod halo2_plonk_api;
+mod test;
 
 #[derive(Debug)]
 pub struct PseHalo2;
