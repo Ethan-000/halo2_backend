@@ -201,6 +201,14 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                             var_message_size: _,
                             outputs: _,
                         } => todo!(),
+                        BlackBoxFuncCall::RecursiveAggregation {
+                            verification_key: _,
+                            proof: _,
+                            public_inputs: _,
+                            key_hash: _,
+                            input_aggregation_object: _,
+                            output_aggregation_object: _,
+                        } => todo!(),
                     };
                 }
                 Opcode::Directive(_) | Opcode::Oracle(_) => {
