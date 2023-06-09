@@ -6,27 +6,23 @@ use acvm::{
     FieldElement,
 };
 
-use pse_ecc::{EccConfig, GeneralEccChip};
-use pse_halo2wrong::{
-    curves::secp256k1::Secp256k1Affine,
-    halo2::{
-        halo2curves::bn256::Fr,
-        halo2curves::{
-            bn256::{Bn256, G1Affine, G1},
-            group::cofactor::CofactorCurve,
-        },
-        plonk::{
-            create_proof, keygen_pk, keygen_vk, verify_proof, ConstraintSystem, Error, ProvingKey,
-            VerifyingKey,
-        },
-        poly::kzg::{
-            commitment::{KZGCommitmentScheme, ParamsKZG},
-            multiopen::{ProverGWC, VerifierGWC},
-            strategy::SingleStrategy,
-        },
-        transcript::{
-            Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
-        },
+use pse_halo2wrong::halo2::{
+    halo2curves::bn256::Fr,
+    halo2curves::{
+        bn256::{Bn256, G1Affine, G1},
+        group::cofactor::CofactorCurve,
+    },
+    plonk::{
+        create_proof, keygen_pk, keygen_vk, verify_proof, ConstraintSystem, Error, ProvingKey,
+        VerifyingKey,
+    },
+    poly::kzg::{
+        commitment::{KZGCommitmentScheme, ParamsKZG},
+        multiopen::{ProverGWC, VerifierGWC},
+        strategy::SingleStrategy,
+    },
+    transcript::{
+        Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
     },
 };
 
@@ -37,6 +33,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::pse_halo2::circuit_translator::NoirHalo2Translator;
 
+/// Generate Halo2 Proving and Verifying Keys
 pub fn halo2_keygen(
     circuit: &NoirHalo2Translator<Fr>,
     params: &ParamsKZG<Bn256>,
@@ -50,14 +47,17 @@ pub fn halo2_keygen(
     (pk, vk_return)
 }
 
+/// Generate Halo2 Proof
 pub fn halo2_prove(
     circuit: NoirHalo2Translator<Fr>,
     params: &ParamsKZG<Bn256>,
     pk: &ProvingKey<<G1 as CofactorCurve>::Affine>,
+    public_inputs: &[Fr],
 ) -> Vec<u8> {
     let rng = OsRng;
     let mut transcript: Blake2bWrite<Vec<u8>, _, Challenge255<_>> =
         Blake2bWrite::<_, _, Challenge255<_>>::init(vec![]);
+
     create_proof::<
         KZGCommitmentScheme<Bn256>,
         ProverGWC<'_, Bn256>,
@@ -65,44 +65,47 @@ pub fn halo2_prove(
         _,
         Blake2bWrite<Vec<u8>, G1Affine, Challenge255<_>>,
         _,
-    >(params, pk, &[circuit], &[&[&[]]], rng, &mut transcript)
+    >(
+        params,
+        pk,
+        &[circuit],
+        &[&[public_inputs]],
+        rng,
+        &mut transcript,
+    )
     .expect("proof generation should not fail");
     transcript.finalize()
 }
 
+/// Verify Halo2 Proof
 pub fn halo2_verify(
     params: &ParamsKZG<Bn256>,
     vk: &VerifyingKey<<G1 as CofactorCurve>::Affine>,
     proof: &[u8],
+    public_inputs: &[Fr],
 ) -> Result<(), Error> {
     let strategy = SingleStrategy::new(params);
     let mut transcript = Blake2bRead::<_, _, Challenge255<_>>::init(proof);
+
     verify_proof::<
         KZGCommitmentScheme<Bn256>,
         VerifierGWC<'_, Bn256>,
         Challenge255<G1Affine>,
         Blake2bRead<&[u8], G1Affine, Challenge255<G1Affine>>,
         SingleStrategy<'_, Bn256>,
-    >(params, vk, strategy, &[&[&[]]], &mut transcript)
+    >(params, vk, strategy, &[&[public_inputs]], &mut transcript)
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PlonkConfig {
     pub(crate) main_gate_config: MainGateConfig,
     pub(crate) range_config: RangeConfig,
-    pub(crate) ecc_config: Option<EccConfig>,
 }
 
 impl PlonkConfig {
+    /// Default configuration
     pub fn configure(meta: &mut ConstraintSystem<Fr>) -> Self {
-        // let (rns_base, rns_scalar) = GeneralEccChip::<Secp256k1Affine, Fr, 4, 68>::rns();
         let main_gate_config = MainGate::<Fr>::configure(meta);
-
-        // let mut overflow_bit_lens: Vec<usize> =
-        //     vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
-        // overflow_bit_lens.extend(rns_base.overflow_lengths());
-        // overflow_bit_lens.extend(rns_scalar.overflow_lengths());
-        // let composition_bit_lens = vec![8, 68 / 4];
 
         let overflow_bit_lens: Vec<usize> = vec![1, 2, 3, 4, 5, 6, 7];
         let composition_bit_lens = vec![8];
@@ -113,30 +116,21 @@ impl PlonkConfig {
             composition_bit_lens,
             overflow_bit_lens,
         );
-        // let ecc_config = EccConfig::new(range_config.clone(), main_gate_config.clone());
 
         PlonkConfig {
             main_gate_config,
             range_config,
-            ecc_config: None,
         }
     }
 
     pub(crate) fn configure_with_params(
         meta: &mut ConstraintSystem<Fr>,
-        opcodes_flags: OpcodeFlags,
+        _opcodes_flags: OpcodeFlags,
     ) -> Self {
         let main_gate_config = MainGate::<Fr>::configure(meta);
 
-        let mut overflow_bit_lens: Vec<usize> = vec![1, 2, 3, 4, 5, 6, 7];
-        let mut composition_bit_lens = vec![8];
-
-        if opcodes_flags.ecdsa_secp256k1 {
-            let (rns_base, rns_scalar) = GeneralEccChip::<Secp256k1Affine, Fr, 4, 68>::rns();
-            overflow_bit_lens.extend(rns_base.overflow_lengths());
-            overflow_bit_lens.extend(rns_scalar.overflow_lengths());
-            composition_bit_lens.extend(vec![68 / 4]);
-        }
+        let overflow_bit_lens: Vec<usize> = vec![1, 2, 3, 4, 5, 6, 7];
+        let composition_bit_lens = vec![8];
 
         let range_config = RangeChip::<Fr>::configure(
             meta,
@@ -146,14 +140,6 @@ impl PlonkConfig {
         );
 
         PlonkConfig {
-            ecc_config: if opcodes_flags.ecdsa_secp256k1 {
-                Some(EccConfig::new(
-                    range_config.clone(),
-                    main_gate_config.clone(),
-                ))
-            } else {
-                None
-            },
             main_gate_config,
             range_config,
         }
@@ -204,8 +190,10 @@ impl NoirConstraint {
     }
 }
 
+/// Opcode flags that shows which opcode
+/// is used given a circuit instance
 #[allow(dead_code)]
-#[derive(Default)]
+#[derive(Default, Clone, Debug)]
 pub struct OpcodeFlags {
     pub(crate) arithmetic: bool,
     pub(crate) range: bool,
@@ -224,7 +212,7 @@ pub struct OpcodeFlags {
 }
 
 impl OpcodeFlags {
-    pub(crate) fn new(opcodes: Vec<Opcode>) -> OpcodeFlags {
+    pub(crate) fn new(opcodes: &[Opcode]) -> OpcodeFlags {
         // opcode params
         let mut arithmetic = false;
         let mut range = false;
@@ -267,7 +255,7 @@ impl OpcodeFlags {
                     // Block is managed by ACVM
                 }
                 Opcode::RAM(_) | Opcode::ROM(_) => {}
-                Opcode::Brillig(_) => todo!(),
+                Opcode::Brillig(_) => {}
             }
         }
 

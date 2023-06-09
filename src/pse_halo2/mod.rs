@@ -7,7 +7,7 @@ mod halo2_params;
 mod halo2_plonk_api;
 mod test;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PseHalo2;
 
 impl PseHalo2 {
