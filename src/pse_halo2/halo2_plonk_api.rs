@@ -220,6 +220,7 @@ pub struct OpcodeFlags {
     pub(crate) fixed_base_scalar_mul: bool,
     pub(crate) keccak256: bool,
     pub(crate) keccak256_variable_length: bool,
+    pub(crate) recursive_aggregation: bool,
 }
 
 impl OpcodeFlags {
@@ -238,6 +239,7 @@ impl OpcodeFlags {
         let mut fixed_base_scalar_mul = false;
         let mut keccak256 = false;
         let mut keccak256_variable_length = false;
+        let mut recursive_aggregation = false;
         for opcode in opcodes {
             match opcode {
                 Opcode::Arithmetic(..) => arithmetic = true,
@@ -256,6 +258,7 @@ impl OpcodeFlags {
                     BlackBoxFuncCall::Keccak256VariableLength { .. } => {
                         keccak256_variable_length = true
                     }
+                    BlackBoxFuncCall::RecursiveAggregation { .. } => recursive_aggregation = true,
                 },
                 Opcode::Directive(_) | Opcode::Oracle(_) => {
                     // Directives are only needed by the pwg
@@ -282,6 +285,7 @@ impl OpcodeFlags {
             fixed_base_scalar_mul,
             keccak256,
             keccak256_variable_length,
+            recursive_aggregation,
         }
     }
 }

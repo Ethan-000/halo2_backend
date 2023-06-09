@@ -98,15 +98,15 @@ impl NoirHalo2Translator<Fr> {
                 let mut terms = Vec::new();
 
                 let a = main_gate.assign_to_column(ctx, a, MainGateColumn::A)?;
-                check_and_copy(ctx, &witness_assignments, noir_cs.a as u32, &a)?;
+                check_and_copy(ctx, witness_assignments, noir_cs.a as u32, &a)?;
                 terms.push(Term::Assigned(&a, ql));
 
                 let b = main_gate.assign_to_column(ctx, b, MainGateColumn::B)?;
-                check_and_copy(ctx, &witness_assignments, noir_cs.b as u32, &b)?;
+                check_and_copy(ctx, witness_assignments, noir_cs.b as u32, &b)?;
                 terms.push(Term::Assigned(&b, qr));
 
                 let c = main_gate.assign_to_column(ctx, c, MainGateColumn::C)?;
-                check_and_copy(ctx, &witness_assignments, noir_cs.c as u32, &c)?;
+                check_and_copy(ctx, witness_assignments, noir_cs.c as u32, &c)?;
                 terms.push(Term::Assigned(&c, qo));
 
                 let d =
@@ -167,7 +167,7 @@ impl NoirHalo2Translator<Fr> {
                 let bit_len = num_bits as usize;
 
                 let cell = range_chip.assign(ctx, value, limb_bit_len, bit_len)?;
-                check_and_copy(ctx, &witness_assignments, witness.0, &cell)?;
+                check_and_copy(ctx, witness_assignments, witness.0, &cell)?;
 
                 // add to assignment map
                 witness_assignments.insert(witness, cell);
@@ -217,13 +217,13 @@ impl NoirHalo2Translator<Fr> {
                 let main_gate = MainGate::<Fr>::new(config.main_gate_config.clone());
 
                 let lhs_cell = main_gate.assign_to_column(ctx, lhs_v, MainGateColumn::A)?;
-                check_and_copy(ctx, &witness_assignments, lhs.0, &lhs_cell)?;
+                check_and_copy(ctx, witness_assignments, lhs.0, &lhs_cell)?;
 
                 let rhs_cell = main_gate.assign_to_column(ctx, rhs_v, MainGateColumn::B)?;
-                check_and_copy(ctx, &witness_assignments, rhs.0, &rhs_cell)?;
+                check_and_copy(ctx, witness_assignments, rhs.0, &rhs_cell)?;
 
                 let output_cell = main_gate.assign_to_column(ctx, output_v, MainGateColumn::C)?;
-                check_and_copy(ctx, &witness_assignments, output.0, &output_cell)?;
+                check_and_copy(ctx, witness_assignments, output.0, &output_cell)?;
 
                 let result = main_gate.and(ctx, &lhs_cell, &rhs_cell)?;
                 main_gate.assert_equal(ctx, &output_cell, &result)?;
@@ -318,14 +318,14 @@ impl NoirHalo2Translator<Fr> {
         // instnantiate new main gate
         let main_gate = MainGate::<Fr>::new(config.main_gate_config.clone());
         // loop through public witness indices and expose publicly through main gate
-        for i in 0..public_indices.len() {
+        for (i, _) in public_indices.iter().enumerate() {
             let assigned = witness_assignments
                 .get_index(public_indices[i])
                 .unwrap()
                 .last()
                 .unwrap();
             main_gate.expose_public(
-                layouter.namespace(|| format!("Public IO #{:?}", i)),
+                layouter.namespace(|| format!("Public IO #{i:?}")),
                 assigned.clone(),
                 i,
             )?;
@@ -354,7 +354,7 @@ pub fn check_and_copy(
 ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
     if assignments.contains_key(&Witness(witness)) {
         let witness_cell = assignments.get_index(witness).unwrap().last().unwrap();
-        ctx.constrain_equal(witness_cell.cell().clone(), cell.cell().clone())
+        ctx.constrain_equal(witness_cell.cell(), cell.cell())
     } else {
         Ok(())
     }

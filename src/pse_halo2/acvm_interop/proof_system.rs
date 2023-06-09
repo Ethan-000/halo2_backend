@@ -4,6 +4,7 @@ use acvm::acir::circuit::Circuit as NoirCircuit;
 use acvm::acir::circuit::Opcode;
 use acvm::acir::native_types::WitnessMap;
 use acvm::acir::BlackBoxFunc;
+use acvm::FieldElement;
 use acvm::{Language, ProofSystemCompiler};
 use pse_halo2wrong::halo2::halo2curves::bn256::Fr;
 use pse_halo2wrong::halo2::halo2curves::bn256::{Bn256, G1Affine};
@@ -54,6 +55,7 @@ impl ProofSystemCompiler for PseHalo2 {
         circuit: &NoirCircuit,
         witness_values: WitnessMap,
         proving_key: &[u8],
+        _is_recursive: bool,
     ) -> Result<Vec<u8>, BackendError> {
         let params =
             ParamsKZG::<Bn256>::read_custom(&mut common_reference_string, SerdeFormat::RawBytes)
@@ -87,6 +89,7 @@ impl ProofSystemCompiler for PseHalo2 {
         _public_inputs: WitnessMap,
         circuit: &NoirCircuit,
         verification_key: &[u8],
+        _is_recursive: bool,
     ) -> Result<bool, BackendError> {
         let params =
             ParamsKZG::<Bn256>::read_custom(&mut common_reference_string, SerdeFormat::RawBytes)
@@ -128,9 +131,26 @@ impl ProofSystemCompiler for PseHalo2 {
                 | BlackBoxFunc::EcdsaSecp256k1
                 | BlackBoxFunc::Keccak256
                 | BlackBoxFunc::FixedBaseScalarMul
+                | BlackBoxFunc::RecursiveAggregation
                 | BlackBoxFunc::SchnorrVerify => false,
             },
             Opcode::Brillig(_) => false,
         }
+    }
+
+    fn proof_as_fields(
+        &self,
+        _proof: &[u8],
+        _public_inputs: WitnessMap,
+    ) -> Result<Vec<FieldElement>, Self::Error> {
+        panic!("vk_as_fields not supported in this backend");
+    }
+
+    fn vk_as_fields(
+        &self,
+        _common_reference_string: &[u8],
+        _verification_key: &[u8],
+    ) -> Result<(Vec<FieldElement>, FieldElement), Self::Error> {
+        panic!("vk_as_fields not supported in this backend");
     }
 }
