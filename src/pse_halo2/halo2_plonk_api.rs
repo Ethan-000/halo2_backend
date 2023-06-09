@@ -51,10 +51,12 @@ pub fn halo2_prove(
     circuit: NoirHalo2Translator<Fr>,
     params: &ParamsKZG<Bn256>,
     pk: &ProvingKey<<G1 as CofactorCurve>::Affine>,
+    public_inputs: &[Fr],
 ) -> Vec<u8> {
     let rng = OsRng;
     let mut transcript: Blake2bWrite<Vec<u8>, _, Challenge255<_>> =
         Blake2bWrite::<_, _, Challenge255<_>>::init(vec![]);
+
     create_proof::<
         KZGCommitmentScheme<Bn256>,
         ProverGWC<'_, Bn256>,
@@ -62,7 +64,14 @@ pub fn halo2_prove(
         _,
         Blake2bWrite<Vec<u8>, G1Affine, Challenge255<_>>,
         _,
-    >(params, pk, &[circuit], &[&[&[]]], rng, &mut transcript)
+    >(
+        params,
+        pk,
+        &[circuit],
+        &[&[public_inputs]],
+        rng,
+        &mut transcript,
+    )
     .expect("proof generation should not fail");
     transcript.finalize()
 }
@@ -71,16 +80,18 @@ pub fn halo2_verify(
     params: &ParamsKZG<Bn256>,
     vk: &VerifyingKey<<G1 as CofactorCurve>::Affine>,
     proof: &[u8],
+    public_inputs: &[Fr],
 ) -> Result<(), Error> {
     let strategy = SingleStrategy::new(params);
     let mut transcript = Blake2bRead::<_, _, Challenge255<_>>::init(proof);
+
     verify_proof::<
         KZGCommitmentScheme<Bn256>,
         VerifierGWC<'_, Bn256>,
         Challenge255<G1Affine>,
         Blake2bRead<&[u8], G1Affine, Challenge255<G1Affine>>,
         SingleStrategy<'_, Bn256>,
-    >(params, vk, strategy, &[&[&[]]], &mut transcript)
+    >(params, vk, strategy, &[&[public_inputs]], &mut transcript)
 }
 
 #[derive(Clone)]

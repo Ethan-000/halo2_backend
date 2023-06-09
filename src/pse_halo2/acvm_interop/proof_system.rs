@@ -20,6 +20,8 @@ use crate::pse_halo2::halo2_plonk_api::{halo2_keygen, halo2_prove, halo2_verify}
 
 use crate::pse_halo2::PseHalo2;
 
+use crate::noir_field_to_halo2_field;
+
 impl ProofSystemCompiler for PseHalo2 {
     type Error = BackendError;
 
@@ -70,13 +72,23 @@ impl ProofSystemCompiler for PseHalo2 {
         )
         .unwrap();
 
+        let instance: Vec<Fr> = circuit
+            .public_inputs()
+            .indices()
+            .iter()
+            .map(|index| match witness_values.get_index(*index) {
+                Some(val) => noir_field_to_halo2_field(*val),
+                None => noir_field_to_halo2_field(FieldElement::zero()),
+            })
+            .collect();
+
         let translator = NoirHalo2Translator::<Fr> {
             circuit: circuit.clone(),
             witness_values,
             _marker: PhantomData::<Fr>,
         };
 
-        let proof = halo2_prove(translator, &params, &pk);
+        let proof = halo2_prove(translator, &params, &pk, &instance[..]);
 
         Ok(proof)
     }
@@ -103,7 +115,12 @@ impl ProofSystemCompiler for PseHalo2 {
         )
         .unwrap();
 
-        Ok(halo2_verify(&params, &vk, proof).is_ok())
+        let instance: Vec<Fr> = _public_inputs
+            .into_iter()
+            .map(|(_, el)| noir_field_to_halo2_field(el))
+            .collect();
+
+        Ok(halo2_verify(&params, &vk, proof, &instance[..]).is_ok())
     }
 
     fn np_language(&self) -> Language {
@@ -153,3 +170,5 @@ impl ProofSystemCompiler for PseHalo2 {
         panic!("vk_as_fields not supported in this backend");
     }
 }
+
+noir_field_to_halo2_field!(Fr);
