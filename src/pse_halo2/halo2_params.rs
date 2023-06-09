@@ -18,6 +18,7 @@ use pse_halo2wrong::{
     },
 };
 
+/// Serialize halo2 parameters from Aztec CRS ceremony
 pub(crate) async fn constuct_halo2_params_from_aztec_crs(
     translator: impl pse_halo2wrong::halo2::plonk::Circuit<Fr>,
 ) -> Result<ParamsKZG<Bn256>, Error> {
