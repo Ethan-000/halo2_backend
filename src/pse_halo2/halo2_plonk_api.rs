@@ -33,7 +33,6 @@ use pse_maingate::{MainGate, MainGateConfig, RangeChip, RangeConfig};
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 
-use crate::noir_field_to_halo2_field;
 use crate::pse_halo2::circuit_translator::NoirHalo2Translator;
 
 pub fn halo2_keygen(
@@ -53,11 +52,12 @@ pub fn halo2_prove(
     circuit: NoirHalo2Translator<Fr>,
     params: &ParamsKZG<Bn256>,
     pk: &ProvingKey<<G1 as CofactorCurve>::Affine>,
+    public_inputs: &[Fr],
 ) -> Vec<u8> {
     let rng = OsRng;
     let mut transcript: Blake2bWrite<Vec<u8>, _, Challenge255<_>> =
         Blake2bWrite::<_, _, Challenge255<_>>::init(vec![]);
-    let instance = get_instance_values(&circuit.circuit.public_inputs(), &circuit.witness_values);
+
     create_proof::<
         KZGCommitmentScheme<Bn256>,
         ProverGWC<'_, Bn256>,
@@ -65,7 +65,14 @@ pub fn halo2_prove(
         _,
         Blake2bWrite<Vec<u8>, G1Affine, Challenge255<_>>,
         _,
-    >(params, pk, &[circuit], &[&[&instance[..]]], rng, &mut transcript)
+    >(
+        params,
+        pk,
+        &[circuit],
+        &[&[public_inputs]],
+        rng,
+        &mut transcript,
+    )
     .expect("proof generation should not fail");
     transcript.finalize()
 }
@@ -74,17 +81,18 @@ pub fn halo2_verify(
     params: &ParamsKZG<Bn256>,
     vk: &VerifyingKey<<G1 as CofactorCurve>::Affine>,
     proof: &[u8],
+    public_inputs: &[Fr],
 ) -> Result<(), Error> {
     let strategy = SingleStrategy::new(params);
     let mut transcript = Blake2bRead::<_, _, Challenge255<_>>::init(proof);
-    let instance = get_instance_values(&circuit.circuit.public_inputs(), &circuit.witness_values);
+
     verify_proof::<
         KZGCommitmentScheme<Bn256>,
         VerifierGWC<'_, Bn256>,
         Challenge255<G1Affine>,
         Blake2bRead<&[u8], G1Affine, Challenge255<G1Affine>>,
         SingleStrategy<'_, Bn256>,
-    >(params, vk, strategy, &[&[&[]]], &mut transcript)
+    >(params, vk, strategy, &[&[public_inputs]], &mut transcript)
 }
 
 #[derive(Clone)]
@@ -159,24 +167,6 @@ impl PlonkConfig {
             range_config,
         }
     }
-}
-
-/**
- * Given a set of public inputs and a witness map, transforms into elements of the field Fr
- *
- * @param public_inputs - reference to public inputs given by ACIR
- * @param witnesses - reference to witness map constructed by PWG
- * @return - vector of witness values as elements of Fr
- */
-fn get_instance_values(public_inputs: &PublicInputs, witnesses: &WitnessMap) -> Vec<Fr> {
-    public_inputs
-        .indices()
-        .iter()
-        .map(|index| {
-            let value = *witnesses.get_index(*index).unwrap_or(&FieldElement::zero());
-            noir_field_to_halo2_field(value)
-        })
-        .collect()
 }
 
 #[derive(Clone, Hash, Debug, Serialize, Deserialize)]
@@ -308,5 +298,3 @@ impl OpcodeFlags {
         }
     }
 }
-
-noir_field_to_halo2_field!(Fr);

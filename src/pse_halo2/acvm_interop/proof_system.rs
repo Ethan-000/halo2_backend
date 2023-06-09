@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use acvm::acir::circuit::Circuit as NoirCircuit;
-use acvm::acir::circuit::Opcode;
+use acvm::acir::circuit::{Opcode, PublicInputs};
 use acvm::acir::native_types::WitnessMap;
 use acvm::acir::BlackBoxFunc;
 use acvm::FieldElement;
@@ -19,6 +19,26 @@ use crate::pse_halo2::halo2_plonk_api::OpcodeFlags;
 use crate::pse_halo2::halo2_plonk_api::{halo2_keygen, halo2_prove, halo2_verify};
 
 use crate::pse_halo2::PseHalo2;
+
+use crate::noir_field_to_halo2_field;
+
+/**
+ * Given a set of public inputs and a witness map, transforms into elements of the field Fr
+ *
+ * @param public_inputs - reference to public inputs given by ACIR
+ * @param witnesses - reference to witness map constructed by PWG
+ * @return - vector of witness values as elements of Fr
+ */
+fn get_instance_values(public_inputs: &PublicInputs, witnesses: &WitnessMap) -> Vec<Fr> {
+    public_inputs
+        .indices()
+        .iter()
+        .map(|index| {
+            let value = *witnesses.get_index(*index).unwrap_or(&FieldElement::zero());
+            noir_field_to_halo2_field(value)
+        })
+        .collect()
+}
 
 impl ProofSystemCompiler for PseHalo2 {
     type Error = BackendError;
@@ -70,13 +90,23 @@ impl ProofSystemCompiler for PseHalo2 {
         )
         .unwrap();
 
+        let instance: Vec<Fr> = circuit
+            .public_inputs()
+            .indices()
+            .iter()
+            .map(|index| match witness_values.get_index(*index) {
+                Some(val) => noir_field_to_halo2_field((*val).clone()),
+                None => noir_field_to_halo2_field(FieldElement::zero()),
+            })
+            .collect();
+
         let translator = NoirHalo2Translator::<Fr> {
             circuit: circuit.clone(),
             witness_values,
             _marker: PhantomData::<Fr>,
         };
 
-        let proof = halo2_prove(translator, &params, &pk);
+        let proof = halo2_prove(translator, &params, &pk, &instance[..]);
 
         Ok(proof)
     }
@@ -103,7 +133,12 @@ impl ProofSystemCompiler for PseHalo2 {
         )
         .unwrap();
 
-        Ok(halo2_verify(&params, &vk, proof).is_ok())
+        let instance: Vec<Fr> = _public_inputs
+            .into_iter()
+            .map(|(_, el)| noir_field_to_halo2_field(el))
+            .collect();
+
+        Ok(halo2_verify(&params, &vk, proof, &instance[..]).is_ok())
     }
 
     fn np_language(&self) -> Language {
@@ -153,3 +188,5 @@ impl ProofSystemCompiler for PseHalo2 {
         panic!("vk_as_fields not supported in this backend");
     }
 }
+
+noir_field_to_halo2_field!(Fr);
