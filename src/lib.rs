@@ -20,4 +20,3 @@ pub use pse_halo2::PseHalo2 as Halo2;
 // zcash not working at the moment, need acir to support pasta curve
 #[cfg(feature = "zcash_halo2")]
 pub use zcash_halo2::ZcashHalo2 as Halo2;
-

@@ -79,7 +79,6 @@ impl ProofSystemCompiler for PseHalo2 {
 
         let opcode_flags = OpcodeFlags::new(&circuit.opcodes);
 
-
         let pk = ProvingKey::<G1Affine>::from_bytes::<NoirHalo2Translator<Fr>>(
             proving_key,
             SerdeFormat::RawBytes,
