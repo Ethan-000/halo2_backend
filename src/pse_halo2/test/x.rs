@@ -138,47 +138,37 @@ mod test {
         };
         let dimension = DimensionMeasurement::measure(&translator).unwrap();
 
+        // instance value (known to be 7)
+        let instance = vec![Fr::from_raw([7u64, 0, 0, 0])];
+
         // run mock prover expecting success
-        let prover = MockProver::run(dimension.k(), &translator, vec![vec![]]).unwrap();
+        let prover = MockProver::run(dimension.k(), &translator, vec![instance]).unwrap();
         assert_eq!(
             prover.verify(),
-            Err(vec![
-                VerifyFailure::ConstraintNotSatisfied {
-                    constraint: ((0, "main_gate").into(), 0, "").into(),
-                    location: FailureLocation::InRegion {
-                        region: (5, "region 0").into(),
-                        offset: 5,
-                    },
-                    cell_values: vec![
-                        (((Any::advice(), 0).into(), 0).into(), String::from("0x4")),
-                        (((Any::advice(), 1).into(), 0).into(), String::from("0x4")),
-                        (((Any::advice(), 2).into(), 0).into(), String::from("0x7")),
-                        (((Any::advice(), 3).into(), 0).into(), String::from("0")),
-                        (((Any::advice(), 4).into(), 0).into(), String::from("0")),
-                        (((Any::advice(), 4).into(), 1).into(), String::from("0")),
-                        (((Any::Fixed, 0).into(), 0).into(), String::from("-1")),
-                        (((Any::Fixed, 1).into(), 0).into(), String::from("-1")),
-                        (((Any::Fixed, 2).into(), 0).into(), String::from("1")),
-                        (((Any::Fixed, 3).into(), 0).into(), String::from("0")),
-                        (((Any::Fixed, 4).into(), 0).into(), String::from("0")),
-                        (((Any::Fixed, 5).into(), 0).into(), String::from("0")),
-                        (((Any::Fixed, 6).into(), 0).into(), String::from("0")),
-                        (((Any::Fixed, 7).into(), 0).into(), String::from("0")),
-                        (((Any::Fixed, 8).into(), 0).into(), String::from("0")),
-                    ]
+            Err(vec![VerifyFailure::ConstraintNotSatisfied {
+                constraint: ((0, "main_gate").into(), 0, "").into(),
+                location: FailureLocation::InRegion {
+                    region: (5, "region 0").into(),
+                    offset: 5,
                 },
-                VerifyFailure::Permutation {
-                    column: (Any::advice(), 0).into(),
-                    location: FailureLocation::InRegion {
-                        region: (7, "region 0").into(),
-                        offset: 0,
-                    },
-                },
-                VerifyFailure::Permutation {
-                    column: (Any::Instance, 0usize).into(),
-                    location: FailureLocation::OutsideRegion { row: 0 },
-                },
-            ])
+                cell_values: vec![
+                    (((Any::advice(), 0).into(), 0).into(), String::from("0x4")),
+                    (((Any::advice(), 1).into(), 0).into(), String::from("0x4")),
+                    (((Any::advice(), 2).into(), 0).into(), String::from("0x7")),
+                    (((Any::advice(), 3).into(), 0).into(), String::from("0")),
+                    (((Any::advice(), 4).into(), 0).into(), String::from("0")),
+                    (((Any::advice(), 4).into(), 1).into(), String::from("0")),
+                    (((Any::Fixed, 0).into(), 0).into(), String::from("-1")),
+                    (((Any::Fixed, 1).into(), 0).into(), String::from("-1")),
+                    (((Any::Fixed, 2).into(), 0).into(), String::from("1")),
+                    (((Any::Fixed, 3).into(), 0).into(), String::from("0")),
+                    (((Any::Fixed, 4).into(), 0).into(), String::from("0")),
+                    (((Any::Fixed, 5).into(), 0).into(), String::from("0")),
+                    (((Any::Fixed, 6).into(), 0).into(), String::from("0")),
+                    (((Any::Fixed, 7).into(), 0).into(), String::from("0")),
+                    (((Any::Fixed, 8).into(), 0).into(), String::from("0")),
+                ]
+            }])
         );
     }
 
@@ -199,25 +189,4 @@ mod test {
         let prover = MockProver::run(dimension.k(), &translator, vec![vec![]]).unwrap();
         assert_eq!(prover.verify(), Ok(()));
     }
-
-    // #[test]
-    // fn test_bit_and_circuit_fail_witness() {
-    //     // get circuit
-    //     let (circuit, mut witness_values) = get_circuit("bit_and").unwrap();
-
-    //     // mutate witness to be incorrect
-    //     witness_values.insert(Witness(2), FieldElement::from(32u128));
-
-    //     // instantiate halo2 circuit
-    //     let translator = NoirHalo2Translator::<Fr> {
-    //         circuit: circuit,
-    //         witness_values,
-    //         _marker: PhantomData::<Fr>,
-    //     };
-    //     let dimension = DimensionMeasurement::measure(&translator).unwrap();
-
-    //     // run mock prover expecting success
-    //     let prover = MockProver::run(dimension.k(), &translator, vec![vec![]]).unwrap();
-    //     assert_eq!(prover.verify(), Ok(()));
-    // }
 }
