@@ -22,9 +22,6 @@ pub(crate) async fn get_aztec_crs(points_needed: u32) -> Result<(Vec<u8>, Vec<u8
 }
 
 async fn download(start: usize, end: usize) -> Result<Vec<u8>, CRSError> {
-    // TODO(#187): Allow downloading from more than just the first transcript
-    // We try to load a URL from the environment and otherwise fallback to a hardcoded URL to allow
-    // Nix to override the URL for testing in the sandbox, where there is no network access on Linux
     let transcript_url = match env::var(TRANSCRIPT_URL_ENV_VAR) {
         Ok(url) => url,
         Err(_) => TRANSCRIPT_URL_FALLBACK.into(),
@@ -51,7 +48,6 @@ async fn download(start: usize, end: usize) -> Result<Vec<u8>, CRSError> {
         url: transcript_url.to_string(),
     })?;
 
-    // TODO(#195): We probably want to consider an injectable logger so we can have logging in JS
     println!(
         "\nDownloading the Ignite SRS ({})",
         ByteSize(total_size).to_string_as(false)
