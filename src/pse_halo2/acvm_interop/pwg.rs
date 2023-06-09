@@ -1,5 +1,4 @@
 use acvm::acir::native_types::Witness;
-
 use acvm::pwg::OpcodeResolutionError;
 use acvm::PartialWitnessGenerator;
 

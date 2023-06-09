@@ -19,6 +19,7 @@ use crate::pse_halo2::halo2_plonk_api::OpcodeFlags;
 use crate::pse_halo2::PseHalo2;
 type PlonkVerifier = verifier::plonk::PlonkVerifier<KzgAs<Bn256, Gwc19>>;
 
+/// Generate the evm verifier of the circuit as Yul code
 fn gen_evm_verifier(
     params: &ParamsKZG<Bn256>,
     vk: &VerifyingKey<G1Affine>,
@@ -44,6 +45,8 @@ fn gen_evm_verifier(
 
 impl SmartContract for PseHalo2 {
     type Error = BackendError;
+
+    /// Get ethereum verification contract from Verification Key
     fn eth_contract_from_vk(
         &self,
         mut common_reference_string: &[u8],
