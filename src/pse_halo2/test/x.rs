@@ -19,6 +19,7 @@ pub fn get_circuit(example: &'static str) -> Result<(Circuit, WitnessMap), std::
     // deserialize representation
     let circuit = Circuit::read(&*circuit_buffer)?;
     let witness = WitnessMap::try_from(&witness_buffer[..]).unwrap();
+
     Ok((circuit, witness))
 }
 
@@ -29,12 +30,18 @@ mod test {
     use crate::{
         dimension_measure::DimensionMeasurement, pse_halo2::circuit_translator::NoirHalo2Translator,
     };
+    use acvm::acir::native_types::Witness;
     use pse_halo2wrong::{
         curves::bn256::Fr,
         halo2::dev::{FailureLocation, MockProver, VerifyFailure},
         halo2::plonk::Any,
     };
     use std::marker::PhantomData;
+
+    use crate::noir_field_to_halo2_field;
+    use acvm::FieldElement;
+
+    noir_field_to_halo2_field!(Fr);
 
     #[test]
     fn deserialize() {
@@ -58,7 +65,7 @@ mod test {
     fn test_add_circuit_success() {
         // get circuit
         let (circuit, witness_values) = get_circuit("add").unwrap();
-
+        println!("Witness: {witness_values:?}");
         // instantiate halo2 circuit
         let translator = NoirHalo2Translator::<Fr> {
             circuit,
@@ -76,7 +83,7 @@ mod test {
     }
 
     #[test]
-    fn test_add_circuit_fail_wrong_instance() {
+    fn test_add_circuit_fail_instance() {
         // get circuit
         let (circuit, witness_values) = get_circuit("add").unwrap();
 
@@ -116,14 +123,74 @@ mod test {
     }
 
     #[test]
-    fn test_bit_and_circuit_success() {
+    fn test_add_circuit_fail_witness() {
         // get circuit
-        let (circuit, witness) = get_circuit("bit_and").unwrap();
+        let (circuit, mut witness_values) = get_circuit("add").unwrap();
+
+        // mutate witness to be incorrect
+        witness_values.insert(Witness(1), FieldElement::from(4u128));
 
         // instantiate halo2 circuit
         let translator = NoirHalo2Translator::<Fr> {
             circuit: circuit,
-            witness_values: witness,
+            witness_values,
+            _marker: PhantomData::<Fr>,
+        };
+        let dimension = DimensionMeasurement::measure(&translator).unwrap();
+
+        // run mock prover expecting success
+        let prover = MockProver::run(dimension.k(), &translator, vec![vec![]]).unwrap();
+        assert_eq!(
+            prover.verify(),
+            Err(vec![
+                VerifyFailure::ConstraintNotSatisfied {
+                    constraint: ((0, "main_gate").into(), 0, "").into(),
+                    location: FailureLocation::InRegion {
+                        region: (5, "region 0").into(),
+                        offset: 5,
+                    },
+                    cell_values: vec![
+                        (((Any::advice(), 0).into(), 0).into(), String::from("0x4")),
+                        (((Any::advice(), 1).into(), 0).into(), String::from("0x4")),
+                        (((Any::advice(), 2).into(), 0).into(), String::from("0x7")),
+                        (((Any::advice(), 3).into(), 0).into(), String::from("0")),
+                        (((Any::advice(), 4).into(), 0).into(), String::from("0")),
+                        (((Any::advice(), 4).into(), 1).into(), String::from("0")),
+                        (((Any::Fixed, 0).into(), 0).into(), String::from("-1")),
+                        (((Any::Fixed, 1).into(), 0).into(), String::from("-1")),
+                        (((Any::Fixed, 2).into(), 0).into(), String::from("1")),
+                        (((Any::Fixed, 3).into(), 0).into(), String::from("0")),
+                        (((Any::Fixed, 4).into(), 0).into(), String::from("0")),
+                        (((Any::Fixed, 5).into(), 0).into(), String::from("0")),
+                        (((Any::Fixed, 6).into(), 0).into(), String::from("0")),
+                        (((Any::Fixed, 7).into(), 0).into(), String::from("0")),
+                        (((Any::Fixed, 8).into(), 0).into(), String::from("0")),
+                    ]
+                },
+                VerifyFailure::Permutation {
+                    column: (Any::advice(), 0).into(),
+                    location: FailureLocation::InRegion {
+                        region: (7, "region 0").into(),
+                        offset: 0,
+                    },
+                },
+                VerifyFailure::Permutation {
+                    column: (Any::Instance, 0usize).into(),
+                    location: FailureLocation::OutsideRegion { row: 0 },
+                },
+            ])
+        );
+    }
+
+    #[test]
+    fn test_bit_and_circuit_success() {
+        // get circuit
+        let (circuit, witness_values) = get_circuit("bit_and").unwrap();
+
+        // instantiate halo2 circuit
+        let translator = NoirHalo2Translator::<Fr> {
+            circuit: circuit,
+            witness_values: witness_values,
             _marker: PhantomData::<Fr>,
         };
         let dimension = DimensionMeasurement::measure(&translator).unwrap();
@@ -132,4 +199,25 @@ mod test {
         let prover = MockProver::run(dimension.k(), &translator, vec![vec![]]).unwrap();
         assert_eq!(prover.verify(), Ok(()));
     }
+
+    // #[test]
+    // fn test_bit_and_circuit_fail_witness() {
+    //     // get circuit
+    //     let (circuit, mut witness_values) = get_circuit("bit_and").unwrap();
+
+    //     // mutate witness to be incorrect
+    //     witness_values.insert(Witness(2), FieldElement::from(32u128));
+
+    //     // instantiate halo2 circuit
+    //     let translator = NoirHalo2Translator::<Fr> {
+    //         circuit: circuit,
+    //         witness_values,
+    //         _marker: PhantomData::<Fr>,
+    //     };
+    //     let dimension = DimensionMeasurement::measure(&translator).unwrap();
+
+    //     // run mock prover expecting success
+    //     let prover = MockProver::run(dimension.k(), &translator, vec![vec![]]).unwrap();
+    //     assert_eq!(prover.verify(), Ok(()));
+    // }
 }
