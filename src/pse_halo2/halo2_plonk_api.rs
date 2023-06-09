@@ -1,8 +1,5 @@
 use acvm::{
-    acir::{
-        circuit::{opcodes::BlackBoxFuncCall, Opcode},
-        // native_types::Witness
-    },
+    acir::circuit::{opcodes::BlackBoxFuncCall, Opcode},
     FieldElement,
 };
 

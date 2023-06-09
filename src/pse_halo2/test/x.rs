@@ -1,13 +1,5 @@
-use crate::pse_halo2::circuit_translator::NoirHalo2Translator;
-use crate::dimension_measure::DimensionMeasurement;
-use acvm::acir::circuit::Circuit;
-use acvm::acir::native_types::WitnessMap;
-use pse_halo2wrong::curves::bn256::Fr;
-use pse_halo2wrong::halo2::dev::MockProver;
-
-use std::fs::File;
-use std::io::Read;
-use std::marker::PhantomData;
+use acvm::acir::{circuit::Circuit, native_types::WitnessMap};
+use std::{fs::File, io::Read};
 
 /**
  * Read an example circuit & pre-solved witness from a stored file
@@ -15,13 +7,14 @@ use std::marker::PhantomData;
  * @param example - The name of the example circuit to read
  * @return A tuple containing the deserialized circuit ACIR and the solved PWG
  */
+#[allow(dead_code)]
 pub fn get_circuit(example: &'static str) -> Result<(Circuit, WitnessMap), std::io::Error> {
     // read binary
     let mut circuit_buffer = Vec::new();
-    File::open(format!("src/pse_halo2/test/bin/{}/circuit.bin", example))?
+    File::open(format!("src/pse_halo2/test/bin/{example}/circuit.bin"))?
         .read_to_end(&mut circuit_buffer)?;
     let mut witness_buffer = Vec::new();
-    File::open(format!("src/pse_halo2/test/bin/{}/witness.bin", example))?
+    File::open(format!("src/pse_halo2/test/bin/{example}/witness.bin"))?
         .read_to_end(&mut witness_buffer)?;
     // deserialize representation
     let circuit = Circuit::read(&*circuit_buffer)?;
@@ -29,15 +22,28 @@ pub fn get_circuit(example: &'static str) -> Result<(Circuit, WitnessMap), std::
     Ok((circuit, witness))
 }
 
+#[cfg(feature = "pse_halo2")]
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::{
+        dimension_measure::DimensionMeasurement, pse_halo2::circuit_translator::NoirHalo2Translator,
+    };
+    use pse_halo2wrong::{
+        curves::bn256::Fr,
+        halo2::dev::{FailureLocation, MockProver, VerifyFailure},
+        halo2::plonk::Any,
+    };
+    use std::marker::PhantomData;
 
     #[test]
     fn deserialize() {
-        let (circuit, witness) = get_circuit("add").unwrap();
-        // println!("Add Circuit: {:?}", circuit);
-        // println!("Add Witnesses: {:?}", witness);
+        // let (circuit, witness) = get_circuit("and").unwrap();
+        // println!("Add Circuit: {circuit:?}");
+        // println!("Add Witnesses: {witness:?}");
+        let (circuit, witness) = get_circuit("bit_and").unwrap();
+        println!("Add Circuit: {circuit:?}");
+        println!("Add Witnesses: {witness:?}");
     }
 
     #[test]
@@ -51,12 +57,12 @@ mod test {
     #[test]
     fn test_add_circuit_success() {
         // get circuit
-        let (circuit, witness) = get_circuit("add").unwrap();
+        let (circuit, witness_values) = get_circuit("add").unwrap();
 
         // instantiate halo2 circuit
         let translator = NoirHalo2Translator::<Fr> {
-            circuit: circuit.clone(),
-            witness_values: witness.clone(),
+            circuit,
+            witness_values,
             _marker: PhantomData::<Fr>,
         };
         let dimension = DimensionMeasurement::measure(&translator).unwrap();
@@ -70,14 +76,54 @@ mod test {
     }
 
     #[test]
+    fn test_add_circuit_fail_wrong_instance() {
+        // get circuit
+        let (circuit, witness_values) = get_circuit("add").unwrap();
+
+        // instantiate halo2 circuit
+        let translator = NoirHalo2Translator::<Fr> {
+            circuit,
+            witness_values,
+            _marker: PhantomData::<Fr>,
+        };
+        let dimension = DimensionMeasurement::measure(&translator).unwrap();
+
+        // instance value (known to be 7, incorrectly set to 8)
+        let instance = vec![Fr::from_raw([8u64, 0, 0, 0])];
+
+        // define permutation error expected when instance value is not set or incorrect
+        let permutation_error = Err(vec![
+            VerifyFailure::Permutation {
+                column: (Any::advice(), 0).into(),
+                location: FailureLocation::InRegion {
+                    region: (7, "region 0").into(),
+                    offset: 0,
+                },
+            },
+            VerifyFailure::Permutation {
+                column: (Any::Instance, 0usize).into(),
+                location: FailureLocation::OutsideRegion { row: 0 },
+            },
+        ]);
+
+        // run mock prover with incorrect instance expecting permutation failure
+        let prover = MockProver::run(dimension.k(), &translator, vec![instance]).unwrap();
+        assert_eq!(prover.verify(), permutation_error);
+
+        // run mock prover with no instance expecting permutation failure
+        let prover = MockProver::run(dimension.k(), &translator, vec![vec![]]).unwrap();
+        assert_eq!(prover.verify(), permutation_error);
+    }
+
+    #[test]
     fn test_bit_and_circuit_success() {
         // get circuit
         let (circuit, witness) = get_circuit("bit_and").unwrap();
 
         // instantiate halo2 circuit
         let translator = NoirHalo2Translator::<Fr> {
-            circuit: circuit.clone(),
-            witness_values: witness.clone(),
+            circuit: circuit,
+            witness_values: witness,
             _marker: PhantomData::<Fr>,
         };
         let dimension = DimensionMeasurement::measure(&translator).unwrap();
