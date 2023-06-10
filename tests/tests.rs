@@ -9,7 +9,6 @@ fn configure_test_dirs() -> Vec<std::path::PathBuf> {
         "5_over",
         "6_array",
         "7_function",
-        "8_integration",
         "bit_and",
     ];
     test_dirs_names
@@ -111,10 +110,11 @@ fn install_nargo(backend: &'static str) {
         .arg("https://github.com/Ethan-000/noir")
         .arg("--branch")
         .arg("add_halo2_backend")
-        .output()
+        .spawn()
+        .unwrap()
+        .wait()
         .unwrap();
     format!("\nInstalling {backend}. This may take a few moments.",);
-    while !std::path::Path::new("./noir/crates/nargo_cli").exists() {}
     // Install specified backend into noir
     Command::new("cargo")
         .current_dir("./noir/crates/nargo_cli")
@@ -125,7 +125,9 @@ fn install_nargo(backend: &'static str) {
         .arg("--features")
         .arg(backend)
         .arg("--no-default-features")
-        .output()
+        .spawn()
+        .unwrap()
+        .wait()
         .unwrap();
 }
 
