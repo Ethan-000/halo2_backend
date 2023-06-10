@@ -4,9 +4,9 @@ version = 3
 
 [[package]]
 name = "acir"
-version = "0.13.3"
+version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e011212158b81a8bbe6c9f7f4713fbf8b9542076a49ba916769436833b5d738f"
+checksum = "5f2d2b80c4e6e0c6f2b5d45693925f6eac1e6fcf9a908aad70158e58b9ed18b0"
 dependencies = [
  "acir_field",
  "brillig_vm",
@@ -18,9 +18,9 @@ dependencies = [
 
 [[package]]
 name = "acir_field"
-version = "0.13.3"
+version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08e3bbb98412bdcb65b7b688269cbc04db0710e25f3c32e99cf3923026ea3941"
+checksum = "c984be877eae94755269391ebde859d65416c7aa7955badc3338464dbbdd1f38"
 dependencies = [
  "ark-bn254",
  "ark-ff",
@@ -32,9 +32,9 @@ dependencies = [
 
 [[package]]
 name = "acvm"
-version = "0.13.3"
+version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5b5a910c6dcbea83195107368805911a02b2ed3453a1516e15fa2bc89e4d1c2"
+checksum = "f31caccd81f7ea1ce5a9417ff283da0f4932ee28d63f6554049de03fe3d69d77"
 dependencies = [
  "acir",
  "acvm_stdlib",
@@ -51,9 +51,9 @@ dependencies = [
 
 [[package]]
 name = "acvm_stdlib"
-version = "0.13.3"
+version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ffe3837b19bcbf11cecd61083e088a49c2d7911abedd0585cc62bf77bb47a384"
+checksum = "b42f48d5c9ecfb1662ec7cbcf337fb4bb9323daf6e0168574431a9ec29684beb"
 dependencies = [
  "acir",
 ]
@@ -319,9 +319,9 @@ checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
 
 [[package]]
 name = "brillig_vm"
-version = "0.13.3"
+version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b690fd9d34b8653edf286c03982433e80e6e3878a8fc6289b680997c3e80925b"
+checksum = "331e59215d1d45d136bcba2f1bbf18cf6c93477375afb851c4afaf8d7aa21b27"
 dependencies = [
  "acir_field",
  "num-bigint",
@@ -800,7 +800,7 @@ dependencies = [
 [[package]]
 name = "halo2-base"
 version = "0.3.0"
-source = "git+https://github.com/axiom-crypto/halo2-lib?branch=release-0.3.0#8b9bdc2ba0d1f6f44e6b313847d2f0268e523c36"
+source = "git+https://github.com/axiom-crypto/halo2-lib?branch=release-0.3.0#020346b19bd816b5ab5fc4a96b3605b8dcf6ffac"
 dependencies = [
  "ff 0.12.1",
  "halo2_proofs 0.2.0 (git+https://github.com/axiom-crypto/halo2.git?branch=axiom/dev)",
@@ -820,7 +820,7 @@ dependencies = [
 [[package]]
 name = "halo2-ecc"
 version = "0.3.0"
-source = "git+https://github.com/axiom-crypto/halo2-lib?branch=release-0.3.0#8b9bdc2ba0d1f6f44e6b313847d2f0268e523c36"
+source = "git+https://github.com/axiom-crypto/halo2-lib?branch=release-0.3.0#020346b19bd816b5ab5fc4a96b3605b8dcf6ffac"
 dependencies = [
  "ff 0.12.1",
  "group 0.12.1",
@@ -1601,9 +1601,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.59"
+version = "1.0.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6aeca18b86b413c660b781aa319e4e2648a3e6f9eadc9b47e9038e6fe9f3451b"
+checksum = "dec2b086b7a862cf4de201096214fa870344cf922b2b30c167badb3af3195406"
 dependencies = [
  "unicode-ident",
 ]
@@ -1932,18 +1932,18 @@ checksum = "bebd363326d05ec3e2f532ab7660680f3b02130d780c299bca73469d521bc0ed"
 
 [[package]]
 name = "serde"
-version = "1.0.163"
+version = "1.0.164"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2113ab51b87a539ae008b5c6c02dc020ffa39afd2d83cffcb3f4eb2722cebec2"
+checksum = "9e8c8cf938e98f769bc164923b06dce91cea1751522f46f8466461af04c9027d"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.163"
+version = "1.0.164"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8c805777e3930c8883389c602315a24224bcc738b63905ef87cd1420353ea93e"
+checksum = "d9735b638ccc51c28bf6914d90a2e9725b377144fc612c49a611fddd1b631d68"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2237,9 +2237,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-rustls"
-version = "0.24.0"
+version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0d409377ff5b1e3ca6437aa86c1eb7d40c134bfec254e44c830defa92669db5"
+checksum = "c28327cf380ac148141087fbfb9de9d7bd4e84ab5d2c28fbc911d753de8a7081"
 dependencies = [
  "rustls",
  "tokio",

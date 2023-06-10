@@ -4,6 +4,7 @@ use acvm::acir::circuit::Circuit as NoirCircuit;
 use acvm::acir::circuit::Opcode;
 use acvm::acir::native_types::WitnessMap;
 use acvm::acir::BlackBoxFunc;
+use acvm::FieldElement;
 use acvm::{Language, ProofSystemCompiler};
 use zcash_halo2_proofs::pasta::EqAffine;
 use zcash_halo2_proofs::pasta::Fp;
@@ -47,6 +48,7 @@ impl ProofSystemCompiler for ZcashHalo2 {
         circuit: &NoirCircuit,
         witness_values: WitnessMap,
         _proving_key: &[u8],
+        _is_recursive: bool,
     ) -> Result<Vec<u8>, BackendError> {
         let translator = NoirHalo2Translator::<Fp> {
             circuit: circuit.clone(),
@@ -70,6 +72,7 @@ impl ProofSystemCompiler for ZcashHalo2 {
         public_inputs: WitnessMap,
         circuit: &NoirCircuit,
         _verification_key: &[u8],
+        _is_recursive: bool,
     ) -> Result<bool, BackendError> {
         let translator = NoirHalo2Translator::<Fp> {
             circuit: circuit.clone(),
@@ -107,9 +110,26 @@ impl ProofSystemCompiler for ZcashHalo2 {
                 | BlackBoxFunc::EcdsaSecp256k1
                 | BlackBoxFunc::Keccak256
                 | BlackBoxFunc::FixedBaseScalarMul
+                | BlackBoxFunc::RecursiveAggregation
                 | BlackBoxFunc::SchnorrVerify => false,
             },
             Opcode::Brillig(_) => todo!(),
         }
+    }
+
+    fn proof_as_fields(
+        &self,
+        _proof: &[u8],
+        _public_inputs: WitnessMap,
+    ) -> Result<Vec<FieldElement>, Self::Error> {
+        panic!("vk_as_fields not supported in this backend");
+    }
+
+    fn vk_as_fields(
+        &self,
+        _common_reference_string: &[u8],
+        _verification_key: &[u8],
+    ) -> Result<(Vec<FieldElement>, FieldElement), Self::Error> {
+        panic!("vk_as_fields not supported in this backend");
     }
 }

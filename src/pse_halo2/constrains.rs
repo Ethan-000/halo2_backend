@@ -2,16 +2,8 @@ use acvm::{
     acir::native_types::{Expression, Witness},
     FieldElement,
 };
-use pse_ecc::{
-    integer::{IntegerInstructions, Range},
-    GeneralEccChip,
-};
-use pse_ecdsa::ecdsa::{AssignedEcdsaSig, AssignedPublicKey, EcdsaChip};
+
 use pse_halo2wrong::{
-    curves::{
-        secp256k1::{Fp, Fq, Secp256k1Affine},
-        CurveAffine,
-    },
     halo2::{
         circuit::{AssignedCell, Layouter, Value},
         halo2curves::bn256::Fr,
@@ -23,12 +15,9 @@ use pse_maingate::{
     RangeInstructions, Term,
 };
 
-use std::slice::Iter;
-
 use crate::{
-    impl_noir_field_to_secp255k1_field_conversion, noir_field_to_halo2_field,
+    noir_field_to_halo2_field,
     pse_halo2::{assigned_map::AssignedMap, circuit_translator::NoirHalo2Translator},
-    utils::Secp256k1FieldConversion,
 };
 
 use super::halo2_plonk_api::{NoirConstraint, PlonkConfig};
@@ -98,15 +87,15 @@ impl NoirHalo2Translator<Fr> {
                 let mut terms = Vec::new();
 
                 let a = main_gate.assign_to_column(ctx, a, MainGateColumn::A)?;
-                check_and_copy(ctx, &witness_assignments, noir_cs.a as u32, &a)?;
+                check_and_copy(ctx, witness_assignments, noir_cs.a as u32, &a)?;
                 terms.push(Term::Assigned(&a, ql));
 
                 let b = main_gate.assign_to_column(ctx, b, MainGateColumn::B)?;
-                check_and_copy(ctx, &witness_assignments, noir_cs.b as u32, &b)?;
+                check_and_copy(ctx, witness_assignments, noir_cs.b as u32, &b)?;
                 terms.push(Term::Assigned(&b, qr));
 
                 let c = main_gate.assign_to_column(ctx, c, MainGateColumn::C)?;
-                check_and_copy(ctx, &witness_assignments, noir_cs.c as u32, &c)?;
+                check_and_copy(ctx, witness_assignments, noir_cs.c as u32, &c)?;
                 terms.push(Term::Assigned(&c, qo));
 
                 let d =
@@ -169,7 +158,7 @@ impl NoirHalo2Translator<Fr> {
                 let bit_len = num_bits as usize;
 
                 let cell = range_chip.assign(ctx, value, limb_bit_len, bit_len)?;
-                check_and_copy(ctx, &witness_assignments, witness.0, &cell)?;
+                check_and_copy(ctx, witness_assignments, witness.0, &cell)?;
 
                 // add to assignment map
                 witness_assignments.insert(witness, cell);
@@ -219,13 +208,13 @@ impl NoirHalo2Translator<Fr> {
                 let main_gate = MainGate::<Fr>::new(config.main_gate_config.clone());
 
                 let lhs_cell = main_gate.assign_to_column(ctx, lhs_v, MainGateColumn::A)?;
-                check_and_copy(ctx, &witness_assignments, lhs.0, &lhs_cell)?;
+                check_and_copy(ctx, witness_assignments, lhs.0, &lhs_cell)?;
 
                 let rhs_cell = main_gate.assign_to_column(ctx, rhs_v, MainGateColumn::B)?;
-                check_and_copy(ctx, &witness_assignments, rhs.0, &rhs_cell)?;
+                check_and_copy(ctx, witness_assignments, rhs.0, &rhs_cell)?;
 
                 let output_cell = main_gate.assign_to_column(ctx, output_v, MainGateColumn::C)?;
-                check_and_copy(ctx, &witness_assignments, output.0, &output_cell)?;
+                check_and_copy(ctx, witness_assignments, output.0, &output_cell)?;
 
                 let result = main_gate.and(ctx, &lhs_cell, &rhs_cell)?;
                 main_gate.assert_equal(ctx, &output_cell, &result)?;
@@ -236,73 +225,6 @@ impl NoirHalo2Translator<Fr> {
                 witness_assignments.insert(output, output_cell);
 
                 Ok(())
-            },
-        )?;
-
-        Ok(())
-    }
-
-    pub(crate) fn add_ecdsa_secp256k1_constrain(
-        &self,
-        hashed_message: Vec<Witness>,
-        signature: Vec<Witness>,
-        public_key_x: Vec<Witness>,
-        public_key_y: Vec<Witness>,
-        layouter: &mut impl Layouter<Fr>,
-        ecc_chip: GeneralEccChip<Secp256k1Affine, Fr, 4, 68>,
-    ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
-        let r = self.noir_field_to_secp255k1_fq_field(signature[..32].to_vec());
-        let s = self.noir_field_to_secp255k1_fq_field(signature[32..].to_vec());
-        let msghash = self.noir_field_to_secp255k1_fq_field(hashed_message);
-        let public_key_x = self.noir_field_to_secp255k1_fp_field(public_key_x);
-        let public_key_y = self.noir_field_to_secp255k1_fp_field(public_key_y);
-
-        let pk = Secp256k1Affine::from_xy(public_key_x, public_key_y).unwrap();
-
-        let signature = Value::known((r, s));
-        let public_key = Value::known(pk);
-        let msg_hash = Value::known(msghash);
-
-        // layouter.assign_region(
-        //     || "assign aux values",
-        //     |region| {
-        //         let offset = 0;
-        //         let ctx = &mut RegionCtx::new(region, offset);
-
-        //         ecc_chip.assign_aux_generator(ctx, Value::known(self.aux_generator))?;
-        //         ecc_chip.assign_aux(ctx, self.window_size, 2)?;
-        //         Ok(())
-        //     },
-        // )?;
-
-        let ecdsa_chip = EcdsaChip::new(ecc_chip.clone());
-        let scalar_chip = ecc_chip.scalar_field_chip();
-
-        layouter.assign_region(
-            || "region 1",
-            |region| {
-                let offset = 0;
-                let ctx = &mut RegionCtx::new(region, offset);
-
-                let r = signature.map(|signature| signature.0);
-                let s = signature.map(|signature| signature.1);
-                let integer_r = ecc_chip.new_unassigned_scalar(r);
-                let integer_s = ecc_chip.new_unassigned_scalar(s);
-                let msg_hash = ecc_chip.new_unassigned_scalar(msg_hash);
-
-                let r_assigned = scalar_chip.assign_integer(ctx, integer_r, Range::Remainder)?;
-                let s_assigned = scalar_chip.assign_integer(ctx, integer_s, Range::Remainder)?;
-                let sig = AssignedEcdsaSig {
-                    r: r_assigned,
-                    s: s_assigned,
-                };
-
-                let pk_in_circuit = ecc_chip.assign_point(ctx, public_key)?;
-                let pk_assigned = AssignedPublicKey {
-                    point: pk_in_circuit,
-                };
-                let msg_hash = scalar_chip.assign_integer(ctx, msg_hash, Range::Remainder)?;
-                ecdsa_chip.verify(ctx, &sig, &pk_assigned, &msg_hash)
             },
         )?;
 
@@ -320,14 +242,14 @@ impl NoirHalo2Translator<Fr> {
         // instnantiate new main gate
         let main_gate = MainGate::<Fr>::new(config.main_gate_config.clone());
         // loop through public witness indices and expose publicly through main gate
-        for i in 0..public_indices.len() {
+        for (i, _) in public_indices.iter().enumerate() {
             let assigned = witness_assignments
                 .get_index(public_indices[i])
                 .unwrap()
                 .last()
                 .unwrap();
             main_gate.expose_public(
-                layouter.namespace(|| format!("Public IO #{:?}", i)),
+                layouter.namespace(|| format!("Public IO #{i:?}")),
                 assigned.clone(),
                 i,
             )?;
@@ -338,16 +260,14 @@ impl NoirHalo2Translator<Fr> {
 
 // check for equality during assignment
 
-/**
- * Check if a given acir witness index needs a copy constraint when assigning a witness to a halo2 cell.
- * If so, perform an equality constraint on a given cell if a given witness appears in the assignment map
- *
- * @param ctx - the context for the region being assigned to
- * @param assignments - the assignment map of acir witness index to exsiting halo2 cells storing witness assignments
- * @param witness - the acir witness index to check for
- * @param cell - the newly assigned cell to copy constrain with a cell stored in the assignment map
- * @return - success if copy constraint operation succeeds
- */
+/// Check if a given acir witness index needs a copy constraint when assigning a witness to a halo2 cell.
+/// If so, perform an equality constraint on a given cell if a given witness appears in the assignment map
+//
+// @param ctx - the context for the region being assigned to
+// @param assignments - the assignment map of acir witness index to exsiting halo2 cells storing witness assignments
+// @param witness - the acir witness index to check for
+// @param cell - the newly assigned cell to copy constrain with a cell stored in the assignment map
+// @return - success if copy constraint operation succeeds
 pub fn check_and_copy(
     ctx: &mut RegionCtx<Fr>,
     assignments: &AssignedMap<Fr>,
@@ -356,12 +276,10 @@ pub fn check_and_copy(
 ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
     if assignments.contains_key(&Witness(witness)) {
         let witness_cell = assignments.get_index(witness).unwrap().last().unwrap();
-        ctx.constrain_equal(witness_cell.cell().clone(), cell.cell().clone())
+        ctx.constrain_equal(witness_cell.cell(), cell.cell())
     } else {
         Ok(())
     }
 }
-
-impl_noir_field_to_secp255k1_field_conversion!(NoirHalo2Translator, Fr, Fp, Fq);
 
 noir_field_to_halo2_field!(Fr);

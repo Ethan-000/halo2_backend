@@ -1,4 +1,4 @@
-// copied from https://github.com/privacy-scaling-explorations/halo2wrong/blob/master/halo2wrong/src/utils.rs
+// copied and adapted from https://github.com/privacy-scaling-explorations/halo2wrong/blob/master/halo2wrong/src/utils.rs
 // cus fn k() is private.
 
 use std::{cell::RefCell, ops::RangeInclusive};
