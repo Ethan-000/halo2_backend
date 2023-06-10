@@ -103,9 +103,8 @@ fn install_nargo(backend: &'static str) {
         .arg("demo")
         .output()
         .unwrap();
-    println!(
-        "\n{}",
-        format!("Installing {backend}. This may take a few moments.")
+    format!(
+        "\nInstalling {backend}. This may take a few moments.",
     );
     // Install specified backend into noir
     Command::new("cargo")
