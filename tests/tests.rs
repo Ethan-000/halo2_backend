@@ -25,29 +25,36 @@ fn nargo_execute(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::
     nargo_cmd()
         .current_dir(test_program_dir)
         .arg("execute")
-        // .arg("[WITNESS_NAME]")
-        .output()
+        .spawn()
+        .unwrap()
+        .wait_with_output()
 }
 
 fn nargo_test(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
     nargo_cmd()
         .current_dir(test_program_dir)
         .arg("test")
-        .output()
+        .spawn()
+        .unwrap()
+        .wait_with_output()
 }
 
 fn nargo_check(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
     nargo_cmd()
         .current_dir(test_program_dir)
         .arg("check")
-        .output()
+        .spawn()
+        .unwrap()
+        .wait_with_output()
 }
 
 fn nargo_gates(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
     nargo_cmd()
         .current_dir(test_program_dir)
         .arg("gates")
-        .output()
+        .spawn()
+        .unwrap()
+        .wait_with_output()
 }
 
 fn nargo_compile(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
@@ -55,7 +62,9 @@ fn nargo_compile(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::
         .current_dir(test_program_dir)
         .arg("compile")
         .arg("my_test_circuit")
-        .output()
+        .spawn()
+        .unwrap()
+        .wait_with_output()
 }
 
 fn nargo_prove(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
@@ -64,7 +73,9 @@ fn nargo_prove(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::pr
         .arg("prove")
         .arg("my_test_proof")
         .arg("my_test_circuit")
-        .output()
+        .spawn()
+        .unwrap()
+        .wait_with_output()
 }
 
 fn nargo_verify(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
@@ -73,7 +84,9 @@ fn nargo_verify(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::p
         .arg("verify")
         .arg("my_test_proof")
         .arg("my_test_circuit")
-        .output()
+        .spawn()
+        .unwrap()
+        .wait_with_output()
 }
 
 fn test_program_dir_path(dir_name: &str) -> std::path::PathBuf {
