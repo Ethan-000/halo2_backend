@@ -91,7 +91,7 @@ fn nargo_verify(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::p
 
 fn test_program_dir_path(dir_name: &str) -> std::path::PathBuf {
     fs::canonicalize(std::path::PathBuf::from(format!(
-        "../tests/test_programs/{dir_name}"
+        "./tests/test_programs/{dir_name}"
     )))
     .unwrap()
 }
@@ -133,7 +133,7 @@ fn install_nargo(backend: &'static str) {
     format!("\nInstalling {backend}. This may take a few moments.",);
     // Install specified backend into noir
     Command::new("cargo")
-        .current_dir(fs::canonicalize("../noir/crates/nargo_cli").unwrap())
+        .current_dir(fs::canonicalize("./noir/crates/nargo_cli").unwrap())
         .arg("install")
         .arg("--path")
         .arg(".")
