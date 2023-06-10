@@ -2,14 +2,14 @@ use std::process::Command;
 
 fn configure_test_dirs() -> Vec<std::path::PathBuf> {
     let test_dirs_names = vec![
-        // "1_mul",
-        // "2_div",
-        // "3_add",
-        // "4_sub",
-        // "5_over",
-        // "6_array",
-        // "7_function",
-        // "8_integration",
+        "1_mul",
+        "2_div",
+        "3_add",
+        "4_sub",
+        "5_over",
+        "6_array",
+        "7_function",
+        "8_integration",
         "bit_and",
     ];
     test_dirs_names
@@ -19,7 +19,7 @@ fn configure_test_dirs() -> Vec<std::path::PathBuf> {
 }
 
 fn nargo_cmd() -> std::process::Command {
-    Command::new("../../../noir/target/release/nargo")
+    Command::new("nargo")
 }
 
 fn nargo_execute(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
