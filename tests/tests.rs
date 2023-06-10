@@ -1,4 +1,3 @@
-
 use std::process::Command;
 
 fn configure_test_dirs() -> Vec<std::path::PathBuf> {
