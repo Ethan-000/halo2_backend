@@ -1,3 +1,4 @@
+use core::time;
 use std::process::Command;
 
 fn configure_test_dirs() -> Vec<std::path::PathBuf> {
@@ -104,6 +105,7 @@ fn install_nargo(backend: &'static str) {
         .output()
         .unwrap();
     format!("\nInstalling {backend}. This may take a few moments.",);
+    std::thread::sleep(time::Duration::from_secs(5));
     // Install specified backend into noir
     Command::new("cargo")
         .current_dir("./noir/crates/nargo_cli")
