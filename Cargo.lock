@@ -247,9 +247,9 @@ checksum = "604178f6c5c21f02dc555784810edfb88d34ac2c73b2eae109655649ee73ce3d"
 
 [[package]]
 name = "base64ct"
-version = "1.0.1"
+version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a32fd6af2b5827bce66c29053ba0e7c42b9dcab01835835058558c10851a46b"
+checksum = "8c3c1a368f70d6cf7302d78f8f7093da241fb8e8807c05cc9e51a125895a6d5b"
 
 [[package]]
 name = "bincode"
@@ -800,7 +800,7 @@ dependencies = [
 [[package]]
 name = "halo2-base"
 version = "0.3.0"
-source = "git+https://github.com/axiom-crypto/halo2-lib?branch=release-0.3.0#8b9bdc2ba0d1f6f44e6b313847d2f0268e523c36"
+source = "git+https://github.com/axiom-crypto/halo2-lib?branch=release-0.3.0#020346b19bd816b5ab5fc4a96b3605b8dcf6ffac"
 dependencies = [
  "ff 0.12.1",
  "halo2_proofs 0.2.0 (git+https://github.com/axiom-crypto/halo2.git?branch=axiom/dev)",
@@ -820,7 +820,7 @@ dependencies = [
 [[package]]
 name = "halo2-ecc"
 version = "0.3.0"
-source = "git+https://github.com/axiom-crypto/halo2-lib?branch=release-0.3.0#8b9bdc2ba0d1f6f44e6b313847d2f0268e523c36"
+source = "git+https://github.com/axiom-crypto/halo2-lib?branch=release-0.3.0#020346b19bd816b5ab5fc4a96b3605b8dcf6ffac"
 dependencies = [
  "ff 0.12.1",
  "group 0.12.1",
@@ -2118,9 +2118,9 @@ dependencies = [
 
 [[package]]
 name = "subtle"
-version = "2.4.1"
+version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6bdef32e8150c2a081110b42772ffe7d7c9032b606bc226c8260fd97e0976601"
+checksum = "81cdd64d312baedb58e21336b31bc043b77e01cc99033ce76ef539f78e965ebc"
 
 [[package]]
 name = "syn"
