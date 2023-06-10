@@ -9,7 +9,7 @@ fn configure_test_dirs() -> Vec<std::path::PathBuf> {
 }
 
 fn nargo_cmd() -> std::process::Command {
-    Command::new("../../noir/target/release/nargo")
+    Command::new("../../../noir/target/release/nargo")
 }
 
 fn nargo_execute(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
@@ -68,7 +68,7 @@ fn nargo_verify(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::p
 }
 
 fn test_program_dir_path(dir_name: &str) -> std::path::PathBuf {
-    std::path::PathBuf::from(format!("./examples/{dir_name}"))
+    std::path::PathBuf::from(format!("./tests/test_programs/{dir_name}"))
 }
 
 fn assert_nargo_cmd_works(cmd_name: &str, test_test_program_dir: &std::path::PathBuf) {
@@ -103,7 +103,10 @@ fn install_nargo(backend: &'static str) {
         .arg("demo")
         .output()
         .unwrap();
-
+    println!(
+        "\n{}",
+        format!("Installing {backend}. This may take a few moments.")
+    );
     // Install specified backend into noir
     Command::new("cargo")
         .current_dir("./noir/crates/nargo_cli")
