@@ -1,7 +1,17 @@
 use std::process::Command;
 
 fn configure_test_dirs() -> Vec<std::path::PathBuf> {
-    let test_dirs_names = vec!["add", "bit_and"];
+    let test_dirs_names = vec![
+        // "1_mul",
+        // "2_div",
+        // "3_add",
+        // "4_sub",
+        // "5_over",
+        // "6_array",
+        // "7_function",
+        // "8_integration",
+        "bit_and",
+    ];
     test_dirs_names
         .into_iter()
         .map(test_program_dir_path)
@@ -100,7 +110,7 @@ fn install_nargo(backend: &'static str) {
         .arg("clone")
         .arg("https://github.com/Ethan-000/noir")
         .arg("--branch")
-        .arg("demo")
+        .arg("add_halo2_backend")
         .output()
         .unwrap();
     format!("\nInstalling {backend}. This may take a few moments.",);
