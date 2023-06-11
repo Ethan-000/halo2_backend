@@ -1,7 +1,16 @@
-use std::process::Command;
+use std::{fs, process::Command};
 
 fn configure_test_dirs() -> Vec<std::path::PathBuf> {
-    let test_dirs_names = vec!["add", "bit_and"];
+    let test_dirs_names = vec![
+        "1_mul",
+        "2_div",
+        "3_add",
+        "4_sub",
+        "5_over",
+        "6_array",
+        "7_function",
+        "bit_and",
+    ];
     test_dirs_names
         .into_iter()
         .map(test_program_dir_path)
@@ -9,36 +18,43 @@ fn configure_test_dirs() -> Vec<std::path::PathBuf> {
 }
 
 fn nargo_cmd() -> std::process::Command {
-    Command::new("../../../noir/target/release/nargo")
+    Command::new("nargo")
 }
 
 fn nargo_execute(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
     nargo_cmd()
         .current_dir(test_program_dir)
         .arg("execute")
-        // .arg("[WITNESS_NAME]")
-        .output()
+        .spawn()
+        .unwrap()
+        .wait_with_output()
 }
 
 fn nargo_test(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
     nargo_cmd()
         .current_dir(test_program_dir)
         .arg("test")
-        .output()
+        .spawn()
+        .unwrap()
+        .wait_with_output()
 }
 
 fn nargo_check(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
     nargo_cmd()
         .current_dir(test_program_dir)
         .arg("check")
-        .output()
+        .spawn()
+        .unwrap()
+        .wait_with_output()
 }
 
 fn nargo_gates(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
     nargo_cmd()
         .current_dir(test_program_dir)
         .arg("gates")
-        .output()
+        .spawn()
+        .unwrap()
+        .wait_with_output()
 }
 
 fn nargo_compile(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
@@ -46,7 +62,9 @@ fn nargo_compile(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::
         .current_dir(test_program_dir)
         .arg("compile")
         .arg("my_test_circuit")
-        .output()
+        .spawn()
+        .unwrap()
+        .wait_with_output()
 }
 
 fn nargo_prove(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
@@ -55,7 +73,9 @@ fn nargo_prove(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::pr
         .arg("prove")
         .arg("my_test_proof")
         .arg("my_test_circuit")
-        .output()
+        .spawn()
+        .unwrap()
+        .wait_with_output()
 }
 
 fn nargo_verify(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
@@ -64,11 +84,16 @@ fn nargo_verify(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::p
         .arg("verify")
         .arg("my_test_proof")
         .arg("my_test_circuit")
-        .output()
+        .spawn()
+        .unwrap()
+        .wait_with_output()
 }
 
 fn test_program_dir_path(dir_name: &str) -> std::path::PathBuf {
-    std::path::PathBuf::from(format!("./tests/test_programs/{dir_name}"))
+    fs::canonicalize(std::path::PathBuf::from(format!(
+        "./tests/test_programs/{dir_name}"
+    )))
+    .unwrap()
 }
 
 fn assert_nargo_cmd_works(cmd_name: &str, test_test_program_dir: &std::path::PathBuf) {
@@ -100,16 +125,15 @@ fn install_nargo(backend: &'static str) {
         .arg("clone")
         .arg("https://github.com/Ethan-000/noir")
         .arg("--branch")
-        .arg("demo")
-        .output()
+        .arg("add_halo2_backend")
+        .spawn()
+        .unwrap()
+        .wait()
         .unwrap();
-    println!(
-        "\n{}",
-        format!("Installing {backend}. This may take a few moments.")
-    );
+    format!("\nInstalling {backend}. This may take a few moments.",);
     // Install specified backend into noir
     Command::new("cargo")
-        .current_dir("./noir/crates/nargo_cli")
+        .current_dir(fs::canonicalize("./noir/crates/nargo_cli").unwrap())
         .arg("install")
         .arg("--path")
         .arg(".")
@@ -117,7 +141,9 @@ fn install_nargo(backend: &'static str) {
         .arg("--features")
         .arg(backend)
         .arg("--no-default-features")
-        .output()
+        .spawn()
+        .unwrap()
+        .wait()
         .unwrap();
 }
 
