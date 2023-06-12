@@ -15,3 +15,6 @@ pkg/
 *.pk
 *.vk
 **/Verifier.toml
+
+*.sol
+**/target
