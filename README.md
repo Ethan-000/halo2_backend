@@ -66,6 +66,12 @@ to verify proof run
 nargo verify add
 ```
 
+to Generates a Solidity verifier smart contract for the program run
+
+```text
+nargo codegen-verifier
+```
+
 ## Features
 
 - [ ] [halo2-zcash](https://github.com/zcash/halo2)
