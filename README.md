@@ -48,10 +48,10 @@ Notice that axiom's fork is built on pse's fork and should be similar.
 
 ## Examples
 
-cd to the `examples` folder of this crate
+cd to the `tests/test_programs` folder of this crate and choose one of the tests/examples eg. 3_add
 
 ```text
-cd add
+cd 3_add
 ```
 
 to generate proof run
