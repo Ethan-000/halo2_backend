@@ -94,7 +94,7 @@ fn nargo_verify(test_program_dir: &PathBuf) -> Result<Output> {
         .wait_with_output()
 }
 
-fn test_program_dir_path(dir_name: &str) -> PathBuf {
+pub fn test_program_dir_path(dir_name: &str) -> PathBuf {
     fs::canonicalize(PathBuf::from(format!("./tests/test_programs/{dir_name}"))).unwrap()
 }
 
