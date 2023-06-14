@@ -8,12 +8,13 @@ use std::{fs::File, io::Read};
  * @param program - program name for circuit to be compiled and solved
  * @return - the deserialized ACIR and solved witness (given the saved Prover.toml)
  */
+#[allow(dead_code)]
 pub fn build_artifacts(program: &'static str) -> (Circuit, WitnessMap) {
     // format path to test program
     let path = format!("./tests/test_programs/{program}/");
 
     // build circuit bytecode
-    std::process::Command::new("nargo")
+    _ = std::process::Command::new("nargo")
         .current_dir(&path)
         .arg("compile")
         .arg("circuit")
@@ -21,7 +22,7 @@ pub fn build_artifacts(program: &'static str) -> (Circuit, WitnessMap) {
         .unwrap()
         .wait_with_output();
     // generate circuit witness
-    std::process::Command::new("nargo")
+    _ = std::process::Command::new("nargo")
         .current_dir(&path)
         .arg("execute")
         .arg("witness")
@@ -30,9 +31,11 @@ pub fn build_artifacts(program: &'static str) -> (Circuit, WitnessMap) {
         .wait_with_output();
 
     // load circuit
-    let mut file = File::open(format!("{path}target/circuit.json")).unwrap();
     let mut contents = String::new();
-    file.read_to_string(&mut contents).unwrap();
+    File::open(format!("{path}target/circuit.json"))
+        .unwrap()
+        .read_to_string(&mut contents)
+        .unwrap();
     let json: Value = serde_json::from_str(&contents).unwrap();
     let bytecode: Vec<u8> = json
         .get("bytecode")
@@ -45,7 +48,7 @@ pub fn build_artifacts(program: &'static str) -> (Circuit, WitnessMap) {
 
     // load witness
     let mut witness_buffer = Vec::new();
-    let mut file = File::open(format!("{path}target/witness.tr"))
+    File::open(format!("{path}target/witness.tr"))
         .unwrap()
         .read_to_end(&mut witness_buffer)
         .unwrap();
@@ -237,9 +240,4 @@ mod test {
             assert_eq!(prover.verify(), Ok(()));
         }
     }
-
-    // #[test]
-    // fn test_bit_and_circuit_success() {
-
-    // }
 }
