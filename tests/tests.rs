@@ -9,7 +9,7 @@ fn configure_test_dirs() -> Vec<std::path::PathBuf> {
         "5_over",
         "6_array",
         "7_function",
-        "bit_and",
+        "8_bit_and",
     ];
     test_dirs_names
         .into_iter()
@@ -119,34 +119,6 @@ fn assert_nargo_cmd_works(cmd_name: &str, test_test_program_dir: &std::path::Pat
     );
 }
 
-fn install_nargo(backend: &'static str) {
-    // Clone noir into repo
-    Command::new("git")
-        .arg("clone")
-        .arg("https://github.com/Ethan-000/noir")
-        .arg("--branch")
-        .arg("add_halo2_backend")
-        .spawn()
-        .unwrap()
-        .wait()
-        .unwrap();
-    format!("\nInstalling {backend}. This may take a few moments.",);
-    // Install specified backend into noir
-    Command::new("cargo")
-        .current_dir(fs::canonicalize("./noir/crates/nargo_cli").unwrap())
-        .arg("install")
-        .arg("--path")
-        .arg(".")
-        .arg("--locked")
-        .arg("--features")
-        .arg(backend)
-        .arg("--no-default-features")
-        .spawn()
-        .unwrap()
-        .wait()
-        .unwrap();
-}
-
 fn run_nargo_tests(test_program_dirs: Vec<std::path::PathBuf>) {
     for test_program in test_program_dirs {
         assert_nargo_cmd_works("check", &test_program);
@@ -163,7 +135,7 @@ fn run_nargo_tests(test_program_dirs: Vec<std::path::PathBuf>) {
 fn test_axiom_backend() {
     let test_program_dirs = configure_test_dirs();
     // Pass in Axiom Halo2 Backend as argument
-    install_nargo("axiom_halo2_backend");
+    halo2_backend::utils::install_nargo("axiom_halo2_backend");
     run_nargo_tests(test_program_dirs);
 }
 
@@ -171,6 +143,6 @@ fn test_axiom_backend() {
 fn test_pse_backend() {
     let test_program_dirs = configure_test_dirs();
     // Pass in PSE Halo2 Backend as argument
-    install_nargo("pse_halo2_backend");
+    halo2_backend::utils::install_nargo("pse_halo2_backend");
     run_nargo_tests(test_program_dirs);
 }
