@@ -1,6 +1,11 @@
-use std::{fs, process::Command};
+use std::{
+    fs,
+    io::Result,
+    path::PathBuf,
+    process::{Command, Output},
+};
 
-fn configure_test_dirs() -> Vec<std::path::PathBuf> {
+fn configure_test_dirs() -> Vec<PathBuf> {
     let test_dirs_names = vec![
         "1_mul",
         "2_div",
@@ -21,7 +26,7 @@ fn nargo_cmd() -> std::process::Command {
     Command::new("nargo")
 }
 
-fn nargo_execute(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
+fn nargo_execute(test_program_dir: &PathBuf) -> Result<Output> {
     nargo_cmd()
         .current_dir(test_program_dir)
         .arg("execute")
@@ -30,7 +35,7 @@ fn nargo_execute(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::
         .wait_with_output()
 }
 
-fn nargo_test(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
+fn nargo_test(test_program_dir: &PathBuf) -> Result<Output> {
     nargo_cmd()
         .current_dir(test_program_dir)
         .arg("test")
@@ -39,7 +44,7 @@ fn nargo_test(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::pro
         .wait_with_output()
 }
 
-fn nargo_check(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
+fn nargo_check(test_program_dir: &PathBuf) -> Result<Output> {
     nargo_cmd()
         .current_dir(test_program_dir)
         .arg("check")
@@ -48,7 +53,7 @@ fn nargo_check(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::pr
         .wait_with_output()
 }
 
-fn nargo_gates(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
+fn nargo_gates(test_program_dir: &PathBuf) -> Result<Output> {
     nargo_cmd()
         .current_dir(test_program_dir)
         .arg("gates")
@@ -57,7 +62,7 @@ fn nargo_gates(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::pr
         .wait_with_output()
 }
 
-fn nargo_compile(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
+fn nargo_compile(test_program_dir: &PathBuf) -> Result<Output> {
     nargo_cmd()
         .current_dir(test_program_dir)
         .arg("compile")
@@ -67,7 +72,7 @@ fn nargo_compile(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::
         .wait_with_output()
 }
 
-fn nargo_prove(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
+fn nargo_prove(test_program_dir: &PathBuf) -> Result<Output> {
     nargo_cmd()
         .current_dir(test_program_dir)
         .arg("prove")
@@ -78,7 +83,7 @@ fn nargo_prove(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::pr
         .wait_with_output()
 }
 
-fn nargo_verify(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::process::Output> {
+fn nargo_verify(test_program_dir: &PathBuf) -> Result<Output> {
     nargo_cmd()
         .current_dir(test_program_dir)
         .arg("verify")
@@ -89,14 +94,11 @@ fn nargo_verify(test_program_dir: &std::path::PathBuf) -> std::io::Result<std::p
         .wait_with_output()
 }
 
-fn test_program_dir_path(dir_name: &str) -> std::path::PathBuf {
-    fs::canonicalize(std::path::PathBuf::from(format!(
-        "./tests/test_programs/{dir_name}"
-    )))
-    .unwrap()
+pub fn test_program_dir_path(dir_name: &str) -> PathBuf {
+    fs::canonicalize(PathBuf::from(format!("./tests/test_programs/{dir_name}"))).unwrap()
 }
 
-fn assert_nargo_cmd_works(cmd_name: &str, test_test_program_dir: &std::path::PathBuf) {
+fn assert_nargo_cmd_works(cmd_name: &str, test_test_program_dir: &PathBuf) {
     let cmd_output = match cmd_name {
         "check" => nargo_check(test_test_program_dir),
         "contract" => todo!(),
@@ -119,7 +121,7 @@ fn assert_nargo_cmd_works(cmd_name: &str, test_test_program_dir: &std::path::Pat
     );
 }
 
-fn install_nargo(backend: &'static str) {
+pub fn install_nargo(backend: &'static str) {
     // Clone noir into repo
     Command::new("git")
         .arg("clone")
@@ -147,16 +149,14 @@ fn install_nargo(backend: &'static str) {
         .unwrap();
 }
 
-fn run_nargo_tests(test_program_dirs: Vec<std::path::PathBuf>) {
-    for test_program in test_program_dirs {
-        assert_nargo_cmd_works("check", &test_program);
-        assert_nargo_cmd_works("compile", &test_program);
-        assert_nargo_cmd_works("execute", &test_program);
-        assert_nargo_cmd_works("prove", &test_program);
-        assert_nargo_cmd_works("verify", &test_program);
-        assert_nargo_cmd_works("test", &test_program);
-        assert_nargo_cmd_works("gates", &test_program);
-    }
+pub fn run_nargo_tests(test_program: PathBuf) {
+    assert_nargo_cmd_works("check", &test_program);
+    assert_nargo_cmd_works("compile", &test_program);
+    assert_nargo_cmd_works("execute", &test_program);
+    assert_nargo_cmd_works("prove", &test_program);
+    assert_nargo_cmd_works("verify", &test_program);
+    assert_nargo_cmd_works("test", &test_program);
+    assert_nargo_cmd_works("gates", &test_program);
 }
 
 #[test]
@@ -164,7 +164,9 @@ fn test_axiom_backend() {
     let test_program_dirs = configure_test_dirs();
     // Pass in Axiom Halo2 Backend as argument
     install_nargo("axiom_halo2_backend");
-    run_nargo_tests(test_program_dirs);
+    for test_program in test_program_dirs {
+        run_nargo_tests(test_program);
+    }
 }
 
 #[test]
@@ -172,5 +174,7 @@ fn test_pse_backend() {
     let test_program_dirs = configure_test_dirs();
     // Pass in PSE Halo2 Backend as argument
     install_nargo("pse_halo2_backend");
-    run_nargo_tests(test_program_dirs);
+    for test_program in test_program_dirs {
+        run_nargo_tests(test_program);
+    }
 }
