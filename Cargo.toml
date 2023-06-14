@@ -16,6 +16,7 @@ reqwest = { version = "0.11.16", default-features = false, features = [
     "rustls-tls",
 ] }
 serde = { version = "1.0.136", features = ["derive"] }
+serde_json = "1.0.68"
 tokio = "1.0"
 futures-util = "0.3.14"
 thiserror = "1.0.21"
@@ -47,9 +48,6 @@ halo2-base = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "rele
 snark-verifier = { git = "https://github.com/axiom-crypto/snark-verifier.git", branch = "release-0.1.1", optional = true }
 halo2-ecc = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "release-0.3.0", optional = true }
 # zkevm-keccak = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "release-0.3.0", optional = true }
-
-[dev-dependencies]
-serde_json = "1.0.68"
 
 [features]
 default = ["pse_halo2"]

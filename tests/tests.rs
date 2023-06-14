@@ -10,6 +10,7 @@ fn configure_test_dirs() -> Vec<std::path::PathBuf> {
         "6_array",
         "7_function",
         "8_bit_and",
+        "9_public_io"
     ];
     test_dirs_names
         .into_iter()
