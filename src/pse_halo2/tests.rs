@@ -63,10 +63,9 @@ mod test {
     // put in pse folder to avoid publishing mods
     use super::*;
     use crate::{
-        dimension_measure::{Dimension, DimensionMeasurement},
-        pse_halo2::circuit_translator::NoirHalo2Translator,
+        dimension_measure::DimensionMeasurement, pse_halo2::circuit_translator::NoirHalo2Translator,
     };
-    use acvm::acir::native_types::Witness;
+    use acvm::{FieldElement, acir::native_types::Witness};
     use pse_halo2wrong::{
         curves::bn256::Fr,
         halo2::dev::{FailureLocation, MockProver, VerifyFailure},
@@ -74,10 +73,6 @@ mod test {
     };
     use std::marker::PhantomData;
 
-    use crate::noir_field_to_halo2_field;
-    use acvm::FieldElement;
-
-    noir_field_to_halo2_field!(Fr);
 
     #[test]
     fn test_public_io_circuit_success() {
@@ -86,8 +81,8 @@ mod test {
 
         // instantiate halo2 circuit
         let translator = NoirHalo2Translator::<Fr> {
-            circuit: circuit,
-            witness_values: witness_values,
+            circuit,
+            witness_values,
             _marker: PhantomData::<Fr>,
         };
         let dimension = DimensionMeasurement::measure(&translator).unwrap();
@@ -150,7 +145,7 @@ mod test {
 
         // instantiate halo2 circuit
         let translator = NoirHalo2Translator::<Fr> {
-            circuit: circuit,
+            circuit,
             witness_values,
             _marker: PhantomData::<Fr>,
         };
@@ -194,7 +189,6 @@ mod test {
     fn test_add_circuit_success() {
         // get circuit
         let (circuit, witness_values) = build_artifacts("9_public_io");
-        println!("Witness: {witness_values:?}");
         // instantiate halo2 circuit
         let translator = NoirHalo2Translator::<Fr> {
             circuit,
@@ -229,8 +223,8 @@ mod test {
 
             // instantiate halo2 circuit
             let translator = NoirHalo2Translator::<Fr> {
-                circuit: circuit,
-                witness_values: witness_values,
+                circuit,
+                witness_values,
                 _marker: PhantomData::<Fr>,
             };
             let dimension = DimensionMeasurement::measure(&translator).unwrap();
