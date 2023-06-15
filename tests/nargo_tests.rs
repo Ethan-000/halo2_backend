@@ -5,6 +5,7 @@ use std::{
     process::{Command, Output},
 };
 
+#[allow(dead_code)]
 fn configure_test_dirs() -> Vec<PathBuf> {
     let test_dirs_names = vec![
         "1_mul",
