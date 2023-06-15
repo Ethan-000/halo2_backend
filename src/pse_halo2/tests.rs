@@ -65,14 +65,13 @@ mod test {
     use crate::{
         dimension_measure::DimensionMeasurement, pse_halo2::circuit_translator::NoirHalo2Translator,
     };
-    use acvm::{FieldElement, acir::native_types::Witness};
+    use acvm::{acir::native_types::Witness, FieldElement};
     use pse_halo2wrong::{
         curves::bn256::Fr,
         halo2::dev::{FailureLocation, MockProver, VerifyFailure},
         halo2::plonk::Any,
     };
     use std::marker::PhantomData;
-
 
     #[test]
     fn test_public_io_circuit_success() {
