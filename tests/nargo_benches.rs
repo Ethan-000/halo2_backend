@@ -73,7 +73,7 @@ fn function(b: &mut Bencher) {
 #[bench]
 fn bit_and(b: &mut Bencher) {
     install_nargo(HALO2_BACKEND);
-    let path = test_program_dir_path("bit_and");
+    let path = test_program_dir_path("8_bit_and");
     b.iter(|| {
         run_nargo_tests(path.clone());
     });

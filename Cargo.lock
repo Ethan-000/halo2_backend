@@ -856,6 +856,7 @@ dependencies = [
  "rand",
  "reqwest",
  "serde",
+ "serde_json",
  "snark-verifier 0.1.0",
  "snark-verifier 0.1.1",
  "thiserror",
