@@ -59,7 +59,7 @@ impl NoirHalo2Translator<Fr> {
 
         // Add the qc term
         noir_cs.qc = gate.q_c;
-
+        
         let a: Value<Assigned<_>> = Value::known(noir_field_to_halo2_field(
             *self
                 .witness_values
