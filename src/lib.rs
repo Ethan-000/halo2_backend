@@ -1,13 +1,13 @@
 #[cfg(feature = "axiom_halo2")]
-pub mod axiom_halo2;
+pub(crate) mod axiom_halo2;
 #[cfg(any(feature = "axiom_halo2", feature = "pse_halo2"))]
-pub mod aztec_crs;
+pub(crate) mod aztec_crs;
 #[cfg(any(feature = "axiom_halo2", feature = "pse_halo2"))]
-pub mod dimension_measure;
-pub mod errors;
+pub(crate) mod dimension_measure;
+pub(crate) mod errors;
 #[cfg(feature = "pse_halo2")]
-pub mod pse_halo2;
-pub mod utils;
+pub(crate) mod pse_halo2;
+pub(crate) mod utils;
 
 #[cfg(feature = "zcash_halo2")]
 mod zcash_halo2;
