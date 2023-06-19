@@ -94,11 +94,11 @@ fn nargo_verify(test_program_dir: &PathBuf) -> Result<Output> {
         .wait_with_output()
 }
 
-pub fn test_program_dir_path(dir_name: &str) -> PathBuf {
+pub(crate) fn test_program_dir_path(dir_name: &str) -> PathBuf {
     fs::canonicalize(PathBuf::from(format!("./tests/test_programs/{dir_name}"))).unwrap()
 }
 
-fn assert_nargo_cmd_works(cmd_name: &str, test_test_program_dir: &PathBuf) {
+pub(crate) fn assert_nargo_cmd_works(cmd_name: &str, test_test_program_dir: &PathBuf) {
     let cmd_output = match cmd_name {
         "check" => nargo_check(test_test_program_dir),
         "contract" => todo!(),
@@ -149,7 +149,7 @@ pub fn install_nargo(backend: &'static str) {
         .unwrap();
 }
 
-pub fn run_nargo_tests(test_program: PathBuf) {
+pub(crate) fn run_nargo_tests(test_program: PathBuf) {
     assert_nargo_cmd_works("check", &test_program);
     assert_nargo_cmd_works("compile", &test_program);
     assert_nargo_cmd_works("execute", &test_program);
@@ -159,6 +159,9 @@ pub fn run_nargo_tests(test_program: PathBuf) {
     assert_nargo_cmd_works("gates", &test_program);
 }
 
+// TODO: Axiom is currently not working.
+// tho tests passes the crs size does not
+// change with each test.
 #[test]
 fn test_axiom_backend() {
     let test_program_dirs = configure_test_dirs();
