@@ -70,3 +70,31 @@ macro_rules! impl_noir_field_to_secp255k1_field_conversion {
         }
     };
 }
+
+pub fn install_nargo(backend: &'static str) {
+    // Clone noir into repo
+    std::process::Command::new("git")
+        .arg("clone")
+        .arg("https://github.com/Ethan-000/noir")
+        .arg("--branch")
+        .arg("add_halo2_backend")
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
+    format!("\nInstalling {backend}. This may take a few moments.",);
+    // Install specified backend into noir
+    std::process::Command::new("cargo")
+        .current_dir(std::fs::canonicalize("./noir/crates/nargo_cli").unwrap())
+        .arg("install")
+        .arg("--path")
+        .arg(".")
+        .arg("--locked")
+        .arg("--features")
+        .arg(backend)
+        .arg("--no-default-features")
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
+}

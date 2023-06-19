@@ -15,6 +15,7 @@ pkg/
 *.pk
 *.vk
 **/Verifier.toml
+**/contract
 
 *.sol
 **/target

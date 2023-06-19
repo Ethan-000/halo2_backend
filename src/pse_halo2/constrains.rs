@@ -80,7 +80,7 @@ impl NoirHalo2Translator<Fr> {
         layouter.assign_region(
             || "region 0",
             |region| {
-                let offset = 0;
+                let offset: usize = 0;
                 let ctx = &mut RegionCtx::new(region, offset);
                 let main_gate = MainGate::<Fr>::new(config.main_gate_config.clone());
 
@@ -126,8 +126,6 @@ impl NoirHalo2Translator<Fr> {
                 Ok(())
             },
         )?;
-
-        //
 
         Ok(())
     }

@@ -5,6 +5,7 @@ use std::{
     process::{Command, Output},
 };
 
+#[allow(dead_code)]
 fn configure_test_dirs() -> Vec<PathBuf> {
     let test_dirs_names = vec![
         "1_mul",
@@ -14,7 +15,8 @@ fn configure_test_dirs() -> Vec<PathBuf> {
         "5_over",
         "6_array",
         "7_function",
-        "bit_and",
+        "8_bit_and",
+        // "9_public_io",
     ];
     test_dirs_names
         .into_iter()
@@ -162,6 +164,7 @@ pub(crate) fn run_nargo_tests(test_program: PathBuf) {
 // TODO: Axiom is currently not working.
 // tho tests passes the crs size does not
 // change with each test.
+#[cfg(feature = "axiom_halo2")]
 #[test]
 fn test_axiom_backend() {
     let test_program_dirs = configure_test_dirs();
@@ -172,6 +175,7 @@ fn test_axiom_backend() {
     }
 }
 
+#[cfg(feature = "pse_halo2")]
 #[test]
 fn test_pse_backend() {
     let test_program_dirs = configure_test_dirs();
