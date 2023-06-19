@@ -49,6 +49,21 @@ snark-verifier = { git = "https://github.com/axiom-crypto/snark-verifier.git", b
 halo2-ecc = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "release-0.3.0", optional = true }
 # zkevm-keccak = { git = "https://github.com/axiom-crypto/halo2-lib", branch = "release-0.3.0", optional = true }
 
+[dev-dependencies]
+criterion = "0.5.1"
+
+[[bench]]
+name = "bench_compilation"
+harness = false
+
+[[bench]]
+name = "bench_prove"
+harness = false
+
+[[bench]]
+name = "bench_verify"
+harness = false
+
 [features]
 default = ["pse_halo2"]
 zcash_halo2 = ["dep:zcash_halo2_proofs"]
