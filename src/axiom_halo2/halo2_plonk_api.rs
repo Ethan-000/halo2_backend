@@ -321,6 +321,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
             || "raw_poly",
             |mut region| {
                 let value = f();
+
                 let lhs = region.assign_advice(self.config.a, 0, value.a);
                 let rhs = region.assign_advice(self.config.b, 0, value.b);
                 let out = region.assign_advice(self.config.c, 0, value.c);

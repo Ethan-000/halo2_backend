@@ -1,7 +1,10 @@
 use core::panic;
 use std::marker::PhantomData;
 
-use crate::pse_halo2::{assigned_map::AssignedMap, halo2_plonk_api::PlonkConfig};
+use crate::{
+    assignment_map::AssignedCellMap,
+    pse_halo2::{assigned_map::AssignedMap, halo2_plonk_api::PlonkConfig}
+};
 use acvm::acir::{
     circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
     native_types::WitnessMap,
@@ -60,7 +63,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
         config: Self::Config,
         mut layouter: impl pse_halo2wrong::halo2::circuit::Layouter<Fr>,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
-        let mut witness_assignments = AssignedMap::<Fr>::new();
+        let mut witness_assignments = AssignedCellMap::<Fr>::new();
         let range_chip = RangeChip::<Fr>::new(config.range_config.clone());
         for gate in self.circuit.opcodes.iter() {
             match gate {

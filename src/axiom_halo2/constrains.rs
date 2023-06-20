@@ -2,6 +2,7 @@ use crate::{
     axiom_halo2::{
         circuit_translator::NoirHalo2Translator,
         halo2_plonk_api::{NoirConstraint, PlonkConfig, PolyTriple, StandardCs},
+        assignment_map::AssignedMap,
     },
     impl_noir_field_to_secp255k1_field_conversion, noir_field_to_halo2_field,
     utils::Secp256k1FieldConversion,
@@ -37,6 +38,7 @@ impl NoirHalo2Translator<Fr> {
         gate: &Expression,
         cs: &impl StandardCs<Fr>,
         layouter: &mut impl Layouter<Fr>,
+        witness_assignments: &mut AssignedMap<Fr>,
     ) {
         let mut noir_cs = NoirConstraint::default();
         // check mul gate
@@ -59,7 +61,7 @@ impl NoirHalo2Translator<Fr> {
 
         // Add the qc term
         noir_cs.qc = gate.q_c;
-        
+
         let a: Value<Assigned<_>> = Value::known(noir_field_to_halo2_field(
             *self
                 .witness_values

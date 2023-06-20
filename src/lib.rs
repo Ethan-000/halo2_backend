@@ -8,6 +8,8 @@ pub mod errors;
 #[cfg(feature = "pse_halo2")]
 pub mod pse_halo2;
 pub mod utils;
+#[cfg(any(feature = "axiom_halo2", feature = "pse_halo2"))]
+pub mod assignment_map;
 
 #[cfg(feature = "zcash_halo2")]
 mod zcash_halo2;
