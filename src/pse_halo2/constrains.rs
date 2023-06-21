@@ -16,7 +16,6 @@ use pse_maingate::{
 };
 
 use crate::{
-    assignment_map::AssignedCellMap,
     noir_field_to_halo2_field,
     pse_halo2::{assigned_map::AssignedMap, circuit_translator::NoirHalo2Translator},
 };
@@ -29,7 +28,7 @@ impl NoirHalo2Translator<Fr> {
         gate: &Expression,
         config: &PlonkConfig,
         layouter: &mut impl Layouter<Fr>,
-        witness_assignments: &mut AssignedCellMap<Fr>,
+        witness_assignments: &mut AssignedMap<Fr>,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
         let mut noir_cs = NoirConstraint::default();
         // check mul gate
@@ -137,7 +136,7 @@ impl NoirHalo2Translator<Fr> {
         num_bits: u32,
         range_chip: &RangeChip<Fr>,
         layouter: &mut impl Layouter<Fr>,
-        witness_assignments: &mut AssignedCellMap<Fr>,
+        witness_assignments: &mut AssignedMap<Fr>,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
         let input = noir_field_to_halo2_field(
             *self
@@ -176,7 +175,7 @@ impl NoirHalo2Translator<Fr> {
         output: Witness,
         config: &PlonkConfig,
         layouter: &mut impl Layouter<Fr>,
-        witness_assignments: &mut AssignedCellMap<Fr>,
+        witness_assignments: &mut AssignedMap<Fr>,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
         let lhs_v = Value::known(noir_field_to_halo2_field(
             *self
@@ -234,7 +233,7 @@ impl NoirHalo2Translator<Fr> {
         &self,
         config: &PlonkConfig,
         layouter: &mut impl Layouter<Fr>,
-        witness_assignments: &AssignedCellMap<Fr>,
+        witness_assignments: &AssignedMap<Fr>,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
         // get public witness indices from noir circuit
         let public_indices = self.circuit.public_inputs().indices();

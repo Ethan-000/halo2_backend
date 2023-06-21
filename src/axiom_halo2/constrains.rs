@@ -1,8 +1,8 @@
 use crate::{
     axiom_halo2::{
+        assignment_map::AssignedMap,
         circuit_translator::NoirHalo2Translator,
         halo2_plonk_api::{NoirConstraint, PlonkConfig, PolyTriple, StandardCs},
-        assignment_map::AssignedMap,
     },
     impl_noir_field_to_secp255k1_field_conversion, noir_field_to_halo2_field,
     utils::Secp256k1FieldConversion,
@@ -14,15 +14,13 @@ use acvm::{
 use halo2_base::{
     gates::{GateInstructions, RangeChip, RangeInstructions},
     halo2_proofs::{
-        circuit::{Layouter, Value},
         halo2curves::{
             bn256::Fr,
             secp256k1::{Fp, Fq, Secp256k1Affine},
             CurveAffine,
         },
-        plonk::Assigned,
     },
-    Context,
+    Context, QuantumCell, AssignedValue,
 };
 use halo2_ecc::{
     ecc::{ecdsa::ecdsa_verify_no_pubkey_check, EccChip},
@@ -32,82 +30,62 @@ use halo2_ecc::{
 use std::slice::Iter;
 
 impl NoirHalo2Translator<Fr> {
-    #[allow(non_snake_case)]
+
     pub(crate) fn add_arithmetic_constrains(
         &self,
         gate: &Expression,
-        cs: &impl StandardCs<Fr>,
-        layouter: &mut impl Layouter<Fr>,
+        config: &PlonkConfig,
         witness_assignments: &mut AssignedMap<Fr>,
     ) {
-        let mut noir_cs = NoirConstraint::default();
-        // check mul gate
+        let mut ctx: Context<Fr> = Context::<Fr>::new(false, 0);
+
+        // store the constrained output of multiplied terms
+        let mut solution: AssignedValue<Fr>;
+
         if !gate.mul_terms.is_empty() {
+            // if there is a mul gate, take mul term selector, left, right, and constant then compute with gates:
+            // mul gate: selector * left = intermediate
+            // mul_add gate: intermediate * right + constant = output
             let mul_term = &gate.mul_terms[0];
-            noir_cs.qm = mul_term.0;
 
-            // Get wL term
-            let wL = &mul_term.1;
-            noir_cs.a = wL.witness_index() as i32;
+            let selector = QuantumCell::Witness(noir_field_to_halo2_field(mul_term.0));
+            let wL = QuantumCell::Witness(noir_field_to_halo2_field(
+                *self
+                    .witness_values
+                    .get(&mul_term.1)
+                    .unwrap_or(&FieldElement::zero()),
+            ));
+            let wR = QuantumCell::Witness(noir_field_to_halo2_field(
+                *self
+                    .witness_values
+                    .get(&mul_term.2)
+                    .unwrap_or(&FieldElement::zero()),
+            ));
 
-            // Get wR term
-            let wR = &mul_term.2;
-            noir_cs.b = wR.witness_index() as i32;
+            let intermediate = config.gate_chip.mul(&mut ctx, selector, wL);
+            // terms.push(config.gate_chip.mul(&mut ctx, intermediate, wR));
+            let c = QuantumCell::Witness(noir_field_to_halo2_field(gate.q_c));
+            solution = config.gate_chip.mul_add(&mut ctx, intermediate, wR, c);
+        } else {
+            // otherwise just assign the constant term
+            solution = ctx.load_witness(noir_field_to_halo2_field(gate.q_c));
         }
 
         for term in &gate.linear_combinations {
-            noir_cs.set_linear_term(term.0, term.1.witness_index() as i32);
+            // get term selector and witness
+            let coefficient = QuantumCell::Witness(noir_field_to_halo2_field(term.0));
+            let variable = QuantumCell::Witness(noir_field_to_halo2_field(
+                *self
+                    .witness_values
+                    .get(&term.1)
+                    .unwrap_or(&FieldElement::zero()),
+            ));
+            // multiply to get term value & add to existing solution value
+            solution = config.gate_chip.mul_add(&mut ctx, coefficient, variable, solution);
         }
 
-        // Add the qc term
-        noir_cs.qc = gate.q_c;
-
-        let a: Value<Assigned<_>> = Value::known(noir_field_to_halo2_field(
-            *self
-                .witness_values
-                .get_index(noir_cs.a as u32)
-                .unwrap_or(&FieldElement::zero()),
-        ))
-        .into();
-
-        let b: Value<Assigned<_>> = Value::known(noir_field_to_halo2_field(
-            *self
-                .witness_values
-                .get_index(noir_cs.b as u32)
-                .unwrap_or(&FieldElement::zero()),
-        ))
-        .into();
-
-        let c: Value<Assigned<_>> = Value::known(noir_field_to_halo2_field(
-            *self
-                .witness_values
-                .get_index(noir_cs.c as u32)
-                .unwrap_or(&FieldElement::zero()),
-        ))
-        .into();
-
-        let qm = noir_field_to_halo2_field(noir_cs.qm);
-
-        let ql = noir_field_to_halo2_field(noir_cs.ql);
-
-        let qr = noir_field_to_halo2_field(noir_cs.qr);
-
-        let qo = noir_field_to_halo2_field(noir_cs.qo);
-
-        let qc = noir_field_to_halo2_field(noir_cs.qc);
-
-        let poly_gate = PolyTriple::new(
-            a,
-            b,
-            c,
-            qm.into(),
-            ql.into(),
-            qr.into(),
-            qo.into(),
-            qc.into(),
-        );
-
-        cs.raw_poly(layouter, || poly_gate).unwrap();
+        // constrain the solution to the output to be equal to 0
+        config.gate_chip.is_zero(&mut ctx, solution);
     }
 
     pub(crate) fn add_range_constrain(
