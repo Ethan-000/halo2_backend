@@ -59,28 +59,6 @@ impl<F: ScalarField> AssignedMap<F> {
             assigned
         }
     }
-
-    // /// Check if a given acir witness index needs a copy constraint when assigning a witness to a halo2 cell.
-    // /// If so, perform an equality constraint on a given cell if a given witness appears in the assignment map
-    // //
-    // // @param ctx - the context for the region being assigned to
-    // // @param assignments - the assignment map of acir witness index to exsiting halo2 cells storing witness assignments
-    // // @param witness - the acir witness index to check for
-    // // @param cell - the newly assigned cell to copy constrain with a cell stored in the assignment map
-    // // @return - success if copy constraint operation succeeds
-    // pub fn check_and_copy(
-    //     &self,
-    //     ctx: &mut RegionCtx<F>,
-    //     witness: u32,
-    //     cell: &AssignedCell<F, F>,
-    // ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
-    //     if self.contains_key(&Witness(witness)) {
-    //         let witness_cell = self.get_index(witness).unwrap().last().unwrap();
-    //         ctx.constrain_equal(witness_cell.cell(), cell.cell())
-    //     } else {
-    //         Ok(())
-    //     }
-    // }
 }
 
 impl<F: ScalarField> Index<&Witness> for AssignedMap<F> {
