@@ -100,35 +100,21 @@ pub struct PlonkConfig {
 
 impl PlonkConfig {
     pub fn configure(meta: &mut ConstraintSystem<Fr>) -> Self {
-        let a = meta.advice_column();
-        let b = meta.advice_column();
-        let c = meta.advice_column();
+        // https://github.com/axiom-crypto/halo2-scaffold/blob/main/src/circuits/standard_plonk.rs
+        let [a, b, c] = [(); 3].map(|_| meta.advice_column());
+        [a, b, c].map(|column| meta.enable_equality(column));
 
-        meta.enable_equality(a);
-        meta.enable_equality(b);
-        meta.enable_equality(c);
-
-        let sm = meta.fixed_column();
-        let sl = meta.fixed_column();
-        let sr = meta.fixed_column();
-        let so = meta.fixed_column();
-        let sc = meta.fixed_column();
+        let [sm, sl, sr, so, sc] = [(); 5].map(|_| meta.fixed_column());
 
         let range_chip = RangeChip::default(17);
         let gate_chip = GateChip::default();
 
         meta.create_gate("Combined add-mult", |meta| {
-            let a = meta.query_advice(a, Rotation::cur());
-            let b = meta.query_advice(b, Rotation::cur());
-            let c = meta.query_advice(c, Rotation::cur());
+            let [a, b, c] = [a, b, c].map(|column| meta.query_advice(column, Rotation::cur()));
+            let [sm, sl, sr, so, sc] =
+                [sm, sl, sr, so, sc].map(|column| meta.query_fixed(column, Rotation::cur()));
 
-            let sl = meta.query_fixed(sl, Rotation::cur());
-            let sr = meta.query_fixed(sr, Rotation::cur());
-            let so = meta.query_fixed(so, Rotation::cur());
-            let sm = meta.query_fixed(sm, Rotation::cur());
-            let sc = meta.query_fixed(sc, Rotation::cur());
-
-            vec![a.clone() * sl + b.clone() * sr + a * b * sm + (c * so) + sc]
+            vec![a.clone() * sl + b.clone() * sr + a * b * sm + c * so + sc]
         });
 
         PlonkConfig {
@@ -335,6 +321,7 @@ impl<FF: Field> StandardCs<FF> for StandardPlonk<FF> {
             || "raw_poly",
             |mut region| {
                 let value = f();
+
                 let lhs = region.assign_advice(self.config.a, 0, value.a);
                 let rhs = region.assign_advice(self.config.b, 0, value.b);
                 let out = region.assign_advice(self.config.c, 0, value.c);

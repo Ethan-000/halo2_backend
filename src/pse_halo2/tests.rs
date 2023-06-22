@@ -234,6 +234,28 @@ mod test {
     }
 
     #[test]
+    fn test_mul_circuit_success() {
+        // get circuit
+        let (circuit, witness_values) = build_artifacts("1_mul");
+        println!("Circuit: {circuit:?}");
+        println!("Witness Values: {witness_values:?}");
+        // instantiate halo2 circuit
+        let translator = NoirHalo2Translator::<Fr> {
+            circuit,
+            witness_values,
+            _marker: PhantomData::<Fr>,
+        };
+        let dimension = DimensionMeasurement::measure(&translator).unwrap();
+
+        // instance value (known to be equal to 7)
+        // let instance = vec![Fr::from_raw([7u64, 0, 0, 0])];
+
+        // run mock prover expecting success
+        let prover = MockProver::run(dimension.k(), &translator, vec![vec![]]).unwrap();
+        assert_eq!(prover.verify(), Ok(()));
+    }
+
+    #[test]
     fn test_circuits_native() {
         let test_dirs_names = vec![
             "1_mul",

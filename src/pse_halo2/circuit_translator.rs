@@ -1,7 +1,9 @@
 use core::panic;
 use std::marker::PhantomData;
 
-use crate::pse_halo2::{assigned_map::AssignedMap, halo2_plonk_api::PlonkConfig};
+use crate::{
+    pse_halo2::{assigned_map::AssignedMap, halo2_plonk_api::PlonkConfig}
+};
 use acvm::acir::{
     circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
     native_types::WitnessMap,
