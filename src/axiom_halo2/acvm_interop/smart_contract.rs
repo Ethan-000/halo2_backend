@@ -1,13 +1,26 @@
-use acvm::SmartContract;
+use acvm::{
+    acir::native_types::{Witness, WitnessMap},
+    FieldElement, SmartContract,
+};
 
 use halo2_base::halo2_proofs::{
+    dev::MockProver,
     halo2curves::bn256::{Bn256, Fq, Fr, G1Affine},
-    plonk::VerifyingKey,
-    poly::{commitment::ParamsProver, kzg::commitment::ParamsKZG},
+    plonk::{create_proof, keygen_pk, keygen_vk, verify_proof, Circuit, ProvingKey, VerifyingKey},
+    poly::{
+        commitment::{Params, ParamsProver},
+        kzg::{
+            commitment::{KZGCommitmentScheme, ParamsKZG},
+            multiopen::{ProverGWC, VerifierGWC},
+            strategy::AccumulatorStrategy,
+        },
+        VerificationStrategy,
+    },
+    transcript::{TranscriptReadBuffer, TranscriptWriterBuffer},
     SerdeFormat,
 };
 use snark_verifier::{
-    loader::evm::EvmLoader,
+    loader::evm::{compile_yul, encode_calldata, Address, EvmLoader, ExecutorBuilder},
     pcs::kzg::{Gwc19, KzgAs},
     system::halo2::{compile, transcript::evm::EvmTranscript, Config},
     verifier::{self, SnarkVerifier},
@@ -17,8 +30,89 @@ use crate::axiom_halo2::circuit_translator::NoirHalo2Translator;
 use crate::axiom_halo2::AxiomHalo2;
 use crate::errors::BackendError;
 
+use rand::{rngs::OsRng, RngCore};
+use serde_json::Value;
+use std::env;
+use std::fs;
+use std::io::Read;
+use std::marker::PhantomData;
+use std::path::PathBuf;
 use std::rc::Rc;
 type PlonkVerifier = verifier::plonk::PlonkVerifier<KzgAs<Bn256, Gwc19>>;
+use itertools::Itertools;
+
+fn evm_verify(deployment_code: Vec<u8>, instances: Vec<Vec<Fr>>, proof: Vec<u8>) {
+    let calldata = encode_calldata(&instances, &proof);
+    let success = {
+        let mut evm = ExecutorBuilder::default()
+            .with_gas_limit(u64::MAX.into())
+            .build();
+
+        let caller = Address::from_low_u64_be(0xfe);
+        let verifier = evm
+            .deploy(caller, deployment_code.into(), 0.into())
+            .address
+            .unwrap();
+        let result = evm.call_raw(caller, verifier, calldata.into(), 0.into());
+
+        dbg!(result.gas_used);
+
+        !result.reverted
+    };
+    assert!(success);
+}
+
+fn gen_pk<C: Circuit<Fr>>(params: &ParamsKZG<Bn256>, circuit: &C) -> ProvingKey<G1Affine> {
+    let vk = keygen_vk(params, circuit).unwrap();
+    keygen_pk(params, vk, circuit).unwrap()
+}
+
+fn gen_proof<C: Circuit<Fr>>(
+    params: &ParamsKZG<Bn256>,
+    pk: &ProvingKey<G1Affine>,
+    circuit: C,
+    instances: Vec<Vec<Fr>>,
+) -> Vec<u8> {
+    println!("Instances {:?}", instances);
+    MockProver::run(params.k(), &circuit, instances.clone())
+        .unwrap()
+        .assert_satisfied();
+
+    let instances = instances
+        .iter()
+        .map(|instances| instances.as_slice())
+        .collect_vec();
+    let proof = {
+        let mut transcript = TranscriptWriterBuffer::<_, G1Affine, _>::init(Vec::new());
+        create_proof::<KZGCommitmentScheme<Bn256>, ProverGWC<_>, _, _, EvmTranscript<_, _, _, _>, _>(
+            params,
+            pk,
+            &[circuit],
+            &[],
+            OsRng,
+            &mut transcript,
+        )
+        .unwrap();
+        transcript.finalize()
+    };
+
+    let accept = {
+        let mut transcript = TranscriptReadBuffer::<_, G1Affine, _>::init(proof.as_slice());
+        VerificationStrategy::<_, VerifierGWC<_>>::finalize(
+            verify_proof::<_, VerifierGWC<_>, _, EvmTranscript<_, _, _, _>, _>(
+                params.verifier_params(),
+                pk.get_vk(),
+                AccumulatorStrategy::new(params.verifier_params()),
+                &[],
+                &mut transcript,
+            )
+            .unwrap(),
+        )
+    };
+    assert!(accept);
+
+    proof
+}
 
 fn gen_evm_verifier(
     params: &ParamsKZG<Bn256>,
@@ -39,6 +133,62 @@ fn gen_evm_verifier(
     let instances = transcript.load_instances(num_instance);
     let proof = PlonkVerifier::read_proof(&vk, &protocol, &instances, &mut transcript).unwrap();
     PlonkVerifier::verify(&vk, &protocol, &instances, &proof).unwrap();
+    // let mut proof_file = fs::File::open(format!(
+    //     "{}/{}",
+    //     env::current_dir().unwrap().display(),
+    //     "proofs/my_test_proof.proof"
+    // ))
+    // .expect("Failed to open proof file");
+    // let mut proof = String::from("");
+    // // Read proof in as string
+    // proof_file
+    //     .read_to_string(&mut proof)
+    //     .expect("Failed to read proof file");
+    let mut contents = String::new();
+    fs::File::open(format!(
+        "{}/target/my_test_circuit.json",
+        env::current_dir().unwrap().display()
+    ))
+    .unwrap()
+    .read_to_string(&mut contents)
+    .unwrap();
+    let json: Value = serde_json::from_str(&contents).unwrap();
+    let bytecode: Vec<u8> = json
+        .get("bytecode")
+        .and_then(Value::as_array)
+        .unwrap()
+        .iter()
+        .filter_map(|v| v.as_u64().map(|n| n as u8))
+        .collect();
+    let circuit = acvm::acir::circuit::Circuit::read(&*bytecode).unwrap();
+    _ = std::process::Command::new("nargo")
+        .current_dir(&env::current_dir().unwrap())
+        .arg("execute")
+        .arg("witness")
+        .spawn()
+        .unwrap()
+        .wait_with_output();
+
+    let mut witness_buffer = Vec::new();
+    fs::File::open(format!(
+        "{}/target/witness.tr",
+        env::current_dir().unwrap().display()
+    ))
+    .unwrap()
+    .read_to_end(&mut witness_buffer)
+    .unwrap();
+
+    let mut witness_values = WitnessMap::try_from(&witness_buffer[..]).unwrap();
+    let translator = NoirHalo2Translator::<Fr> {
+        circuit,
+        witness_values,
+        _marker: PhantomData::<Fr>,
+    };
+    let compiled_code = compile_yul(&loader.yul_code());
+    let pk = gen_pk(&params, &translator);
+    let gen_proof = gen_proof(&params, &pk, translator.clone(), vec![]);
+    evm_verify(compiled_code, vec![], gen_proof);
+
     loader.yul_code()
 }
 

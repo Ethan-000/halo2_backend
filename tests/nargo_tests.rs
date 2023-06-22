@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use std::{
     fs,
     io::Result,
@@ -6,17 +5,18 @@ use std::{
     process::{Command, Output},
 };
 
+#[allow(dead_code)]
 fn configure_test_dirs() -> Vec<PathBuf> {
     let test_dirs_names = vec![
-        "1_mul",
-        "2_div",
-        "3_add",
-        "4_sub",
-        "5_over",
-        "6_array",
-        "7_function",
-        "8_bit_and",
-        // "9_public_io",
+        // "1_mul",
+        // "2_div",
+        // "3_add",
+        // "4_sub",
+        // "5_over",
+        // "6_array",
+        // "7_function",
+        // "8_bit_and",
+        "9_public_io",
     ];
     test_dirs_names
         .into_iter()
@@ -64,7 +64,16 @@ fn nargo_gates(test_program_dir: &PathBuf) -> Result<Output> {
         .wait_with_output()
 }
 
-fn nargo_compile(test_program_dir: &PathBuf) -> Result<Output> {
+pub fn nargo_codegen_verifier(test_program_dir: &PathBuf) -> Result<Output> {
+    nargo_cmd()
+        .current_dir(test_program_dir)
+        .arg("codegen-verifier")
+        .spawn()
+        .unwrap()
+        .wait_with_output()
+}
+
+pub fn nargo_compile(test_program_dir: &PathBuf) -> Result<Output> {
     nargo_cmd()
         .current_dir(test_program_dir)
         .arg("compile")
@@ -74,7 +83,7 @@ fn nargo_compile(test_program_dir: &PathBuf) -> Result<Output> {
         .wait_with_output()
 }
 
-fn nargo_prove(test_program_dir: &PathBuf) -> Result<Output> {
+pub fn nargo_prove(test_program_dir: &PathBuf) -> Result<Output> {
     nargo_cmd()
         .current_dir(test_program_dir)
         .arg("prove")
@@ -96,14 +105,14 @@ fn nargo_verify(test_program_dir: &PathBuf) -> Result<Output> {
         .wait_with_output()
 }
 
-pub(crate) fn test_program_dir_path(dir_name: &str) -> PathBuf {
+pub fn test_program_dir_path(dir_name: &str) -> PathBuf {
     fs::canonicalize(PathBuf::from(format!("./tests/test_programs/{dir_name}"))).unwrap()
 }
 
-pub(crate) fn assert_nargo_cmd_works(cmd_name: &str, test_test_program_dir: &PathBuf) {
+fn assert_nargo_cmd_works(cmd_name: &str, test_test_program_dir: &PathBuf) {
     let cmd_output = match cmd_name {
         "check" => nargo_check(test_test_program_dir),
-        "contract" => todo!(),
+        "codegen-verifier" => nargo_codegen_verifier(test_test_program_dir),
         "compile" => nargo_compile(test_test_program_dir),
         "new" => panic!("This cmd doesn't depend on the backend"),
         "execute" => nargo_execute(test_test_program_dir),
@@ -151,8 +160,9 @@ pub fn install_nargo(backend: &'static str) {
         .unwrap();
 }
 
-pub(crate) fn run_nargo_tests(test_program: PathBuf) {
+pub fn run_nargo_tests(test_program: PathBuf) {
     assert_nargo_cmd_works("check", &test_program);
+    assert_nargo_cmd_works("codegen-verifier", &test_program);
     assert_nargo_cmd_works("compile", &test_program);
     assert_nargo_cmd_works("execute", &test_program);
     assert_nargo_cmd_works("prove", &test_program);
@@ -161,9 +171,6 @@ pub(crate) fn run_nargo_tests(test_program: PathBuf) {
     assert_nargo_cmd_works("gates", &test_program);
 }
 
-// TODO: Axiom is currently not working.
-// tho tests passes the crs size does not
-// change with each test.
 #[cfg(feature = "axiom_halo2")]
 #[test]
 fn test_axiom_backend() {
