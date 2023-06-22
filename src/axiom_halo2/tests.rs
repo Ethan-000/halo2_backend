@@ -95,12 +95,13 @@ mod test {
         axiom_halo2::circuit_translator::NoirHalo2Translator,
         dimension_measure::DimensionMeasurement,
     };
-    use acvm::{acir::native_types::Witness, FieldElement};
-    use halo2_base::halo2_proofs::{
-        dev::{FailureLocation, MockProver, VerifyFailure},
-        halo2curves::bn256::Fr,
-        plonk::Any,
-    };
+    // use acvm::{acir::native_types::Witness, FieldElement};
+    // use halo2_base::halo2_proofs::{
+    //     dev::{FailureLocation, MockProver, VerifyFailure},
+    //     halo2curves::bn256::Fr,
+    //     plonk::Any,
+    // };
+    use halo2_base::halo2_proofs::{dev::MockProver, halo2curves::bn256::Fr};
     use std::marker::PhantomData;
 
     // #[test]
@@ -251,7 +252,7 @@ mod test {
     //     // run mock prover expecting success
     //     let prover = MockProver::run(dimension.k(), &translator, vec![]).unwrap();
     //     assert_eq!(prover.verify(), Ok(()));
-    // }
+    // }git
 
     #[test]
     fn test_circuits_native() {

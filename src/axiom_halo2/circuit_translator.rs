@@ -38,7 +38,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
     fn synthesize(
         &self,
         config: Self::Config,
-        mut layouter: impl halo2_base::halo2_proofs::circuit::Layouter<Fr>,
+        _layouter: impl halo2_base::halo2_proofs::circuit::Layouter<Fr>,
     ) -> Result<(), halo2_base::halo2_proofs::plonk::Error> {
         let mut witness_assignments = AssignedMap::<Fr>::new();
 
@@ -187,7 +187,6 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                     todo!()
                 }
                 Opcode::Brillig(_) => todo!(),
-                _ => (), // all opcodes not in this map already assigned in previous map
             }
         }
         Ok(())

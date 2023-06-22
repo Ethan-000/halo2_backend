@@ -8,7 +8,6 @@ use std::{
     ops::Index,
 };
 
-// TODO: move to src/utils.rs
 #[derive(Debug, Clone, Default)]
 pub struct AssignedMap<F: Field>(BTreeMap<Witness, Vec<AssignedCell<F, F>>>);
 
@@ -17,6 +16,7 @@ impl<F: Field> AssignedMap<F> {
         Self(BTreeMap::new())
     }
 
+    #[allow(dead_code)]
     pub fn get(&self, witness: &Witness) -> Option<&Vec<AssignedCell<F, F>>> {
         self.0.get(witness)
     }

@@ -2,7 +2,7 @@ use crate::{
     axiom_halo2::{
         assigned_map::AssignedMap,
         circuit_translator::NoirHalo2Translator,
-        halo2_plonk_api::{NoirConstraint, PlonkConfig, PolyTriple, StandardCs},
+        halo2_plonk_api::PlonkConfig,
     },
     impl_noir_field_to_secp255k1_field_conversion, noir_field_to_halo2_field,
     utils::Secp256k1FieldConversion,

@@ -5,7 +5,6 @@ use std::{
     ops::Index,
 };
 
-// TODO: move to src/utils.rs
 #[derive(Debug, Clone, Default)]
 pub struct AssignedMap<F: ScalarField>(BTreeMap<Witness, Vec<AssignedValue<F>>>);
 
@@ -18,6 +17,7 @@ impl<F: ScalarField> AssignedMap<F> {
         self.0.get(witness)
     }
 
+    #[allow(dead_code)]
     pub fn get_index(&self, index: u32) -> Option<&Vec<AssignedValue<F>>> {
         self.0.get(&index.into())
     }

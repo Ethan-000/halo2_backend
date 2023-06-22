@@ -5,7 +5,7 @@ use acvm::{
 
 use pse_halo2wrong::{
     halo2::{
-        circuit::{AssignedCell, Layouter, Value},
+        circuit::{Layouter, Value},
         halo2curves::bn256::Fr,
     },
     RegionCtx,
