@@ -1,5 +1,5 @@
 use acvm::acir::native_types::Witness;
-use halo2_base::{Context, utils::ScalarField, AssignedValue,};
+use halo2_base::{utils::ScalarField, AssignedValue, Context};
 use std::{
     collections::{btree_map, BTreeMap},
     ops::Index,
@@ -39,13 +39,18 @@ impl<F: ScalarField> AssignedMap<F> {
      * Check if a given witness is stored as an assigned value.
      *   - if the witness key exists, return the last assigned value
      *   - otherwise, assign the value, store it, and return it
-     * 
+     *
      * @param ctx - the context for the region the witness would be assigned to
      * @param key - the witness index to check for
      * @param value - the value to assign to the witness if it does not exist
      * @return - the assigned value for the witness
      */
-    pub fn get_or_assign(&mut self, ctx: &mut Context<F>, key: &Witness, value: F) -> AssignedValue<F> {
+    pub fn get_or_assign(
+        &mut self,
+        ctx: &mut Context<F>,
+        key: &Witness,
+        value: F,
+    ) -> AssignedValue<F> {
         if self.contains_key(key) {
             *self.get(key).unwrap().last().unwrap()
         } else {

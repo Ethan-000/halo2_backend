@@ -253,7 +253,6 @@ mod test {
     //     assert_eq!(prover.verify(), Ok(()));
     // }
 
-
     #[test]
     fn test_circuits_native() {
         let test_dirs_names = vec![

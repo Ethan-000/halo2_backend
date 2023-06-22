@@ -1,6 +1,6 @@
 use acvm::acir::native_types::Witness;
 use pse_halo2wrong::{
-    halo2::{arithmetic::Field, circuit::AssignedCell, plonk::Error},
+    halo2::{arithmetic::Field, circuit::AssignedCell},
     RegionCtx,
 };
 use std::{

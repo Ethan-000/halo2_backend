@@ -1,8 +1,5 @@
 use crate::{
-    axiom_halo2::{
-        assigned_map::AssignedMap,
-        halo2_plonk_api::PlonkConfig,
-    },
+    axiom_halo2::{assigned_map::AssignedMap, halo2_plonk_api::PlonkConfig},
     errors::Error,
 };
 use acvm::acir::{
