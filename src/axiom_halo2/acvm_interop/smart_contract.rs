@@ -114,36 +114,7 @@ fn gen_proof<C: Circuit<Fr>>(
     proof
 }
 
-fn gen_evm_verifier(
-    params: &ParamsKZG<Bn256>,
-    vk: &VerifyingKey<G1Affine>,
-    num_instance: Vec<usize>,
-) -> String {
-    let protocol = compile(
-        params,
-        vk,
-        Config::kzg().with_num_instance(num_instance.clone()),
-    );
-    let vk = (params.get_g()[0], params.g2(), params.s_g2()).into();
-
-    let loader = EvmLoader::new::<Fq, Fr>();
-    let protocol = protocol.loaded(&loader);
-    let mut transcript = EvmTranscript::<_, Rc<EvmLoader>, _, _>::new(&loader);
-
-    let instances = transcript.load_instances(num_instance);
-    let proof = PlonkVerifier::read_proof(&vk, &protocol, &instances, &mut transcript).unwrap();
-    PlonkVerifier::verify(&vk, &protocol, &instances, &proof).unwrap();
-    // let mut proof_file = fs::File::open(format!(
-    //     "{}/{}",
-    //     env::current_dir().unwrap().display(),
-    //     "proofs/my_test_proof.proof"
-    // ))
-    // .expect("Failed to open proof file");
-    // let mut proof = String::from("");
-    // // Read proof in as string
-    // proof_file
-    //     .read_to_string(&mut proof)
-    //     .expect("Failed to read proof file");
+fn gen_halo2_circuit_and_witness() -> (acvm::acir::circuit::Circuit, WitnessMap) {
     let mut contents = String::new();
     fs::File::open(format!(
         "{}/target/my_test_circuit.json",
@@ -178,13 +149,39 @@ fn gen_evm_verifier(
     .read_to_end(&mut witness_buffer)
     .unwrap();
 
-    let mut witness_values = WitnessMap::try_from(&witness_buffer[..]).unwrap();
+    let witness = WitnessMap::try_from(&witness_buffer[..]).unwrap();
+    (circuit, witness)
+}
+
+fn gen_evm_verifier(
+    params: &ParamsKZG<Bn256>,
+    vk: &VerifyingKey<G1Affine>,
+    num_instance: Vec<usize>,
+) -> String {
+    let protocol = compile(
+        params,
+        vk,
+        Config::kzg().with_num_instance(num_instance.clone()),
+    );
+    let vk = (params.get_g()[0], params.g2(), params.s_g2()).into();
+
+    let loader = EvmLoader::new::<Fq, Fr>();
+    let protocol = protocol.loaded(&loader);
+    let mut transcript = EvmTranscript::<_, Rc<EvmLoader>, _, _>::new(&loader);
+
+    let instances = transcript.load_instances(num_instance);
+    let proof = PlonkVerifier::read_proof(&vk, &protocol, &instances, &mut transcript).unwrap();
+    PlonkVerifier::verify(&vk, &protocol, &instances, &proof).unwrap();
+
+    let compiled_code = compile_yul(&loader.yul_code());
+
+    // TODO: Testing verifier in rust. Remove after completion
+    let (circuit, witness_values) = gen_halo2_circuit_and_witness();
     let translator = NoirHalo2Translator::<Fr> {
         circuit,
         witness_values,
         _marker: PhantomData::<Fr>,
     };
-    let compiled_code = compile_yul(&loader.yul_code());
     let pk = gen_pk(&params, &translator);
     let gen_proof = gen_proof(&params, &pk, translator.clone(), vec![]);
     evm_verify(compiled_code, vec![], gen_proof);
