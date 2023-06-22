@@ -108,21 +108,25 @@ impl NoirHalo2Translator<Fr> {
         witness: Witness,
         num_bits: u32,
         config: &PlonkConfig,
+        witness_assignments: &mut AssignedMap<Fr>,
     ) {
         let mut ctx = Context::<Fr>::new(false, 0);
 
-        let x = noir_field_to_halo2_field(
-            *self
-                .witness_values
-                .get(&witness)
-                .unwrap_or(&FieldElement::zero()),
+        // assign x or get existing assignnment
+        let x = &witness_assignments.get_or_assign(
+            &mut ctx,
+            &witness,
+            noir_field_to_halo2_field(
+                *self
+                    .witness_values
+                    .get(&witness)
+                    .unwrap_or(&FieldElement::zero()),
+            ),
         );
-
-        let x = ctx.load_witness(x);
 
         config
             .range_chip
-            .range_check(&mut ctx, x, num_bits as usize);
+            .range_check(&mut ctx, *x, num_bits as usize);
     }
 
     pub(crate) fn add_and_constrain(
@@ -131,36 +135,45 @@ impl NoirHalo2Translator<Fr> {
         rhs: Witness,
         output: Witness,
         config: &PlonkConfig,
+        witness_assignments: &mut AssignedMap<Fr>,
     ) {
         let mut ctx = Context::<Fr>::new(false, 0);
-        let lhs_v = noir_field_to_halo2_field(
-            *self
-                .witness_values
-                .get(&lhs)
-                .unwrap_or(&FieldElement::zero()),
+
+        // assign lhs, rhs, output or get existing assignnments
+        let lhs_v = &witness_assignments.get_or_assign(
+            &mut ctx,
+            &lhs,
+            noir_field_to_halo2_field(
+                *self
+                    .witness_values
+                    .get(&lhs)
+                    .unwrap_or(&FieldElement::zero()),
+            ),
+        );
+        let rhs_v = &witness_assignments.get_or_assign(
+            &mut ctx,
+            &rhs,
+            noir_field_to_halo2_field(
+                *self
+                    .witness_values
+                    .get(&rhs)
+                    .unwrap_or(&FieldElement::zero()),
+            ),
+        );
+        let output_v = &witness_assignments.get_or_assign(
+            &mut ctx,
+            &output,
+            noir_field_to_halo2_field(
+                *self
+                    .witness_values
+                    .get(&output)
+                    .unwrap_or(&FieldElement::zero()),
+            ),
         );
 
-        let rhs_v = noir_field_to_halo2_field(
-            *self
-                .witness_values
-                .get(&rhs)
-                .unwrap_or(&FieldElement::zero()),
-        );
+        let and_out = config.gate_chip.and(&mut ctx, *lhs_v, *rhs_v);
 
-        let output_v = noir_field_to_halo2_field(
-            *self
-                .witness_values
-                .get(&output)
-                .unwrap_or(&FieldElement::zero()),
-        );
-
-        let a = ctx.load_witness(lhs_v);
-        let b = ctx.load_witness(rhs_v);
-        let c = ctx.load_witness(output_v);
-
-        let and_out = config.gate_chip.and(&mut ctx, a, b);
-
-        config.gate_chip.is_equal(&mut ctx, c, and_out);
+        config.gate_chip.is_equal(&mut ctx, *output_v, and_out);
     }
 
     pub(crate) fn add_ecdsa_secp256k1_constrain(

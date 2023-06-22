@@ -50,9 +50,12 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                 }
                 Opcode::BlackBoxFuncCall(gadget_call) => {
                     match gadget_call {
-                        BlackBoxFuncCall::RANGE { input } => {
-                            self.add_range_constrain(input.witness, input.num_bits, &config)
-                        }
+                        BlackBoxFuncCall::RANGE { input } => self.add_range_constrain(
+                            input.witness,
+                            input.num_bits,
+                            &config,
+                            &mut witness_assignments,
+                        ),
                         BlackBoxFuncCall::AND { lhs, rhs, output }
                         | BlackBoxFuncCall::XOR { lhs, rhs, output } => {
                             assert_eq!(lhs.num_bits, rhs.num_bits);
@@ -63,6 +66,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                                     rhs.witness,
                                     *output,
                                     &config,
+                                    &mut witness_assignments,
                                 ),
                                 BlackBoxFuncCall::XOR { .. } => {
                                     panic!("xor has not yet been implemented")
