@@ -1,7 +1,7 @@
 use crate::{
     axiom_halo2::{
-        assignment_map::AssignedMap,
-        halo2_plonk_api::{PlonkConfig, StandardPlonk},
+        assigned_map::AssignedMap,
+        halo2_plonk_api::PlonkConfig,
     },
     errors::Error,
 };

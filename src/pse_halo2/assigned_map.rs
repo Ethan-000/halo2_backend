@@ -17,7 +17,7 @@ impl<F: Field> AssignedMap<F> {
         Self(BTreeMap::new())
     }
 
-    pub fn _get(&self, witness: &Witness) -> Option<&Vec<AssignedCell<F, F>>> {
+    pub fn get(&self, witness: &Witness) -> Option<&Vec<AssignedCell<F, F>>> {
         self.0.get(witness)
     }
 

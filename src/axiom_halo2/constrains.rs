@@ -1,6 +1,6 @@
 use crate::{
     axiom_halo2::{
-        assignment_map::AssignedMap,
+        assigned_map::AssignedMap,
         circuit_translator::NoirHalo2Translator,
         halo2_plonk_api::{NoirConstraint, PlonkConfig, PolyTriple, StandardCs},
     },
@@ -13,14 +13,12 @@ use acvm::{
 };
 use halo2_base::{
     gates::{GateInstructions, RangeChip, RangeInstructions},
-    halo2_proofs::{
-        halo2curves::{
-            bn256::Fr,
-            secp256k1::{Fp, Fq, Secp256k1Affine},
-            CurveAffine,
-        },
+    halo2_proofs::halo2curves::{
+        bn256::Fr,
+        secp256k1::{Fp, Fq, Secp256k1Affine},
+        CurveAffine,
     },
-    Context, QuantumCell, AssignedValue,
+    AssignedValue, Context, QuantumCell,
 };
 use halo2_ecc::{
     ecc::{ecdsa::ecdsa_verify_no_pubkey_check, EccChip},
@@ -30,7 +28,6 @@ use halo2_ecc::{
 use std::slice::Iter;
 
 impl NoirHalo2Translator<Fr> {
-
     pub(crate) fn add_arithmetic_constrains(
         &self,
         gate: &Expression,
@@ -48,24 +45,36 @@ impl NoirHalo2Translator<Fr> {
             // mul_add gate: intermediate * right + constant = output
             let mul_term = &gate.mul_terms[0];
 
-            let selector = QuantumCell::Witness(noir_field_to_halo2_field(mul_term.0));
-            let wL = QuantumCell::Witness(noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(&mul_term.1)
-                    .unwrap_or(&FieldElement::zero()),
-            ));
-            let wR = QuantumCell::Witness(noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(&mul_term.2)
-                    .unwrap_or(&FieldElement::zero()),
-            ));
+            // assign terms or get existing assignnments
+            let w_l = &witness_assignments.get_or_assign(
+                &mut ctx,
+                &mul_term.1,
+                noir_field_to_halo2_field(
+                    *self
+                        .witness_values
+                        .get(&mul_term.1)
+                        .unwrap_or(&FieldElement::zero()),
+                ),
+            );
+            let w_r = &witness_assignments.get_or_assign(
+                &mut ctx,
+                &mul_term.2,
+                noir_field_to_halo2_field(
+                    *self
+                        .witness_values
+                        .get(&mul_term.1)
+                        .unwrap_or(&FieldElement::zero()),
+                ),
+            );
 
-            let intermediate = config.gate_chip.mul(&mut ctx, selector, wL);
-            // terms.push(config.gate_chip.mul(&mut ctx, intermediate, wR));
+            // get coefficient/ selector term
+            let coefficient = QuantumCell::Witness(noir_field_to_halo2_field(mul_term.0));
+            // multiply coefficient / selector by left term
+            let intermediate = config.gate_chip.mul(&mut ctx, coefficient, *w_l);
+            // multiply product of coefficient and left term by right term, then add constant term
             let c = QuantumCell::Witness(noir_field_to_halo2_field(gate.q_c));
-            solution = config.gate_chip.mul_add(&mut ctx, intermediate, wR, c);
+
+            solution = config.gate_chip.mul_add(&mut ctx, intermediate, *w_r, c);
         } else {
             // otherwise just assign the constant term
             solution = ctx.load_witness(noir_field_to_halo2_field(gate.q_c));
@@ -74,14 +83,20 @@ impl NoirHalo2Translator<Fr> {
         for term in &gate.linear_combinations {
             // get term selector and witness
             let coefficient = QuantumCell::Witness(noir_field_to_halo2_field(term.0));
-            let variable = QuantumCell::Witness(noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(&term.1)
-                    .unwrap_or(&FieldElement::zero()),
-            ));
+            let variable = &witness_assignments.get_or_assign(
+                &mut ctx,
+                &term.1,
+                noir_field_to_halo2_field(
+                    *self
+                        .witness_values
+                        .get(&term.1)
+                        .unwrap_or(&FieldElement::zero()),
+                ),
+            );
             // multiply to get term value & add to existing solution value
-            solution = config.gate_chip.mul_add(&mut ctx, coefficient, variable, solution);
+            solution = config
+                .gate_chip
+                .mul_add(&mut ctx, coefficient, *variable, solution);
         }
 
         // constrain the solution to the output to be equal to 0
