@@ -137,6 +137,7 @@ fn gen_proof<C: Circuit<Fr>>(
 
 fn evm_verify(deployment_code: Vec<u8>, instances: Vec<Vec<Fr>>, proof: Vec<u8>) {
     let calldata = encode_calldata(&instances, &proof);
+    println!("Calldata: {:?}", hex::encode(&calldata));
     let gas_cost = deploy_and_call(deployment_code, calldata).unwrap();
     dbg!(gas_cost);
 }
@@ -214,7 +215,6 @@ fn gen_evm_verifier(
         _marker: PhantomData::<Fr>,
     };
     let pk = gen_pk(&params, &translator);
-    println!("{:?}", pk);
     let gen_proof = gen_proof(&params, &pk, translator.clone(), vec![vec![]]);
     evm_verify(compile_yul(&loader.yul_code()), vec![vec![]], gen_proof);
 
@@ -242,6 +242,6 @@ impl SmartContract for PseHalo2 {
         )
         .unwrap();
 
-        Ok(gen_evm_verifier(&params, &vk, vec![1]))
+        Ok(gen_evm_verifier(&params, &vk, vec![0]))
     }
 }

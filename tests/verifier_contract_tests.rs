@@ -27,7 +27,7 @@ use {
 use pse_halo2wrong::curves::{bn256::Fr, ff::PrimeField};
 
 const BACKENDS: [&str; 2] = ["axiom_halo2_backend", "pse_halo2_backend"];
-const HALO2_BACKEND: &str = BACKENDS[1];
+const HALO2_BACKEND: &str = BACKENDS[0];
 
 fn encode_calldata<F>(instances: &[Vec<F>], proof: &[u8]) -> Vec<u8>
 where
@@ -111,7 +111,8 @@ fn test_verifier_contract() {
     // Generate verifier contract
     nargo_codegen_verifier(&test_program_dir).unwrap();
 
-    let calldata = encode_calldata(&vec![instances], &proof.as_bytes());
-    // println!("{}", hex::encode(calldata));
+    let instance: Vec<Fr> = vec![];
+
+    let calldata = encode_calldata(&vec![instance], &proof.as_bytes());
     // let deployment_code = gen_evm_verifier(&params, pk.get_vk(), vec![1]);
 }
