@@ -1,5 +1,5 @@
 use crate::{
-    axiom_halo2::halo2_plonk_api::{PlonkConfig, StandardPlonk},
+    axiom_halo2::{assigned_map::AssignedMap, halo2_plonk_api::PlonkConfig},
     errors::Error,
 };
 use acvm::acir::{
@@ -38,19 +38,24 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
     fn synthesize(
         &self,
         config: Self::Config,
-        mut layouter: impl halo2_base::halo2_proofs::circuit::Layouter<Fr>,
+        _layouter: impl halo2_base::halo2_proofs::circuit::Layouter<Fr>,
     ) -> Result<(), halo2_base::halo2_proofs::plonk::Error> {
-        let cs: StandardPlonk<Fr> = StandardPlonk::new(config.clone());
+        let mut witness_assignments = AssignedMap::<Fr>::new();
+
+        // let cs: StandardPlonk<Fr> = StandardPlonk::new(config.clone());
         for gate in self.circuit.opcodes.iter() {
             match gate {
                 Opcode::Arithmetic(expression) => {
-                    self.add_arithmetic_constrains(expression, &cs, &mut layouter)
+                    self.add_arithmetic_constrains(expression, &config, &mut witness_assignments);
                 }
                 Opcode::BlackBoxFuncCall(gadget_call) => {
                     match gadget_call {
-                        BlackBoxFuncCall::RANGE { input } => {
-                            self.add_range_constrain(input.witness, input.num_bits, &config)
-                        }
+                        BlackBoxFuncCall::RANGE { input } => self.add_range_constrain(
+                            input.witness,
+                            input.num_bits,
+                            &config,
+                            &mut witness_assignments,
+                        ),
                         BlackBoxFuncCall::AND { lhs, rhs, output }
                         | BlackBoxFuncCall::XOR { lhs, rhs, output } => {
                             assert_eq!(lhs.num_bits, rhs.num_bits);
@@ -61,6 +66,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                                     rhs.witness,
                                     *output,
                                     &config,
+                                    &mut witness_assignments,
                                 ),
                                 BlackBoxFuncCall::XOR { .. } => {
                                     panic!("xor has not yet been implemented")
