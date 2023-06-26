@@ -95,7 +95,7 @@ jobs:
         with:
           cache-on-failure: true
 
-      - name: Install latest nextest release
+      - name: Install latest wasm-pack release
         uses: taiki-e/install-action@wasm-pack
 
       - name: build wasm
