@@ -77,5 +77,5 @@ jobs:
       - name: Install latest nextest release
         uses: taiki-e/install-action@nextest
 
-      - name: run axiom test
+      - name: run pse test
         run: cargo nextest run --package noir_halo2_backend_pse --test-threads=1
