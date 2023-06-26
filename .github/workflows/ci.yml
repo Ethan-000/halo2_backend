@@ -36,6 +36,7 @@ jobs:
         uses: actions-rs/clippy-check@v1
         with:
           args: --all --all-features
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   test:
     name: test
