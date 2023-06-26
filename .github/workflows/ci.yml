@@ -38,8 +38,8 @@ jobs:
           args: --all --all-features
           token: ${{ secrets.GITHUB_TOKEN }}
 
-  test:
-    name: test
+  test_axiom:
+    name: test axiom
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
@@ -57,7 +57,25 @@ jobs:
         uses: taiki-e/install-action@nextest
 
       - name: run axiom test
-        run: cargo nextest run --package noir_halo2_backend_axiom
+        run: cargo nextest run --package noir_halo2_backend_axiom -- --test-threads=1
 
-      - name: run pse test
-        run: cargo nextest run --package noir_halo2_backend_pse
+  test_pse:
+    name: test pse
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2022-10-28
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+
+      - name: Install latest nextest release
+        uses: taiki-e/install-action@nextest
+
+      - name: run axiom test
+        run: cargo nextest run --package noir_halo2_backend_pse -- --test-threads=1
