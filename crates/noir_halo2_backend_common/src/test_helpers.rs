@@ -130,9 +130,10 @@ pub fn assert_nargo_cmd_works(cmd_name: &str, test_test_program_dir: &PathBuf) {
 }
 
 pub fn install_nargo(backend: &'static str) {
-    if std::fs::symlink_metadata("./noir").is_err() {
+    if std::fs::symlink_metadata("../noir").is_err() {
         // Clone noir into repo
         Command::new("git")
+            .current_dir(fs::canonicalize("../").unwrap())
             .arg("clone")
             .arg("https://github.com/Ethan-000/noir")
             .arg("--branch")
@@ -145,7 +146,7 @@ pub fn install_nargo(backend: &'static str) {
     }
     // Install specified backend into noir
     Command::new("cargo")
-        .current_dir(fs::canonicalize("./noir/crates/nargo_cli").unwrap())
+        .current_dir(fs::canonicalize("../noir/crates/nargo_cli").unwrap())
         .arg("install")
         .arg("--path")
         .arg(".")
