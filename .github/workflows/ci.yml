@@ -57,7 +57,7 @@ jobs:
         uses: taiki-e/install-action@nextest
 
       - name: run axiom test
-        run: cargo nextest run --package noir_halo2_backend_axiom -- --test-threads=1
+        run: cargo nextest run --package noir_halo2_backend_axiom --test-threads=1
 
   test_pse:
     name: test pse
@@ -78,4 +78,4 @@ jobs:
         uses: taiki-e/install-action@nextest
 
       - name: run axiom test
-        run: cargo nextest run --package noir_halo2_backend_pse -- --test-threads=1
+        run: cargo nextest run --package noir_halo2_backend_pse --test-threads=1
