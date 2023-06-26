@@ -5,7 +5,7 @@ examples/9
 .vscode
 node_modules
 pkg/
-/noir
+**/noir
 
 # Nargo output
 *.proof
