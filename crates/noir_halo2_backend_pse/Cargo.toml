@@ -14,9 +14,9 @@ pse_halo2wrong = { git = "https://github.com/privacy-scaling-explorations/halo2w
 pse_maingate = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "maingate", tag = "v2023_04_20", features = [
     "circuit-params",
 ] }
-pse_ecdsa = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "ecdsa", tag = "v2023_04_20", features = [
-    "circuit-params",
-] }
+# pse_ecdsa = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "ecdsa", tag = "v2023_04_20", features = [
+#     "circuit-params",
+# ] }
 pse_ecc = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "ecc", tag = "v2023_04_20", features = [
     "circuit-params",
 ] }

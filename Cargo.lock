@@ -663,19 +663,6 @@ dependencies = [
 
 [[package]]
 name = "ecdsa"
-version = "0.1.0"
-source = "git+https://github.com/privacy-scaling-explorations/halo2wrong?tag=v2023_04_20#f72db265aa3cebe297c9b9816e940d0e1d400886"
-dependencies = [
- "ecc",
- "num-bigint",
- "num-integer",
- "num-traits",
- "rand",
- "subtle",
-]
-
-[[package]]
-name = "ecdsa"
 version = "0.14.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "413301934810f597c1d19ca71c8710e99a3f1ba28a0d2ebc01551a2daeea3c5c"
@@ -1384,7 +1371,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72c1e0b51e7ec0a97369623508396067a486bd0cbed95a2659a4b863d28cfc8b"
 dependencies = [
  "cfg-if",
- "ecdsa 0.14.8",
+ "ecdsa",
  "elliptic-curve",
  "sha2",
 ]
@@ -1522,7 +1509,6 @@ dependencies = [
  "acvm",
  "criterion",
  "ecc",
- "ecdsa 0.1.0",
  "halo2wrong",
  "maingate",
  "noir_halo2_backend_common",
