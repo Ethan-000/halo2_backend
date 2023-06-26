@@ -41,3 +41,10 @@ harness = false
 [[bench]]
 name = "bench_noir_halo2_pse_verify"
 harness = false
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+console_error_panic_hook = "0.1.7"
+getrandom = { version = "0.2", features = ["js"] }
+serde-wasm-bindgen = "0.4"
+tokio = { version = "1.28.1", features = ["rt"] }
+wasm-bindgen = { version = "0.2.81", features = ["serde-serialize"] }
