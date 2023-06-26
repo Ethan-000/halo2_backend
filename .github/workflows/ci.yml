@@ -98,5 +98,5 @@ jobs:
       - name: Install latest nextest release
         uses: taiki-e/install-action@wasm-pack
 
-      - name: build wasm 
-        run : wasm-pack build "crates/noir_halo2_backend_pse
+      - name: build wasm
+        run: wasm-pack build "crates/noir_halo2_backend_pse"
