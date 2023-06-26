@@ -1,68 +1,6 @@
-use acvm::acir::{circuit::Circuit, native_types::WitnessMap};
-use noir_halo2_backend_common::test_helpers::install_nargo;
-use serde_json::Value;
-use std::{fs::File, io::Read};
-
-/**
- * Given a test_program circuit program name, build the circuit and witness artifacts & return the deserialized objects
- *
- * @param program - program name for circuit to be compiled and solved
- * @return - the deserialized ACIR and solved witness (given the saved Prover.toml)
- */
-#[allow(dead_code)]
-pub fn build_artifacts(program: &'static str) -> (Circuit, WitnessMap) {
-    install_nargo("axiom_halo2_backend");
-    // format path to test program
-    let path = format!("../noir_halo2_backend_common/test_programs/{program}/");
-
-    // build circuit bytecode
-    _ = std::process::Command::new("nargo")
-        .current_dir(&path)
-        .arg("compile")
-        .arg("circuit")
-        .spawn()
-        .unwrap()
-        .wait_with_output();
-    // generate circuit witness
-    _ = std::process::Command::new("nargo")
-        .current_dir(&path)
-        .arg("execute")
-        .arg("witness")
-        .spawn()
-        .unwrap()
-        .wait_with_output();
-
-    // load circuit
-    let mut contents = String::new();
-    File::open(format!("{path}target/circuit.json"))
-        .unwrap()
-        .read_to_string(&mut contents)
-        .unwrap();
-    let json: Value = serde_json::from_str(&contents).unwrap();
-    let bytecode: Vec<u8> = json
-        .get("bytecode")
-        .and_then(Value::as_array)
-        .unwrap()
-        .iter()
-        .filter_map(|v| v.as_u64().map(|n| n as u8))
-        .collect();
-    let circuit = Circuit::read(&*bytecode).unwrap();
-
-    // load witness
-    let mut witness_buffer = Vec::new();
-    File::open(format!("{path}target/witness.tr"))
-        .unwrap()
-        .read_to_end(&mut witness_buffer)
-        .unwrap();
-    let witness = WitnessMap::try_from(&witness_buffer[..]).unwrap();
-
-    (circuit, witness)
-}
-
 #[cfg(test)]
 mod test {
     // put in axiom folder to avoid publishing mods
-    use super::*;
     use crate::{circuit_translator::NoirHalo2Translator, dimension_measure::DimensionMeasurement};
     // use acvm::{acir::native_types::Witness, FieldElement};
     // use halo2_base::halo2_proofs::{
@@ -71,6 +9,7 @@ mod test {
     //     plonk::Any,
     // };
     use halo2_base::halo2_proofs::{dev::MockProver, halo2curves::bn256::Fr};
+    use noir_halo2_backend_common::test_helpers::build_artifacts;
     use std::marker::PhantomData;
 
     // #[test]
@@ -218,7 +157,7 @@ mod test {
         ];
         for program in test_dirs_names {
             // get circuit
-            let (circuit, witness_values) = build_artifacts(program);
+            let (circuit, witness_values) = build_artifacts(program, "axiom_halo2_backend");
 
             // instantiate halo2 circuit
             let translator = NoirHalo2Translator::<Fr> {

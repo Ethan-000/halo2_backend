@@ -1511,6 +1511,7 @@ dependencies = [
  "bincode",
  "bytesize",
  "reqwest",
+ "serde_json",
  "thiserror",
 ]
 

@@ -1,10 +1,13 @@
 #![allow(dead_code)]
 use std::{
-    fs,
-    io::Result,
+    fs::{self, File},
+    io::{Read, Result},
     path::PathBuf,
     process::{Command, Output},
 };
+
+use acvm::acir::{circuit::Circuit, native_types::WitnessMap};
+use serde_json::Value;
 
 pub fn configure_test_dirs() -> Vec<PathBuf> {
     let test_dirs_names = vec![
@@ -127,17 +130,19 @@ pub fn assert_nargo_cmd_works(cmd_name: &str, test_test_program_dir: &PathBuf) {
 }
 
 pub fn install_nargo(backend: &'static str) {
-    // Clone noir into repo
-    Command::new("git")
-        .arg("clone")
-        .arg("https://github.com/Ethan-000/noir")
-        .arg("--branch")
-        .arg("add_halo2_backend")
-        .spawn()
-        .unwrap()
-        .wait()
-        .unwrap();
-    format!("\nInstalling {backend}. This may take a few moments.",);
+    if std::fs::symlink_metadata(fs::canonicalize("./noir").unwrap()).is_err() {
+        // Clone noir into repo
+        Command::new("git")
+            .arg("clone")
+            .arg("https://github.com/Ethan-000/noir")
+            .arg("--branch")
+            .arg("add_halo2_backend")
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap();
+        format!("\nInstalling {backend}. This may take a few moments.",);
+    }
     // Install specified backend into noir
     Command::new("cargo")
         .current_dir(fs::canonicalize("./noir/crates/nargo_cli").unwrap())
@@ -174,4 +179,66 @@ pub fn run_nargo_prove(test_program: PathBuf) {
 
 pub fn run_nargo_verify(test_program: PathBuf) {
     assert_nargo_cmd_works("verify", &test_program);
+}
+
+/**
+ * Given a test_program circuit program name, build the circuit and witness artifacts & return the deserialized objects
+ *
+ * @param program - program name for circuit to be compiled and solved
+ * @return - the deserialized ACIR and solved witness (given the saved Prover.toml)
+ */
+#[allow(dead_code)]
+pub fn build_artifacts(program: &'static str, backend: &'static str) -> (Circuit, WitnessMap) {
+    install_nargo(backend);
+    // format path to test program
+    let path = std::fs::canonicalize(format!(
+        "../noir_halo2_backend_common/test_programs/{program}"
+    ))
+    .unwrap();
+    let path = path.to_str().unwrap();
+
+    println!("{:?}", path);
+
+    // build circuit bytecode
+    _ = std::process::Command::new("nargo")
+        .current_dir(&path)
+        .arg("compile")
+        .arg("circuit")
+        .spawn()
+        .unwrap()
+        .wait_with_output();
+    // generate circuit witness
+    _ = std::process::Command::new("nargo")
+        .current_dir(&path)
+        .arg("execute")
+        .arg("witness")
+        .spawn()
+        .unwrap()
+        .wait_with_output();
+
+    // load circuit
+    let mut contents = String::new();
+    File::open(format!("{path}/target/circuit.json"))
+        .unwrap()
+        .read_to_string(&mut contents)
+        .unwrap();
+    let json: Value = serde_json::from_str(&contents).unwrap();
+    let bytecode: Vec<u8> = json
+        .get("bytecode")
+        .and_then(Value::as_array)
+        .unwrap()
+        .iter()
+        .filter_map(|v| v.as_u64().map(|n| n as u8))
+        .collect();
+    let circuit = Circuit::read(&*bytecode).unwrap();
+
+    // load witness
+    let mut witness_buffer = Vec::new();
+    File::open(format!("{path}/target/witness.tr"))
+        .unwrap()
+        .read_to_end(&mut witness_buffer)
+        .unwrap();
+    let witness = WitnessMap::try_from(&witness_buffer[..]).unwrap();
+
+    (circuit, witness)
 }
