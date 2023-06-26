@@ -197,11 +197,9 @@ pub fn build_artifacts(program: &'static str, backend: &'static str) -> (Circuit
     .unwrap();
     let path = path.to_str().unwrap();
 
-    println!("{:?}", path);
-
     // build circuit bytecode
     _ = std::process::Command::new("nargo")
-        .current_dir(&path)
+        .current_dir(path)
         .arg("compile")
         .arg("circuit")
         .spawn()
@@ -209,7 +207,7 @@ pub fn build_artifacts(program: &'static str, backend: &'static str) -> (Circuit
         .wait_with_output();
     // generate circuit witness
     _ = std::process::Command::new("nargo")
-        .current_dir(&path)
+        .current_dir(path)
         .arg("execute")
         .arg("witness")
         .spawn()
