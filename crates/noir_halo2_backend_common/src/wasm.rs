@@ -1,3 +1,4 @@
+#[cfg(target_family = "wasm")]
 #[macro_export]
 macro_rules! impl_noir_halo2_backend_wasm_bindgen {
     (
