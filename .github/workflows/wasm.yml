@@ -1,0 +1,32 @@
+name: wasm
+
+on: [push, pull_request]
+
+env:
+  RUSTFLAGS: -D warnings
+  CARGO_TERM_COLOR: always
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  wasm_build:
+    name: build pse wasm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2022-10-28
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+
+      - name: Install latest wasm-pack release
+        uses: taiki-e/install-action@wasm-pack
+
+      - name: build wasm
+        run: wasm-pack build "crates/noir_halo2_backend_pse"

@@ -48,7 +48,6 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly-2022-10-28
-          components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true
@@ -69,7 +68,6 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly-2022-10-28
-          components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true
@@ -90,7 +88,6 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly-2022-10-28
-          components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true
