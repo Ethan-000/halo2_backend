@@ -48,7 +48,6 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly-2022-10-28
-          components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true
@@ -69,7 +68,6 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly-2022-10-28
-          components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
         with:
           cache-on-failure: true
@@ -79,24 +77,3 @@ jobs:
 
       - name: run pse test
         run: cargo nextest run --package noir_halo2_backend_pse --test-threads=1
-
-  wasm_build:
-    name: build pse wasm
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v3
-      - name: Install toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: nightly-2022-10-28
-          components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v2
-        with:
-          cache-on-failure: true
-
-      - name: Install latest wasm-pack release
-        uses: taiki-e/install-action@wasm-pack
-
-      - name: build wasm
-        run: wasm-pack build "crates/noir_halo2_backend_pse"

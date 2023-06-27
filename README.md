@@ -17,41 +17,33 @@ This crate will not be possible without
 ## Installtion
 
 ```text
-git clone https://github.com/Ethan-000/noir
+git clone https://github.com/Ethan-000/noir --branch demo-0.1.2
 ```
 
 ```text
 cd noir
 ```
 
-```text
-git checkout demo
-```
-
-```text
-cd crates/nargo_cli
-```
-
 To install pse's halo2 as backend:
 
 ```text
-cargo install --path . --locked --features pse_halo2_backend --no-default-features
+cargo install --path crates/nargo_cli --locked --features pse_halo2_backend --no-default-features
 ```
 
 To install axioms's halo2 as backend:
 
 ```text
-cargo install --path . --locked --features axiom_halo2_backend --no-default-features
+cargo install --path crates/nargo_cli --locked --features axiom_halo2_backend --no-default-features
 ```
 
 Notice that axiom's fork is built on pse's fork and should be similar.
 
 ## Examples
 
-cd to the `examples` folder of this crate
+cd to the `crates/noir_halo2_backend_common/test_programs` folder of this crate and choose one of the tests/examples eg. 3_add
 
 ```text
-cd add
+cd 3_add
 ```
 
 to generate proof run
@@ -64,6 +56,12 @@ to verify proof run
 
 ```text
 nargo verify add
+```
+
+to generates a solidity verifier smart contract for the program run
+
+```text
+nargo codegen-verifier
 ```
 
 ## Features
