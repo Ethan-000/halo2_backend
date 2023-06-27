@@ -5,6 +5,9 @@ edition.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [dependencies]
 acvm.workspace = true
 noir_halo2_backend_common.workspace = true
@@ -27,3 +30,11 @@ harness = false
 [[bench]]
 name = "bench_noir_halo2_axiom_verify"
 harness = false
+
+# wasm not supported because halo2-base uses jemallocator
+[target.'cfg(target_family = "wasm")'.dependencies]
+console_error_panic_hook = "0.1.7"
+getrandom = { version = "0.2", features = ["js"] }
+serde-wasm-bindgen = "0.5.0"
+tokio = { version = "1.28.1", features = ["rt"] }
+wasm-bindgen = { version = "0.2.81", features = ["serde-serialize"] }
