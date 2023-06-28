@@ -184,7 +184,7 @@ fn gen_evm_verifier(
     };
     let pk = gen_pk(&params, &translator);
     let gen_proof = gen_proof(&params, &pk, translator.clone(), vec![]);
-    evm_verify(compiled_code, vec![vec![]], gen_proof);
+    evm_verify(compiled_code, vec![], gen_proof);
 
     loader.yul_code()
 }
