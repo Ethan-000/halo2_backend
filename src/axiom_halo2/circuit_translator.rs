@@ -1,8 +1,5 @@
 use crate::{
-    axiom_halo2::{
-        assignment_map::AssignedMap,
-        halo2_plonk_api::{PlonkConfig, StandardPlonk},
-    },
+    axiom_halo2::{assigned_map::AssignedMap, halo2_plonk_api::PlonkConfig},
     errors::Error,
 };
 use acvm::acir::{
@@ -41,7 +38,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
     fn synthesize(
         &self,
         config: Self::Config,
-        mut layouter: impl halo2_base::halo2_proofs::circuit::Layouter<Fr>,
+        _layouter: impl halo2_base::halo2_proofs::circuit::Layouter<Fr>,
     ) -> Result<(), halo2_base::halo2_proofs::plonk::Error> {
         let mut witness_assignments = AssignedMap::<Fr>::new();
 
@@ -53,9 +50,12 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                 }
                 Opcode::BlackBoxFuncCall(gadget_call) => {
                     match gadget_call {
-                        BlackBoxFuncCall::RANGE { input } => {
-                            self.add_range_constrain(input.witness, input.num_bits, &config)
-                        }
+                        BlackBoxFuncCall::RANGE { input } => self.add_range_constrain(
+                            input.witness,
+                            input.num_bits,
+                            &config,
+                            &mut witness_assignments,
+                        ),
                         BlackBoxFuncCall::AND { lhs, rhs, output }
                         | BlackBoxFuncCall::XOR { lhs, rhs, output } => {
                             assert_eq!(lhs.num_bits, rhs.num_bits);
@@ -66,6 +66,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                                     rhs.witness,
                                     *output,
                                     &config,
+                                    &mut witness_assignments,
                                 ),
                                 BlackBoxFuncCall::XOR { .. } => {
                                     panic!("xor has not yet been implemented")
@@ -186,7 +187,6 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                     todo!()
                 }
                 Opcode::Brillig(_) => todo!(),
-                _ => (), // all opcodes not in this map already assigned in previous map
             }
         }
         Ok(())

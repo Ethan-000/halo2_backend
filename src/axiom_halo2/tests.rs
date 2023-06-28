@@ -95,12 +95,13 @@ mod test {
         axiom_halo2::circuit_translator::NoirHalo2Translator,
         dimension_measure::DimensionMeasurement,
     };
-    use acvm::{acir::native_types::Witness, FieldElement};
-    use halo2_base::halo2_proofs::{
-        dev::{FailureLocation, MockProver, VerifyFailure},
-        halo2curves::bn256::Fr,
-        plonk::Any,
-    };
+    // use acvm::{acir::native_types::Witness, FieldElement};
+    // use halo2_base::halo2_proofs::{
+    //     dev::{FailureLocation, MockProver, VerifyFailure},
+    //     halo2curves::bn256::Fr,
+    //     plonk::Any,
+    // };
+    use halo2_base::halo2_proofs::{dev::MockProver, halo2curves::bn256::Fr};
     use std::marker::PhantomData;
 
     // #[test]
@@ -233,26 +234,6 @@ mod test {
     //     let prover = MockProver::run(dimension.k(), &translator, vec![instance]).unwrap();
     //     assert_eq!(prover.verify(), Ok(()));
     // }
-
-    // #[test]
-    // fn test_add_circuit_success() {
-    //     // get circuit
-    //     let (circuit, witness_values) = build_artifacts("3_add");
-    //     // instantiate halo2 circuit
-    //     let translator = NoirHalo2Translator::<Fr> {
-    //         circuit,
-    //         witness_values,
-    //         _marker: PhantomData::<Fr>,
-    //     };
-    //     let dimension = DimensionMeasurement::measure(&translator).unwrap();
-
-    //     // instance value (known to be equal to 7)
-    //     // let instance = vec![Fr::from_raw([7u64, 0, 0, 0])];
-    //     // run mock prover expecting success
-    //     let prover = MockProver::run(dimension.k(), &translator, vec![]).unwrap();
-    //     assert_eq!(prover.verify(), Ok(()));
-    // }
-
 
     #[test]
     fn test_circuits_native() {

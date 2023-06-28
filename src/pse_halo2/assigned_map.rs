@@ -1,6 +1,6 @@
 use acvm::acir::native_types::Witness;
 use pse_halo2wrong::{
-    halo2::{arithmetic::Field, circuit::AssignedCell, plonk::Error},
+    halo2::{arithmetic::Field, circuit::AssignedCell},
     RegionCtx,
 };
 use std::{
@@ -8,7 +8,6 @@ use std::{
     ops::Index,
 };
 
-// TODO: move to src/utils.rs
 #[derive(Debug, Clone, Default)]
 pub struct AssignedMap<F: Field>(BTreeMap<Witness, Vec<AssignedCell<F, F>>>);
 
@@ -17,7 +16,8 @@ impl<F: Field> AssignedMap<F> {
         Self(BTreeMap::new())
     }
 
-    pub fn _get(&self, witness: &Witness) -> Option<&Vec<AssignedCell<F, F>>> {
+    #[allow(dead_code)]
+    pub fn get(&self, witness: &Witness) -> Option<&Vec<AssignedCell<F, F>>> {
         self.0.get(witness)
     }
 
