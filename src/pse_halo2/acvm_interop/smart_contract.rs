@@ -17,6 +17,7 @@ use crate::errors::BackendError;
 use crate::pse_halo2::circuit_translator::NoirHalo2Translator;
 use crate::pse_halo2::halo2_plonk_api::OpcodeFlags;
 use crate::pse_halo2::PseHalo2;
+
 type PlonkVerifier = verifier::plonk::PlonkVerifier<KzgAs<Bn256, Gwc19>>;
 
 /// Generate the evm verifier of the circuit as Yul code
@@ -64,6 +65,6 @@ impl SmartContract for PseHalo2 {
         )
         .unwrap();
 
-        Ok(gen_evm_verifier(&params, &vk, vec![1]))
+        Ok(gen_evm_verifier(&params, &vk, vec![0]))
     }
 }

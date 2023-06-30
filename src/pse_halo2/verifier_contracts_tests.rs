@@ -1,10 +1,12 @@
 use acvm::acir::native_types::WitnessMap;
 use itertools::Itertools;
 use pse_halo2wrong::{
-    curves::bn256::{Bn256, Fr, G1Affine},
+    curves::bn256::{Bn256, Fq, Fr, G1Affine},
     halo2::{
         dev::MockProver,
-        plonk::{create_proof, keygen_pk, keygen_vk, verify_proof, Circuit, ProvingKey},
+        plonk::{
+            create_proof, keygen_pk, keygen_vk, verify_proof, Circuit, ProvingKey, VerifyingKey,
+        },
         poly::{
             commitment::{Params, ParamsProver},
             kzg::{
@@ -18,7 +20,10 @@ use pse_halo2wrong::{
     },
 };
 use pse_snark_verifier::{
-    loader::evm::encode_calldata, system::halo2::transcript::evm::EvmTranscript,
+    loader::evm::{encode_calldata, EvmLoader},
+    pcs::kzg::{Gwc19, KzgAs},
+    system::halo2::{compile, transcript::evm::EvmTranscript, Config},
+    verifier::{self, SnarkVerifier},
 };
 use rand::rngs::OsRng;
 // TODO: Remove after verifier contract is working
@@ -27,7 +32,9 @@ use revm::{
     InMemoryDB, EVM,
 };
 use serde_json::Value;
-use std::{env, fs::File, io::Read};
+use std::{env, fs::File, io::Read, rc::Rc};
+
+type PlonkVerifier = verifier::plonk::PlonkVerifier<KzgAs<Bn256, Gwc19>>;
 
 pub fn deploy_and_call(deployment_code: Vec<u8>, calldata: Vec<u8>) -> Result<u64, String> {
     let mut evm = EVM {
@@ -84,20 +91,32 @@ pub fn deploy_and_call(deployment_code: Vec<u8>, calldata: Vec<u8>) -> Result<u6
 
 fn evm_verify(deployment_code: Vec<u8>, instances: Vec<Vec<Fr>>, proof: Vec<u8>) {
     let calldata = encode_calldata(&instances, &proof);
-    println!("Calldata: {:?}", hex::encode(&calldata));
+    println!("{:?}", hex::encode(&calldata));
     let gas_cost = deploy_and_call(deployment_code, calldata).unwrap();
     dbg!(gas_cost);
 }
 
-fn gen_halo2_circuit_and_witness() -> (acvm::acir::circuit::Circuit, WitnessMap) {
+fn gen_halo2_circuit_and_witness(test: &str) -> (acvm::acir::circuit::Circuit, WitnessMap) {
     let mut contents = String::new();
-    File::open(format!(
-        "{}/target/my_test_circuit.json",
-        env::current_dir().unwrap().display()
-    ))
-    .unwrap()
-    .read_to_string(&mut contents)
-    .unwrap();
+    let path = format!(
+        "{}/tests/test_programs/{}",
+        env::current_dir().unwrap().display(),
+        test
+    );
+    // Compile
+    _ = std::process::Command::new("nargo")
+        .current_dir(&path)
+        .arg("compile")
+        .arg("my_test_circuit")
+        .spawn()
+        .unwrap()
+        .wait_with_output();
+
+    // Read JSON circuit representation
+    File::open(format!("{}/target/my_test_circuit.json", path))
+        .unwrap()
+        .read_to_string(&mut contents)
+        .unwrap();
     let json: Value = serde_json::from_str(&contents).unwrap();
     let bytecode: Vec<u8> = json
         .get("bytecode")
@@ -107,22 +126,36 @@ fn gen_halo2_circuit_and_witness() -> (acvm::acir::circuit::Circuit, WitnessMap)
         .filter_map(|v| v.as_u64().map(|n| n as u8))
         .collect();
     let circuit = acvm::acir::circuit::Circuit::read(&*bytecode).unwrap();
+    // Generate witness.tr file
     _ = std::process::Command::new("nargo")
-        .current_dir(&env::current_dir().unwrap())
+        .current_dir(&path)
         .arg("execute")
         .arg("witness")
         .spawn()
         .unwrap()
         .wait_with_output();
 
+    _ = std::process::Command::new("nargo")
+        .current_dir(&path)
+        .arg("prove")
+        .arg("my_test_proof")
+        .spawn()
+        .unwrap()
+        .wait_with_output();
+
+    // Generate verifier contract
+    _ = std::process::Command::new("nargo")
+        .current_dir(&path)
+        .arg("codegen-verifier")
+        .spawn()
+        .unwrap()
+        .wait_with_output();
+
     let mut witness_buffer = Vec::new();
-    File::open(format!(
-        "{}/target/witness.tr",
-        env::current_dir().unwrap().display()
-    ))
-    .unwrap()
-    .read_to_end(&mut witness_buffer)
-    .unwrap();
+    File::open(format!("{}/target/witness.tr", &path))
+        .unwrap()
+        .read_to_end(&mut witness_buffer)
+        .unwrap();
 
     let witness = WitnessMap::try_from(&witness_buffer[..]).unwrap();
     (circuit, witness)
@@ -179,6 +212,29 @@ fn gen_proof<C: Circuit<Fr>>(
     proof
 }
 
+fn gen_evm_verifier(
+    params: &ParamsKZG<Bn256>,
+    vk: &VerifyingKey<G1Affine>,
+    num_instance: Vec<usize>,
+) -> String {
+    let protocol = compile(
+        params,
+        vk,
+        Config::kzg().with_num_instance(num_instance.clone()),
+    );
+    let vk = (params.get_g()[0], params.g2(), params.s_g2()).into();
+
+    let loader = EvmLoader::new::<Fq, Fr>();
+    let protocol = protocol.loaded(&loader);
+    let mut transcript = EvmTranscript::<_, Rc<EvmLoader>, _, _>::new(&loader);
+
+    let instances = transcript.load_instances(num_instance);
+    let proof = PlonkVerifier::read_proof(&vk, &protocol, &instances, &mut transcript).unwrap();
+    PlonkVerifier::verify(&vk, &protocol, &instances, &proof).unwrap();
+
+    loader.yul_code()
+}
+
 #[cfg(feature = "pse_halo2")]
 #[cfg(test)]
 mod test {
@@ -186,12 +242,18 @@ mod test {
     use crate::errors::BackendError;
     use crate::pse_halo2::halo2_params::constuct_halo2_params_from_aztec_crs;
     type Error = BackendError;
-    use std::marker::PhantomData;
-
+    use crate::pse_halo2::circuit_translator::NoirHalo2Translator;
+    use ethers::{
+        abi::{self, AbiEncode, AbiType},
+        prelude::{ContractDeployer, ContractFactory, SignerMiddleware},
+        providers::Provider,
+        signers::LocalWallet,
+    };
     use pse_halo2wrong::{curves::bn256::Fq, halo2::SerdeFormat};
     use pse_snark_verifier::loader::evm::{compile_yul, EvmLoader};
+    use std::{fs::read_to_string, marker::PhantomData, sync::Arc};
 
-    use crate::pse_halo2::circuit_translator::NoirHalo2Translator;
+    use ethers_solc::Solc;
 
     async fn generate_crs(translator: NoirHalo2Translator<Fr>) -> Result<Vec<u8>, Error> {
         let mut common_reference_string = Vec::new();
@@ -205,23 +267,42 @@ mod test {
         Ok(common_reference_string)
     }
 
-    #[cfg(test)]
+    #[tokio::test]
     async fn test_pse_verifier() {
-        let (circuit, witness_values) = gen_halo2_circuit_and_witness();
+        let (circuit, witness_values) = gen_halo2_circuit_and_witness("1_mul");
         let translator = NoirHalo2Translator::<Fr> {
             circuit,
             witness_values,
             _marker: PhantomData::<Fr>,
         };
-        let mut common_reference_string = generate_crs(translator.clone()).await.unwrap();
+        let common_reference_string = generate_crs(translator.clone()).await.unwrap();
         let params = ParamsKZG::<Bn256>::read_custom(
             &mut common_reference_string.as_slice(),
             SerdeFormat::RawBytes,
         )
         .unwrap();
-        let loader = EvmLoader::new::<Fq, Fr>();
         let pk = gen_pk(&params, &translator);
+
+        let verifier_contract = gen_evm_verifier(&params, pk.get_vk(), vec![0]);
+        let proof_path = format!(
+            "{}/tests/test_programs/{}",
+            env::current_dir().unwrap().display(),
+            "1_mul/proofs/my_test_proof.proof"
+        );
+        let proof = read_to_string(proof_path).unwrap();
+
+        let contract_path = format!(
+            "{}/tests/test_programs/{}",
+            env::current_dir().unwrap().display(),
+            "1_mul/contract/plonk_vk.sol"
+        );
+
+        let yul_code = read_to_string(contract_path).unwrap();
+        let deployment_code = compile_yul(&yul_code);
+
         let gen_proof = gen_proof(&params, &pk, translator.clone(), vec![vec![]]);
-        evm_verify(compile_yul(&loader.yul_code()), vec![vec![]], gen_proof);
+        evm_verify(deployment_code, vec![vec![]], proof.as_bytes().to_vec());
+
+        // evm_verify(deployment_code, vec![], proof.as_bytes().to_vec());
     }
 }

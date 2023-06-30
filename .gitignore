@@ -6,6 +6,7 @@ examples/9
 node_modules
 pkg/
 /noir
+.env
 
 # Nargo output
 *.proof
