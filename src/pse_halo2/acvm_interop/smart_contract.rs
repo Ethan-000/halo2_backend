@@ -65,6 +65,6 @@ impl SmartContract for PseHalo2 {
         )
         .unwrap();
 
-        Ok(gen_evm_verifier(&params, &vk, vec![0]))
+        Ok(gen_evm_verifier(&params, &vk, vec![1]))
     }
 }

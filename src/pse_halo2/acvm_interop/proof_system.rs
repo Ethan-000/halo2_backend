@@ -86,8 +86,6 @@ impl ProofSystemCompiler for PseHalo2 {
         )
         .unwrap();
 
-        println!("Pk: {:?}", pk);
-
         let instance: Vec<Fr> = circuit
             .public_inputs()
             .indices()

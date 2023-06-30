@@ -8,14 +8,14 @@ use std::{
 #[allow(dead_code)]
 fn configure_test_dirs() -> Vec<PathBuf> {
     let test_dirs_names = vec![
-        // "1_mul",
-        // "2_div",
-        // "3_add",
-        // "4_sub",
-        // "5_over",
-        // "6_array",
-        // "7_function",
-        // "8_bit_and",
+        "1_mul",
+        "2_div",
+        "3_add",
+        "4_sub",
+        "5_over",
+        "6_array",
+        "7_function",
+        "8_bit_and",
         "9_public_io",
     ];
     test_dirs_names

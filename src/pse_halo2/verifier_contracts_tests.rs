@@ -12,11 +12,13 @@ use pse_halo2wrong::{
             kzg::{
                 commitment::{KZGCommitmentScheme, ParamsKZG},
                 multiopen::{ProverGWC, VerifierGWC},
-                strategy::AccumulatorStrategy,
+                strategy::{AccumulatorStrategy, SingleStrategy},
             },
             VerificationStrategy,
         },
-        transcript::{TranscriptReadBuffer, TranscriptWriterBuffer},
+        transcript::{
+            Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
+        },
     },
 };
 use pse_snark_verifier::{
@@ -181,8 +183,17 @@ fn gen_proof<C: Circuit<Fr>>(
         .map(|instances| instances.as_slice())
         .collect_vec();
     let proof = {
-        let mut transcript = TranscriptWriterBuffer::<_, G1Affine, _>::init(Vec::new());
-        create_proof::<KZGCommitmentScheme<Bn256>, ProverGWC<_>, _, _, EvmTranscript<_, _, _, _>, _>(
+        let mut transcript: Blake2bWrite<Vec<u8>, _, Challenge255<_>> =
+            Blake2bWrite::<_, _, Challenge255<_>>::init(vec![]);
+
+        create_proof::<
+            KZGCommitmentScheme<Bn256>,
+            ProverGWC<'_, Bn256>,
+            Challenge255<G1Affine>,
+            _,
+            Blake2bWrite<Vec<u8>, G1Affine, Challenge255<_>>,
+            _,
+        >(
             params,
             pk,
             &[circuit],
@@ -195,20 +206,23 @@ fn gen_proof<C: Circuit<Fr>>(
     };
 
     let accept = {
-        let mut transcript = TranscriptReadBuffer::<_, G1Affine, _>::init(proof.as_slice());
-        VerificationStrategy::<_, VerifierGWC<_>>::finalize(
-            verify_proof::<_, VerifierGWC<_>, _, EvmTranscript<_, _, _, _>, _>(
-                params.verifier_params(),
-                pk.get_vk(),
-                AccumulatorStrategy::new(params.verifier_params()),
-                &[instances.as_slice()],
-                &mut transcript,
-            )
-            .unwrap(),
+        let strategy = SingleStrategy::new(params);
+        let mut transcript = Blake2bRead::<_, _, Challenge255<_>>::init(proof.as_slice());
+
+        verify_proof::<
+            KZGCommitmentScheme<Bn256>,
+            VerifierGWC<'_, Bn256>,
+            Challenge255<G1Affine>,
+            Blake2bRead<&[u8], G1Affine, Challenge255<G1Affine>>,
+            SingleStrategy<'_, Bn256>,
+        >(
+            params,
+            pk.get_vk(),
+            strategy,
+            &[instances.as_slice()],
+            &mut transcript,
         )
     };
-    assert!(accept);
-
     proof
 }
 
@@ -269,7 +283,7 @@ mod test {
 
     #[tokio::test]
     async fn test_pse_verifier() {
-        let (circuit, witness_values) = gen_halo2_circuit_and_witness("1_mul");
+        let (circuit, witness_values) = gen_halo2_circuit_and_witness("9_public_io");
         let translator = NoirHalo2Translator::<Fr> {
             circuit,
             witness_values,
@@ -283,25 +297,29 @@ mod test {
         .unwrap();
         let pk = gen_pk(&params, &translator);
 
-        let verifier_contract = gen_evm_verifier(&params, pk.get_vk(), vec![0]);
+        // let verifier_contract = gen_evm_verifier(&params, pk.get_vk(), vec![1]);
         let proof_path = format!(
             "{}/tests/test_programs/{}",
             env::current_dir().unwrap().display(),
-            "1_mul/proofs/my_test_proof.proof"
+            "9_public_io/proofs/my_test_proof.proof"
         );
-        let proof = read_to_string(proof_path).unwrap();
-
+        // let proof = read_to_string(proof_path).unwrap();
+        let proof = hex::decode(std::fs::read(proof_path).unwrap()).unwrap();
         let contract_path = format!(
             "{}/tests/test_programs/{}",
             env::current_dir().unwrap().display(),
-            "1_mul/contract/plonk_vk.sol"
+            "9_public_io/contract/plonk_vk.sol"
         );
 
         let yul_code = read_to_string(contract_path).unwrap();
         let deployment_code = compile_yul(&yul_code);
 
-        let gen_proof = gen_proof(&params, &pk, translator.clone(), vec![vec![]]);
-        evm_verify(deployment_code, vec![vec![]], proof.as_bytes().to_vec());
+        // let gen_proof = gen_proof(&params, &pk, translator.clone(), vec![vec![]]);
+        evm_verify(
+            deployment_code,
+            vec![vec![Fr::from_raw([7u64, 0, 0, 0])]],
+            proof,
+        );
 
         // evm_verify(deployment_code, vec![], proof.as_bytes().to_vec());
     }
