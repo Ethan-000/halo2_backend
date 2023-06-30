@@ -1,4 +1,4 @@
-#[cfg(target_family = "wasm")]
+// #[cfg(target_family = "wasm")]
 #[macro_export]
 macro_rules! impl_noir_halo2_backend_wasm_bindgen {
     (
@@ -11,12 +11,12 @@ macro_rules! impl_noir_halo2_backend_wasm_bindgen {
         use tokio::runtime::Builder;
         use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
-        #[wasm_bindgen]
+        // #[wasm_bindgen]
         pub fn init_panic_hook() {
             console_error_panic_hook::set_once();
         }
 
-        #[wasm_bindgen]
+        // #[wasm_bindgen]
         pub fn generate_common_reference_string(circuit_js: JsValue) -> Result<JsValue, JsValue> {
             let runtime = Builder::new_current_thread().enable_all().build().unwrap();
             let circuit: Circuit = serde_wasm_bindgen::from_value(circuit_js)?;
@@ -27,7 +27,7 @@ macro_rules! impl_noir_halo2_backend_wasm_bindgen {
             Ok(serde_wasm_bindgen::to_value(&crs)?)
         }
 
-        #[wasm_bindgen]
+        // #[wasm_bindgen]
         pub fn get_exact_circuit_size(circuit_js: JsValue) -> Result<JsValue, JsValue> {
             let circuit: Circuit = serde_wasm_bindgen::from_value(circuit_js)?;
 
@@ -36,7 +36,7 @@ macro_rules! impl_noir_halo2_backend_wasm_bindgen {
             Ok(serde_wasm_bindgen::to_value(&circuit_size)?)
         }
 
-        #[wasm_bindgen]
+        // #[wasm_bindgen]
         pub fn get_proving_key(
             common_reference_string_js: JsValue,
             circuit_js: JsValue,
@@ -52,7 +52,7 @@ macro_rules! impl_noir_halo2_backend_wasm_bindgen {
             Ok(serde_wasm_bindgen::to_value(&pk)?)
         }
 
-        #[wasm_bindgen]
+        // #[wasm_bindgen]
         pub fn get_verification_key(
             common_reference_string_js: JsValue,
             circuit_js: JsValue,
@@ -68,7 +68,7 @@ macro_rules! impl_noir_halo2_backend_wasm_bindgen {
             Ok(serde_wasm_bindgen::to_value(&vk)?)
         }
 
-        #[wasm_bindgen]
+        // #[wasm_bindgen]
         pub fn prove_with_pk(
             common_reference_string_js: JsValue,
             circuit_js: JsValue,
@@ -94,7 +94,7 @@ macro_rules! impl_noir_halo2_backend_wasm_bindgen {
             Ok(serde_wasm_bindgen::to_value(&proof)?)
         }
 
-        #[wasm_bindgen]
+        // #[wasm_bindgen]
         pub fn verify_with_pk(
             common_reference_string_js: JsValue,
             proof_js: JsValue,
@@ -123,7 +123,7 @@ macro_rules! impl_noir_halo2_backend_wasm_bindgen {
             Ok(serde_wasm_bindgen::to_value(&valid_proof)?)
         }
 
-        #[wasm_bindgen]
+        // #[wasm_bindgen]
         pub fn get_eth_verification_contract(
             common_reference_string_js: JsValue,
             verification_key_js: JsValue,

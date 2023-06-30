@@ -34,7 +34,6 @@ impl NoirHalo2Translator<Fr> {
         witness_assignments: &mut AssignedMap<Fr>,
     ) {
         let mut ctx: Context<Fr> = Context::<Fr>::new(false, 0);
-
         // store the constrained output of multiplied terms
         let mut solution: AssignedValue<Fr>;
 

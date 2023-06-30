@@ -166,6 +166,8 @@ mod test {
                 _marker: PhantomData::<Fr>,
             };
             let dimension = DimensionMeasurement::measure(&translator).unwrap();
+            println!("name: {:?}", program);
+            println!("Dimensions: {:?}", dimension.k());
 
             // run mock prover expecting success
             let prover = MockProver::run(dimension.k(), &translator, vec![]).unwrap();

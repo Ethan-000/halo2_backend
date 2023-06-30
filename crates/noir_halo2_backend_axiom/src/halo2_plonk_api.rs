@@ -1,6 +1,6 @@
 use crate::circuit_translator::NoirHalo2Translator;
 use halo2_base::{
-    gates::{GateChip, RangeChip},
+    gates::{GateChip, RangeChip, builder::{GateCircuitBuilder, RangeWithInstanceCircuitBuilder}},
     halo2_proofs::{
         halo2curves::bn256::Fr,
         halo2curves::{
