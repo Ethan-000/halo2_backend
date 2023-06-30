@@ -7,6 +7,7 @@ mod constrains;
 mod halo2_params;
 mod halo2_plonk_api;
 mod tests;
+mod verifier_tests;
 #[cfg(target_family = "wasm")]
 mod wasm;
 
