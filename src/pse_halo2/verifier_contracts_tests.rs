@@ -93,7 +93,7 @@ pub fn deploy_and_call(deployment_code: Vec<u8>, calldata: Vec<u8>) -> Result<u6
 
 fn evm_verify(deployment_code: Vec<u8>, instances: Vec<Vec<Fr>>, proof: Vec<u8>) {
     let calldata = encode_calldata(&instances, &proof);
-    println!("{:?}", hex::encode(&calldata));
+    println!("{:?}", hex::encode(&calldata[..]));
     let gas_cost = deploy_and_call(deployment_code, calldata).unwrap();
     dbg!(gas_cost);
 }
@@ -315,11 +315,7 @@ mod test {
         let deployment_code = compile_yul(&yul_code);
 
         // let gen_proof = gen_proof(&params, &pk, translator.clone(), vec![vec![]]);
-        evm_verify(
-            deployment_code,
-            vec![vec![Fr::from_raw([7u64, 0, 0, 0])]],
-            proof,
-        );
+        evm_verify(deployment_code, vec![vec![Fr::from(7)]], proof);
 
         // evm_verify(deployment_code, vec![], proof.as_bytes().to_vec());
     }
