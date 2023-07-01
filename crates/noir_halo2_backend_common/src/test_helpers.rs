@@ -58,6 +58,15 @@ fn nargo_check(test_program_dir: &PathBuf) -> Result<Output> {
         .wait_with_output()
 }
 
+fn nargo_contract(test_program_dir: &PathBuf) -> Result<Output> {
+    nargo_cmd()
+        .current_dir(test_program_dir)
+        .arg("codegen-verifier")
+        .spawn()
+        .unwrap()
+        .wait_with_output()
+}
+
 fn nargo_gates(test_program_dir: &PathBuf) -> Result<Output> {
     nargo_cmd()
         .current_dir(test_program_dir)
@@ -109,7 +118,7 @@ pub fn test_program_dir_path(dir_name: &str) -> PathBuf {
 pub fn assert_nargo_cmd_works(cmd_name: &str, test_test_program_dir: &PathBuf) {
     let cmd_output = match cmd_name {
         "check" => nargo_check(test_test_program_dir),
-        "contract" => todo!(),
+        "contract" => nargo_contract(test_program_dir),
         "compile" => nargo_compile(test_test_program_dir),
         "new" => panic!("This cmd doesn't depend on the backend"),
         "execute" => nargo_execute(test_test_program_dir),
@@ -162,6 +171,7 @@ pub fn install_nargo(backend: &'static str) {
 pub fn run_nargo_tests(test_program: PathBuf) {
     assert_nargo_cmd_works("check", &test_program);
     assert_nargo_cmd_works("compile", &test_program);
+    assert_nargo_cmd_works("contract", &test_program);
     assert_nargo_cmd_works("execute", &test_program);
     assert_nargo_cmd_works("prove", &test_program);
     assert_nargo_cmd_works("verify", &test_program);
