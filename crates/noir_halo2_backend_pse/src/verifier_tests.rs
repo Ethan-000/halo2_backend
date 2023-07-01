@@ -267,12 +267,13 @@ mod test {
 
     #[tokio::test]
     async fn test_pse_verifier() {
-        let program = "1_mul";
+        let program = "9_public_io";
 
         let proof_path = format!(
-            "{}/../noir_halo2_backend_common/test_programs/{}",
+            "{}/../noir_halo2_backend_common/test_programs/{}/{}",
             env::current_dir().unwrap().display(),
-            "1_mul/proofs/my_test_proof.proof"
+            program,
+            "/proofs/my_test_proof.proof"
         );
 
         let (circuit, witness_values) = gen_halo2_circuit_and_witness(program);
@@ -296,9 +297,10 @@ mod test {
         let proof = hex::decode(std::fs::read(proof_path).unwrap()).unwrap();
 
         let contract_path = format!(
-            "{}/../noir_halo2_backend_common/test_programs/{}",
+            "{}/../noir_halo2_backend_common/test_programs/{}/{}",
             env::current_dir().unwrap().display(),
-            "1_mul/contract/plonk_vk.sol"
+            program,
+            "/contract/plonk_vk.sol"
         );
 
         println!("flag1");

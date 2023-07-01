@@ -63,6 +63,10 @@ impl SmartContract for PseHalo2 {
         )
         .unwrap();
 
+
+        let num = vk.cs().num_instance_columns();
+        println!("Num: {}", num);
+
         Ok(gen_evm_verifier(&params, &vk, vec![1]))
     }
 }
