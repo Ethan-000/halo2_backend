@@ -19,7 +19,7 @@ pub fn configure_test_dirs() -> Vec<PathBuf> {
         "6_array",
         "7_function",
         "8_bit_and",
-        // "9_public_io",
+        "9_public_io",
     ];
     test_dirs_names
         .into_iter()
@@ -118,7 +118,7 @@ pub fn test_program_dir_path(dir_name: &str) -> PathBuf {
 pub fn assert_nargo_cmd_works(cmd_name: &str, test_test_program_dir: &PathBuf) {
     let cmd_output = match cmd_name {
         "check" => nargo_check(test_test_program_dir),
-        "contract" => nargo_contract(test_program_dir),
+        "contract" => nargo_contract(test_test_program_dir),
         "compile" => nargo_compile(test_test_program_dir),
         "new" => panic!("This cmd doesn't depend on the backend"),
         "execute" => nargo_execute(test_test_program_dir),
@@ -179,8 +179,16 @@ pub fn run_nargo_tests(test_program: PathBuf) {
     assert_nargo_cmd_works("gates", &test_program);
 }
 
+pub fn run_nargo_check(test_program: PathBuf) {
+    assert_nargo_cmd_works("check", &test_program);
+}
+
 pub fn run_nargo_compile(test_program: PathBuf) {
     assert_nargo_cmd_works("compile", &test_program);
+}
+
+pub fn run_nargo_contract(test_program: PathBuf) {
+    assert_nargo_cmd_works("contract", &test_program);
 }
 
 pub fn run_nargo_prove(test_program: PathBuf) {
