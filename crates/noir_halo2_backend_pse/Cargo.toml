@@ -46,19 +46,19 @@ pse_snark_verifier = { git = "https://github.com/privacy-scaling-explorations/sn
 # pse_zkevm_circuit = { git = "https://github.com/privacy-scaling-explorations/zkevm-circuits", package = "zkevm-circuits", tag = "v0.3.1" }
 
 [dev-dependencies]
-criterion = "0.5.1"
+# criterion = "0.5.1"
 
-[[bench]]
-name = "bench_compilation"
-harness = false
+# [[bench]]
+# name = "bench_compilation"
+# harness = false
 
-[[bench]]
-name = "bench_noir_halo2_pse_prove"
-harness = false
+# [[bench]]
+# name = "bench_noir_halo2_pse_prove"
+# harness = false
 
-[[bench]]
-name = "bench_noir_halo2_pse_verify"
-harness = false
+# [[bench]]
+# name = "bench_noir_halo2_pse_verify"
+# harness = false
 
 # can only build on linux because the use of a c lib
 [target.'cfg(target_family = "wasm")'.dependencies]

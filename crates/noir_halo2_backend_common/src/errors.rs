@@ -18,14 +18,14 @@ pub enum CRSError {
     #[error("Failed to serialize CRS")]
     _Serialize { source: Box<bincode::ErrorKind> },
 
-    #[error("Failed to build request '{url}' ({source})")]
-    Request { url: String, source: reqwest::Error },
-    #[error("Failed to GET from '{url}' ({source})")]
-    Fetch { url: String, source: reqwest::Error },
-    #[error("Failed to get content length from '{url}'")]
-    Length { url: String },
-    #[error("Error while downloading file")]
-    Download { source: reqwest::Error },
+    // #[error("Failed to build request '{url}' ({source})")]
+    // Request { url: String, source: reqwest::Error },
+    // #[error("Failed to GET from '{url}' ({source})")]
+    // Fetch { url: String, source: reqwest::Error },
+    // #[error("Failed to get content length from '{url}'")]
+    // Length { url: String },
+    // #[error("Error while downloading file")]
+    // Download { source: reqwest::Error },
 }
 
 #[allow(clippy::upper_case_acronyms)]

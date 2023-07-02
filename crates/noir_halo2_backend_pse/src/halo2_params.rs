@@ -1,6 +1,7 @@
 use std::io::Write;
 
-use noir_halo2_backend_common::{aztec_crs::get_aztec_crs, errors::Error};
+use noir_halo2_backend_common::{errors::Error};
+// use noir_halo2_backend_common::{aztec_crs::get_aztec_crs, errors::Error};
 use pse_halo2wrong::{
     curves::bn256::Fr,
     halo2::{
@@ -29,7 +30,8 @@ pub(crate) async fn constuct_halo2_params_from_aztec_crs(
     let n = 1 << k;
     assert!(n == 1 << k);
 
-    let (g1_data, g2_data) = get_aztec_crs(n).await?;
+    // let (g1_data, g2_data) = get_aztec_crs(n).await?;
+    let (g1_data, g2_data) = (vec![0u8; 0], vec![0u8; 0]);
 
     let mut g = vec![<<Bn256 as Engine>::G1Affine as PrimeCurveAffine>::generator()];
 
