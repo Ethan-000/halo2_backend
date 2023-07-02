@@ -38,8 +38,8 @@ harness = false
 
 # wasm not supported because halo2-base uses jemallocator
 [target.'cfg(target_family = "wasm")'.dependencies]
-console_error_panic_hook.workspace = true
-getrandom.workspace = true
+# console_error_panic_hook.workspace = true
+# getrandom.workspace = true
 # serde-wasm-bindgen.workspace = true
 tokio.workspace = true
 # wasm-bindgen.workspace = true
