@@ -29,7 +29,7 @@ fn gen_nargo_files(test_program: PathBuf) {
 
 fn evm_verify(deployment_code: Vec<u8>, instances: Vec<Vec<Fr>>, proof: Vec<u8>) {
     let calldata = encode_calldata(&instances, &proof);
-    println!("{:?}", hex::encode(&calldata));
+
     let success = {
         let mut evm = ExecutorBuilder::default()
             .with_gas_limit(u64::MAX.into())
