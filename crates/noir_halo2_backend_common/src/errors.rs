@@ -11,6 +11,7 @@ pub enum FeatureError {
     _FieldToArray(usize, usize),
 }
 
+
 #[derive(Debug, Error)]
 pub enum CRSError {
     #[error("Failed to deserialize CRS")]
@@ -18,12 +19,16 @@ pub enum CRSError {
     #[error("Failed to serialize CRS")]
     _Serialize { source: Box<bincode::ErrorKind> },
 
+    #[cfg(feature = "native")]
     #[error("Failed to build request '{url}' ({source})")]
     Request { url: String, source: reqwest::Error },
+    #[cfg(feature = "native")]
     #[error("Failed to GET from '{url}' ({source})")]
     Fetch { url: String, source: reqwest::Error },
+    #[cfg(feature = "native")]
     #[error("Failed to get content length from '{url}'")]
     Length { url: String },
+    #[cfg(feature = "native")]
     #[error("Error while downloading file")]
     Download { source: reqwest::Error },
 }

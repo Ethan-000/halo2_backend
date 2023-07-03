@@ -1514,14 +1514,11 @@ dependencies = [
  "acvm",
  "bincode",
  "bytesize",
- "console_error_panic_hook",
  "getrandom",
  "reqwest",
- "serde-wasm-bindgen",
  "serde_json",
  "thiserror",
  "tokio",
- "wasm-bindgen",
 ]
 
 [[package]]
