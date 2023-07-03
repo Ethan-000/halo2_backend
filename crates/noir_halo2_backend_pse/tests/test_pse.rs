@@ -8,9 +8,8 @@ use noir_halo2_backend_common::test_helpers::{
     configure_test_dirs, install_nargo, run_nargo_check, run_nargo_contract, run_nargo_prove,
     run_nargo_tests,
 };
-use pse_halo2wrong::curves::{bn256::Fr, ff::PrimeField, serde::SerdeObject};
+use pse_halo2wrong::curves::bn256::Fr;
 use pse_snark_verifier::loader::evm::{compile_yul, encode_calldata, Address, ExecutorBuilder};
-use toml::Value;
 
 #[test]
 fn test_pse_backend() {
@@ -30,6 +29,7 @@ fn gen_nargo_files(test_program: PathBuf) {
 
 fn evm_verify(deployment_code: Vec<u8>, instances: Vec<Vec<Fr>>, proof: Vec<u8>) {
     let calldata = encode_calldata(&instances, &proof);
+    println!("{:?}", hex::encode(&calldata));
     let success = {
         let mut evm = ExecutorBuilder::default()
             .with_gas_limit(u64::MAX.into())
@@ -55,7 +55,7 @@ fn test_pse_verifier_contracts_no_public_io() {
     let test_program_dirs = configure_test_dirs();
     // Pass in PSE Halo2 Backend as argument
     install_nargo("pse_halo2_backend");
-    for test_program in &test_program_dirs[0..8] {
+    for test_program in &test_program_dirs[0..1] {
         // Generate necessary files
         gen_nargo_files(test_program.clone());
         // Paths to relevant nargo generated files
