@@ -20,6 +20,7 @@ pub fn configure_test_dirs() -> Vec<PathBuf> {
         "7_function",
         "8_bit_and",
         "9_public_io",
+        "10_public_io_array",
     ];
     test_dirs_names
         .into_iter()
