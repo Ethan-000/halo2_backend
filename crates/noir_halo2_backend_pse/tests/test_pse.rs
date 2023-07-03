@@ -29,7 +29,7 @@ fn gen_nargo_files(test_program: PathBuf) {
 
 fn evm_verify(deployment_code: Vec<u8>, instances: Vec<Vec<Fr>>, proof: Vec<u8>) {
     let calldata = encode_calldata(&instances, &proof);
-
+    println!("{:?}", hex::encode(&calldata));
     let success = {
         let mut evm = ExecutorBuilder::default()
             .with_gas_limit(u64::MAX.into())
@@ -87,10 +87,6 @@ fn test_pse_verifier_contracts_public_io() {
         let deployment_code = compile_yul(&yul_code.unwrap());
 
         let proof = hex::decode(read(proof_path).unwrap()).unwrap();
-        evm_verify(
-            deployment_code,
-            vec![vec![Fr::from_raw([7u64, 0, 0, 0])]],
-            proof,
-        );
+        evm_verify(deployment_code, vec![vec![Fr::from(7)]], proof);
     }
 }
