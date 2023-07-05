@@ -43,6 +43,29 @@ pub(crate) async fn constuct_halo2_params_from_aztec_crs(
     Ok(params_kzg(k, g, g_lagrange, g2, s_g2))
 }
 
+pub(crate) async fn update_halo2_params_from_aztec_crs(
+    translator: impl pse_halo2wrong::halo2::plonk::Circuit<Fr>,
+) -> Result<ParamsKZG<Bn256>, Error> {
+    let dimension = DimensionMeasurement::measure(&translator).unwrap();
+
+    let k = dimension.k();
+    let n = 1 << k;
+    assert!(n == 1 << k);
+
+    let (g1_data, g2_data) = get_aztec_crs(n).await?;
+
+    let mut g = vec![<<Bn256 as Engine>::G1Affine as PrimeCurveAffine>::generator()];
+
+    g.extend(g1_data.chunks(64).map(to_g1_point));
+
+    let g_lagrange = g_to_lagrange(g.iter().map(PrimeCurveAffine::to_curve).collect(), k);
+
+    let g2 = <<Bn256 as Engine>::G2Affine as PrimeCurveAffine>::generator();
+    let s_g2 = to_g2_point(&g2_data);
+
+    Ok(params_kzg(k, g, g_lagrange, g2, s_g2))
+}
+
 /// Constructs a `ParamsKZG<Bn256>` from its parameters
 fn params_kzg(
     k: u32,
