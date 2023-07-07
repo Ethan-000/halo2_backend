@@ -21,12 +21,20 @@ jobs:
           nix_path: nixpkgs=channel:nixos-22.11
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Restore nix store cache
+      - name: restore nix store cache
         id: nix-store-cache
         uses: actions/cache@v3
         with:
           path: /tmp/nix-cache
           key: ubuntu-latest-flake-${{ hashFiles('*.lock') }}
+
+      - name: Copy cache into nix store
+        if: steps.nix-store-cache.outputs.cache-hit == 'true'
+        run: |
+          for narinfo in /tmp/nix-cache/*.narinfo; do
+                path=$(head -n 1 "$narinfo" | awk '{print $2}')
+                nix copy --no-check-sigs --from "file:///tmp/nix-cache" "$path"
+            done
 
       - name: run `nix flake check`
         run: nix flake check -L
