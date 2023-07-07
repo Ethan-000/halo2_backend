@@ -111,6 +111,7 @@
           inputsFrom = builtins.attrValues self.checks.${system};
 
           nativeBuildInputs = with pkgs; [
+            git
             cargo
             rustc
             rust_toolchain
