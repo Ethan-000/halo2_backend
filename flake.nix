@@ -51,14 +51,25 @@
             ++ pkgs.lib.optional (pkgs.hostPlatform.isAarch64 && pkgs.hostPlatform.isDarwin) "aarch64-apple-darwin";
         };
 
+        # environment = {
+        #   LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
+        # };
+
         crane_lib = (crane.mkLib pkgs).overrideToolchain rust_toolchain;
 
         common_args = {
           src = crane_lib.cleanCargoSource (crane_lib.path ./.);
         };
 
+        extraBuildInputs = pkgs.lib.optionals pkgs.stdenv.isDarwin [
+          pkgs.libiconv
+          pkgs.darwin.apple_sdk.frameworks.Security
+        ];
+
         noir_halo2_pse_naitive_args = common_args // {
-          pname = "noir-halo2-backend-pse-native";
+          pname = "noir_halo2_backend_pse_naitive";
+
+          buildInputs = [] ++ extraBuildInputs;
         };
 
         noir_halo2_pse_naitive_cargo_artifacts = crane_lib.buildDepsOnly noir_halo2_pse_naitive_args;
@@ -73,33 +84,29 @@
       {
         checks = {
           cargo-clippy = crane_lib.cargoClippy (noir_halo2_pse_naitive_args // {
-            inherit noir_halo2_pse_naitive_cargo_artifacts;
+            cargoArtifacts = noir_halo2_pse_naitive_cargo_artifacts;
             cargoClippyExtraArgs = "--all-targets -- --deny warnings";
           });
 
-          cargo-fmt = crane_lib.cargoFmt (common_args);
+          cargo-fmt = crane_lib.cargoFmt (noir_halo2_pse_naitive_args);
 
-          cargo-nextest = crane_lib.cargoNextest (noir_halo2_pse_naitive_args // {
-            inherit noir_halo2_pse_naitive_cargo_artifacts;
-            package = "noir_halo2_backend_pse";
-            test-threads = 1;
-          });
-
-          packages = {
-            inherit system;
-            default = noir_halo2_pse_naitive;
-
-            inherit noir_halo2_pse_naitive;
-          };
-
-          devShells.default = pkgs.mkShell {
-            inputsFrom = builtins.attrValues self.checks.${system};
-
-            nativeBuildInputs = with pkgs; [
-              cargo
-              rustc
-            ];
-          };
+          # cargo-nextest = crane_lib.cargoNextest (noir_halo2_pse_naitive_args // {
+          #   cargoArtifacts = noir_halo2_pse_naitive_cargo_artifacts;
+          #   cargoNextestExtraArgs = "--package noir_halo2_backend_pse --test-threads=1";
+          # });
         };
+
+        packages = {
+          default = noir_halo2_pse_naitive;
+        };
+
+        devShells.default = pkgs.mkShell ( {
+          inputsFrom = builtins.attrValues self.checks.${system};
+
+          nativeBuildInputs = with pkgs; [
+            cargo
+            rustc
+          ];
+        });
       });
 }
