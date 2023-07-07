@@ -96,10 +96,10 @@
       {
         checks = {
           cargo-fmt = crane_lib.cargoFmt (noir_halo2_pse_naitive_args);
-          # cargo-clippy = crane_lib.cargoClippy (noir_halo2_pse_naitive_args // {
-          #   cargoArtifacts = noir_halo2_pse_naitive_cargo_artifacts;
-          #   cargoClippyExtraArgs = "--all-targets -- --deny warnings";
-          # });
+          cargo-clippy = crane_lib.cargoClippy (noir_halo2_pse_naitive_args // {
+            cargoArtifacts = noir_halo2_pse_naitive_cargo_artifacts;
+            cargoClippyExtraArgs = "--all-targets -- --deny warnings";
+          });
         };
 
         packages = {
