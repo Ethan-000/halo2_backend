@@ -100,13 +100,14 @@
       in
       {
         checks = {
-          cargo-fmt = crane_lib.cargoFmt (noir_halo2_pse_naitive_args) {
+          cargo-fmt = crane_lib.cargoFmt (noir_halo2_pse_naitive_args // {
             inherit GIT_COMMIT GIT_DIRTY;
 
             cargoArtifacts = noir_halo2_pse_naitive_cargo_artifacts;
-          };
+          });
           cargo-clippy = crane_lib.cargoClippy (noir_halo2_pse_naitive_args // {
             inherit GIT_COMMIT GIT_DIRTY;
+
             cargoArtifacts = noir_halo2_pse_naitive_cargo_artifacts;
             cargoClippyExtraArgs = "--all-targets -- --deny warnings";
           });
