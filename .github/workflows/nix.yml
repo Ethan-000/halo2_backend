@@ -21,13 +21,6 @@ jobs:
           nix_path: nixpkgs=channel:nixos-22.11
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Restore nix store cache
-        id: nix-store-cache
-        uses: actions/cache@v3
-        with:
-          path: /tmp/nix-cache
-          key: ${{ runner.os }}-flake-${{ hashFiles('*.lock') }}
-
       - name: run `nix flake check`
         run: nix flake check --no-update-lock-file --show-trace
 
