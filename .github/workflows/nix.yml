@@ -22,7 +22,7 @@ jobs:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: run `nix flake check`
-        run: nix flake check
+        run: nix flake check -L --show-trace
 
       - name: build wasm package
-        run: nix build .#wasm
+        run: nix build -L .#wasm
