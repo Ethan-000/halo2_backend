@@ -3,7 +3,7 @@
 
   inputs = {
     nixpkgs = {
-      url = "github:NixOS/nixpkgs/nixos-22.11";
+      url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     };
 
     flake-utils = {
@@ -41,9 +41,6 @@
         pkgs = import nixpkgs {
           inherit system overlays;
         };
-
-        GIT_COMMIT = if (self ? rev) then self.rev else "unknown";
-        GIT_DIRTY = if (self ? rev) then "false" else "true";
 
         rust_toolchain = pkgs.rust-bin.nightly."2022-10-28".default.override {
           extensions = [ "rust-src" ];
@@ -83,7 +80,6 @@
         noir_halo2_pse_wasm_cargo_artifacts = crane_lib.buildDepsOnly noir_halo2_pse_wasm_args;
 
         noir_halo2_pse_naitive = crane_lib.buildPackage (noir_halo2_pse_naitive_args // {
-          inherit GIT_COMMIT GIT_DIRTY;
 
           cargoArtifacts = noir_halo2_pse_naitive_cargo_artifacts;
 
@@ -91,7 +87,6 @@
         });
 
         noir_halo2_pse_wasm = crane_lib.buildPackage (noir_halo2_pse_wasm_args // {
-          inherit GIT_COMMIT GIT_DIRTY;
 
           cargoArtifacts = noir_halo2_pse_wasm_cargo_artifacts;
 
@@ -101,13 +96,9 @@
       {
         checks = {
           cargo-fmt = crane_lib.cargoFmt (noir_halo2_pse_naitive_args // {
-            inherit GIT_COMMIT GIT_DIRTY;
-
             cargoArtifacts = noir_halo2_pse_naitive_cargo_artifacts;
           });
           cargo-clippy = crane_lib.cargoClippy (noir_halo2_pse_naitive_args // {
-            inherit GIT_COMMIT GIT_DIRTY;
-
             cargoArtifacts = noir_halo2_pse_naitive_cargo_artifacts;
             cargoClippyExtraArgs = "--all-targets -- --deny warnings";
           });
