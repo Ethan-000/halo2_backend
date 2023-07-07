@@ -51,10 +51,6 @@
             ++ pkgs.lib.optional (pkgs.hostPlatform.isAarch64 && pkgs.hostPlatform.isDarwin) "aarch64-apple-darwin";
         };
 
-        # environment = {
-        #   LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
-        # };
-
         crane_lib = (crane.mkLib pkgs).overrideToolchain rust_toolchain;
 
         common_args = {
@@ -72,7 +68,16 @@
           buildInputs = [] ++ extraBuildInputs;
         };
 
+        noir_halo2_pse_wasm_args = common_args // {
+          pname = "noir_halo2_backend_pse_wasm";
+
+          cargoExtraArgs = "--target wasm32-unknown-unknown";
+
+          buildInputs = [] ++ extraBuildInputs;
+        };
+
         noir_halo2_pse_naitive_cargo_artifacts = crane_lib.buildDepsOnly noir_halo2_pse_naitive_args;
+        noir_halo2_pse_wasm_cargo_artifacts = crane_lib.buildDepsOnly noir_halo2_pse_wasm_args;
 
         noir_halo2_pse_naitive = crane_lib.buildPackage (noir_halo2_pse_naitive_args // {
 
@@ -80,24 +85,26 @@
 
           doCheck = false;
         });
+
+        noir_halo2_pse_wasm = crane_lib.buildPackage (noir_halo2_pse_wasm_args // {
+
+          cargoArtifacts = noir_halo2_pse_wasm_cargo_artifacts;
+
+          doCheck = false;
+        });
       in
       {
         checks = {
+          cargo-fmt = crane_lib.cargoFmt (noir_halo2_pse_naitive_args);
           cargo-clippy = crane_lib.cargoClippy (noir_halo2_pse_naitive_args // {
             cargoArtifacts = noir_halo2_pse_naitive_cargo_artifacts;
             cargoClippyExtraArgs = "--all-targets -- --deny warnings";
           });
-
-          cargo-fmt = crane_lib.cargoFmt (noir_halo2_pse_naitive_args);
-
-          # cargo-nextest = crane_lib.cargoNextest (noir_halo2_pse_naitive_args // {
-          #   cargoArtifacts = noir_halo2_pse_naitive_cargo_artifacts;
-          #   cargoNextestExtraArgs = "--package noir_halo2_backend_pse --test-threads=1";
-          # });
         };
 
         packages = {
           default = noir_halo2_pse_naitive;
+          wasm = noir_halo2_pse_wasm;
         };
 
         devShells.default = pkgs.mkShell ( {
@@ -106,6 +113,7 @@
           nativeBuildInputs = with pkgs; [
             cargo
             rustc
+            rust_toolchain
           ];
         });
       });
