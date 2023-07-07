@@ -10,7 +10,7 @@
       url = "github:numtide/flake-utils";
     };
 
-    inputs.flake-compat = {
+    flake-compat = {
       url = "github:edolstra/flake-compat";
       flake = false;
     };
@@ -34,7 +34,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, rust-overlay, crane, ... } @ inputs:
+  outputs = { self, nixpkgs, flake-utils, rust-overlay, crane, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         overlays = [ (import rust-overlay) ];
@@ -44,7 +44,11 @@
 
         rust_toolchain = pkgs.rust-bin.nightly."2022-10-28".default.override {
           extensions = [ "rust-src" ];
-          targets = [ "wasm32-unknown-unknown" ];
+          targets = [ "wasm32-unknown-unknown" ]
+            ++ pkgs.lib.optional (pkgs.hostPlatform.isx86_64 && pkgs.hostPlatform.isLinux) "x86_64-unknown-linux-gnu"
+            ++ pkgs.lib.optional (pkgs.hostPlatform.isAarch64 && pkgs.hostPlatform.isLinux) "aarch64-unknown-linux-gnu"
+            ++ pkgs.lib.optional (pkgs.hostPlatform.isx86_64 && pkgs.hostPlatform.isDarwin) "x86_64-apple-darwin"
+            ++ pkgs.lib.optional (pkgs.hostPlatform.isAarch64 && pkgs.hostPlatform.isDarwin) "aarch64-apple-darwin";
         };
 
         crane_lib = (crane.mkLib pkgs).overrideToolchain rust_toolchain;
