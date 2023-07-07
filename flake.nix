@@ -86,7 +86,10 @@
           });
 
           packages = {
+            inherit system;
             default = noir_halo2_pse_naitive;
+
+            inherit noir_halo2_pse_naitive;
           };
 
           devShells.default = pkgs.mkShell {
