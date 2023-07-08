@@ -1,9 +1,5 @@
-use acvm::acir::native_types::Witness;
-
-use acvm::pwg::OpcodeResolutionError;
-use acvm::PartialWitnessGenerator;
-
 use crate::ZcashHalo2;
+use acvm::{acir::native_types::Witness, pwg::OpcodeResolutionError, PartialWitnessGenerator};
 
 impl PartialWitnessGenerator for ZcashHalo2 {
     fn schnorr_verify(

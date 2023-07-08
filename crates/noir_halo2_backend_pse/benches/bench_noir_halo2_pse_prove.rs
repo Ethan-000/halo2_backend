@@ -28,21 +28,15 @@ fn benchmark_tests_prove(c: &mut Criterion) {
 
     // 6_array
     let path = test_program_dir_path("6_array");
-    c.bench_function("6_array_prove", |b| {
-        b.iter(|| run_nargo_prove(path.clone()))
-    });
+    c.bench_function("6_array_prove", |b| b.iter(|| run_nargo_prove(path.clone())));
 
     // 7_function
     let path = test_program_dir_path("7_function");
-    c.bench_function("7_function_prove", |b| {
-        b.iter(|| run_nargo_prove(path.clone()))
-    });
+    c.bench_function("7_function_prove", |b| b.iter(|| run_nargo_prove(path.clone())));
 
     // bit_and
     let path = test_program_dir_path("8_bit_and");
-    c.bench_function("8_bit_and_prove", |b| {
-        b.iter(|| run_nargo_prove(path.clone()))
-    });
+    c.bench_function("8_bit_and_prove", |b| b.iter(|| run_nargo_prove(path.clone())));
 }
 
 criterion_group! {

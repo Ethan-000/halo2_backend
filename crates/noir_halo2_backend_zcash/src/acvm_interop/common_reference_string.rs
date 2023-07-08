@@ -1,10 +1,7 @@
+use crate::{halo2_params::constuct_halo2_ipa_params, ZcashHalo2};
 use acvm::{acir::circuit::Circuit, async_trait, CommonReferenceString, ProofSystemCompiler};
 use noir_halo2_backend_common::errors::BackendError;
-use zcash_halo2_proofs::pasta::EqAffine;
-use zcash_halo2_proofs::poly::commitment::Params;
-
-use crate::halo2_params::constuct_halo2_ipa_params;
-use crate::ZcashHalo2;
+use zcash_halo2_proofs::{pasta::EqAffine, poly::commitment::Params};
 
 // TODO(#185): Ensure CRS download works in JS
 #[async_trait(?Send)]

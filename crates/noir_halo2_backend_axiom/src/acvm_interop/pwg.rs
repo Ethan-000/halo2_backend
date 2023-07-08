@@ -1,9 +1,5 @@
-use acvm::acir::native_types::Witness;
-
-use acvm::pwg::OpcodeResolutionError;
-use acvm::PartialWitnessGenerator;
-
 use crate::AxiomHalo2;
+use acvm::{acir::native_types::Witness, pwg::OpcodeResolutionError, PartialWitnessGenerator};
 
 impl PartialWitnessGenerator for AxiomHalo2 {
     fn schnorr_verify(

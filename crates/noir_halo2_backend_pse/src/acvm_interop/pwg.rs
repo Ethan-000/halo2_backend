@@ -1,8 +1,5 @@
-use acvm::acir::native_types::Witness;
-use acvm::pwg::OpcodeResolutionError;
-use acvm::PartialWitnessGenerator;
-
 use crate::PseHalo2;
+use acvm::{acir::native_types::Witness, pwg::OpcodeResolutionError, PartialWitnessGenerator};
 
 impl PartialWitnessGenerator for PseHalo2 {
     fn schnorr_verify(

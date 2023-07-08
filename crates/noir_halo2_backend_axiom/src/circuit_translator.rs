@@ -6,8 +6,9 @@ use acvm::acir::{
 };
 use core::panic;
 use halo2_base::halo2_proofs::{
-    circuit::SimpleFloorPlanner, halo2curves::bn256::Fr, plonk::Circuit as Halo2PlonkCircuit,
-    plonk::ConstraintSystem,
+    circuit::SimpleFloorPlanner,
+    halo2curves::bn256::Fr,
+    plonk::{Circuit as Halo2PlonkCircuit, ConstraintSystem},
 };
 use noir_halo2_backend_common::errors::Error;
 use std::marker::PhantomData;
@@ -154,10 +155,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                         BlackBoxFuncCall::FixedBaseScalarMul { .. } => {
                             todo!()
                         }
-                        BlackBoxFuncCall::Keccak256 {
-                            inputs: _,
-                            outputs: _,
-                        } => {
+                        BlackBoxFuncCall::Keccak256 { inputs: _, outputs: _ } => {
                             panic!("keccak256 has not yet been implemented")
                         }
                         BlackBoxFuncCall::Keccak256VariableLength {

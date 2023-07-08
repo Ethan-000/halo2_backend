@@ -1,13 +1,14 @@
-use std::marker::PhantomData;
-
-use acvm::acir::native_types::WitnessMap;
-use acvm::{acir::circuit::Circuit, async_trait, CommonReferenceString};
+use crate::{
+    circuit_translator::NoirHalo2Translator, halo2_params::constuct_halo2_params_from_aztec_crs,
+    PseHalo2,
+};
+use acvm::{
+    acir::{circuit::Circuit, native_types::WitnessMap},
+    async_trait, CommonReferenceString,
+};
 use noir_halo2_backend_common::errors::BackendError;
 use pse_halo2wrong::curves::bn256::Fr;
-
-use crate::circuit_translator::NoirHalo2Translator;
-use crate::halo2_params::constuct_halo2_params_from_aztec_crs;
-use crate::PseHalo2;
+use std::marker::PhantomData;
 
 #[async_trait(?Send)]
 impl CommonReferenceString for PseHalo2 {

@@ -160,11 +160,8 @@ mod test {
             let (circuit, witness_values) = build_artifacts(program, "axiom_halo2_backend");
 
             // instantiate halo2 circuit
-            let translator = NoirHalo2Translator::<Fr> {
-                circuit,
-                witness_values,
-                _marker: PhantomData::<Fr>,
-            };
+            let translator =
+                NoirHalo2Translator::<Fr> { circuit, witness_values, _marker: PhantomData::<Fr> };
             let dimension = DimensionMeasurement::measure(&translator).unwrap();
 
             // run mock prover expecting success

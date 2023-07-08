@@ -1,19 +1,21 @@
-use std::marker::PhantomData;
-
-use acvm::acir::circuit::Circuit as NoirCircuit;
-use acvm::acir::circuit::Opcode;
-use acvm::acir::native_types::WitnessMap;
-use acvm::acir::BlackBoxFunc;
-use acvm::FieldElement;
-use acvm::{Language, ProofSystemCompiler};
+use crate::{
+    circuit_translator::NoirHalo2Translator,
+    halo2_plonk_api::{halo2_keygen, halo2_prove, halo2_verify},
+};
+use acvm::{
+    acir::{
+        circuit::{Circuit as NoirCircuit, Opcode},
+        native_types::WitnessMap,
+        BlackBoxFunc,
+    },
+    FieldElement, Language, ProofSystemCompiler,
+};
 use noir_halo2_backend_common::errors::BackendError;
-use zcash_halo2_proofs::pasta::EqAffine;
-use zcash_halo2_proofs::pasta::Fp;
-
-use zcash_halo2_proofs::poly::commitment::Params;
-
-use crate::circuit_translator::NoirHalo2Translator;
-use crate::halo2_plonk_api::{halo2_keygen, halo2_prove, halo2_verify};
+use std::marker::PhantomData;
+use zcash_halo2_proofs::{
+    pasta::{EqAffine, Fp},
+    poly::commitment::Params,
+};
 
 use crate::ZcashHalo2;
 

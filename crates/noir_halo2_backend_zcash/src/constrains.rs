@@ -1,14 +1,14 @@
-use crate::halo2_plonk_api::{PolyTriple, StandardCs};
+use super::halo2_plonk_api::NoirConstraint;
+use crate::{
+    circuit_translator::NoirHalo2Translator,
+    halo2_plonk_api::{PolyTriple, StandardCs},
+};
 use acvm::{acir::native_types::Expression, FieldElement};
 use zcash_halo2_proofs::{
     circuit::{Layouter, Value},
     pasta::{group::ff::PrimeField, Fp},
     plonk::Assigned,
 };
-
-use crate::circuit_translator::NoirHalo2Translator;
-
-use super::halo2_plonk_api::NoirConstraint;
 
 impl NoirHalo2Translator<Fp> {
     #[allow(non_snake_case)]
@@ -41,26 +41,17 @@ impl NoirHalo2Translator<Fp> {
         noir_cs.qc = gate.q_c;
 
         let a: Value<Assigned<_>> = Value::known(noir_field_to_halo2_field(
-            *self
-                .witness_values
-                .get_index(noir_cs.a as u32)
-                .unwrap_or(&FieldElement::zero()),
+            *self.witness_values.get_index(noir_cs.a as u32).unwrap_or(&FieldElement::zero()),
         ))
         .into();
 
         let b: Value<Assigned<_>> = Value::known(noir_field_to_halo2_field(
-            *self
-                .witness_values
-                .get_index(noir_cs.b as u32)
-                .unwrap_or(&FieldElement::zero()),
+            *self.witness_values.get_index(noir_cs.b as u32).unwrap_or(&FieldElement::zero()),
         ))
         .into();
 
         let c: Value<Assigned<_>> = Value::known(noir_field_to_halo2_field(
-            *self
-                .witness_values
-                .get_index(noir_cs.c as u32)
-                .unwrap_or(&FieldElement::zero()),
+            *self.witness_values.get_index(noir_cs.c as u32).unwrap_or(&FieldElement::zero()),
         ))
         .into();
 
@@ -74,16 +65,8 @@ impl NoirHalo2Translator<Fp> {
 
         let qc = noir_field_to_halo2_field(noir_cs.qc);
 
-        let poly_gate = PolyTriple::new(
-            a,
-            b,
-            c,
-            qm.into(),
-            ql.into(),
-            qr.into(),
-            qo.into(),
-            qc.into(),
-        );
+        let poly_gate =
+            PolyTriple::new(a, b, c, qm.into(), ql.into(), qr.into(), qo.into(), qc.into());
 
         cs.raw_poly(layouter, || poly_gate).unwrap();
     }

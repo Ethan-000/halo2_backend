@@ -1,8 +1,6 @@
 // copied and adapted from https://github.com/privacy-scaling-explorations/halo2wrong/blob/master/halo2wrong/src/utils.rs
 // cus fn k() is private.
 
-use std::{cell::RefCell, ops::RangeInclusive};
-
 use pse_halo2wrong::{
     curves::group::ff::PrimeField,
     halo2::{
@@ -13,6 +11,7 @@ use pse_halo2wrong::{
         },
     },
 };
+use std::{cell::RefCell, ops::RangeInclusive};
 
 #[derive(Default)]
 pub struct DimensionMeasurement {

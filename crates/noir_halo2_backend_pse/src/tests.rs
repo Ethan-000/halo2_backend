@@ -7,8 +7,10 @@ mod test {
     use noir_halo2_backend_common::test_helpers::build_artifacts;
     use pse_halo2wrong::{
         curves::bn256::Fr,
-        halo2::dev::{FailureLocation, MockProver, VerifyFailure},
-        halo2::plonk::Any,
+        halo2::{
+            dev::{FailureLocation, MockProver, VerifyFailure},
+            plonk::Any,
+        },
     };
     use std::marker::PhantomData;
 
@@ -18,11 +20,8 @@ mod test {
         let (circuit, witness_values) = build_artifacts("9_public_io", "pse_halo2_backend");
 
         // instantiate halo2 circuit
-        let translator = NoirHalo2Translator::<Fr> {
-            circuit,
-            witness_values,
-            _marker: PhantomData::<Fr>,
-        };
+        let translator =
+            NoirHalo2Translator::<Fr> { circuit, witness_values, _marker: PhantomData::<Fr> };
         let dimension = DimensionMeasurement::measure(&translator).unwrap();
 
         // instance value (known to be 7)
@@ -39,11 +38,8 @@ mod test {
         let (circuit, witness_values) = build_artifacts("9_public_io", "pse_halo2_backend");
 
         // instantiate halo2 circuit
-        let translator = NoirHalo2Translator::<Fr> {
-            circuit,
-            witness_values,
-            _marker: PhantomData::<Fr>,
-        };
+        let translator =
+            NoirHalo2Translator::<Fr> { circuit, witness_values, _marker: PhantomData::<Fr> };
         let dimension = DimensionMeasurement::measure(&translator).unwrap();
 
         // instance value (known to be 7, incorrectly set to 8)
@@ -53,10 +49,7 @@ mod test {
         let permutation_error = Err(vec![
             VerifyFailure::Permutation {
                 column: (Any::advice(), 0).into(),
-                location: FailureLocation::InRegion {
-                    region: (7, "region 0").into(),
-                    offset: 0,
-                },
+                location: FailureLocation::InRegion { region: (7, "region 0").into(), offset: 0 },
             },
             VerifyFailure::Permutation {
                 column: (Any::Instance, 0usize).into(),
@@ -82,11 +75,8 @@ mod test {
         witness_values.insert(Witness(1), FieldElement::from(4u128));
 
         // instantiate halo2 circuit
-        let translator = NoirHalo2Translator::<Fr> {
-            circuit,
-            witness_values,
-            _marker: PhantomData::<Fr>,
-        };
+        let translator =
+            NoirHalo2Translator::<Fr> { circuit, witness_values, _marker: PhantomData::<Fr> };
         let dimension = DimensionMeasurement::measure(&translator).unwrap();
 
         // instance value (known to be 7)
@@ -98,10 +88,7 @@ mod test {
             prover.verify(),
             Err(vec![VerifyFailure::ConstraintNotSatisfied {
                 constraint: ((0, "main_gate").into(), 0, "").into(),
-                location: FailureLocation::InRegion {
-                    region: (5, "region 0").into(),
-                    offset: 5,
-                },
+                location: FailureLocation::InRegion { region: (5, "region 0").into(), offset: 5 },
                 cell_values: vec![
                     (((Any::advice(), 0).into(), 0).into(), String::from("0x4")),
                     (((Any::advice(), 1).into(), 0).into(), String::from("0x4")),
@@ -140,11 +127,8 @@ mod test {
             let (circuit, witness_values) = build_artifacts(program, "pse_halo2_backend");
 
             // instantiate halo2 circuit
-            let translator = NoirHalo2Translator::<Fr> {
-                circuit,
-                witness_values,
-                _marker: PhantomData::<Fr>,
-            };
+            let translator =
+                NoirHalo2Translator::<Fr> { circuit, witness_values, _marker: PhantomData::<Fr> };
             let dimension = DimensionMeasurement::measure(&translator).unwrap();
 
             // run mock prover expecting success

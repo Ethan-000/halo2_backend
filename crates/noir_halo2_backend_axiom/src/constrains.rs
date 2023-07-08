@@ -1,3 +1,7 @@
+use super::{
+    assigned_map::AssignedMap, circuit_translator::NoirHalo2Translator,
+    halo2_plonk_api::PlonkConfig,
+};
 use acvm::{
     acir::native_types::{Expression, Witness},
     FieldElement,
@@ -21,11 +25,6 @@ use noir_halo2_backend_common::{
 };
 use std::slice::Iter;
 
-use super::{
-    assigned_map::AssignedMap, circuit_translator::NoirHalo2Translator,
-    halo2_plonk_api::PlonkConfig,
-};
-
 impl NoirHalo2Translator<Fr> {
     pub(crate) fn add_arithmetic_constrains(
         &self,
@@ -39,8 +38,8 @@ impl NoirHalo2Translator<Fr> {
         let mut solution: AssignedValue<Fr>;
 
         if !gate.mul_terms.is_empty() {
-            // if there is a mul gate, take mul term selector, left, right, and constant then compute with gates:
-            // mul gate: selector * left = intermediate
+            // if there is a mul gate, take mul term selector, left, right, and constant then
+            // compute with gates: mul gate: selector * left = intermediate
             // mul_add gate: intermediate * right + constant = output
             let mul_term = &gate.mul_terms[0];
 
@@ -49,20 +48,14 @@ impl NoirHalo2Translator<Fr> {
                 &mut ctx,
                 &mul_term.1,
                 noir_field_to_halo2_field(
-                    *self
-                        .witness_values
-                        .get(&mul_term.1)
-                        .unwrap_or(&FieldElement::zero()),
+                    *self.witness_values.get(&mul_term.1).unwrap_or(&FieldElement::zero()),
                 ),
             );
             let w_r = &witness_assignments.get_or_assign(
                 &mut ctx,
                 &mul_term.2,
                 noir_field_to_halo2_field(
-                    *self
-                        .witness_values
-                        .get(&mul_term.1)
-                        .unwrap_or(&FieldElement::zero()),
+                    *self.witness_values.get(&mul_term.1).unwrap_or(&FieldElement::zero()),
                 ),
             );
 
@@ -86,16 +79,11 @@ impl NoirHalo2Translator<Fr> {
                 &mut ctx,
                 &term.1,
                 noir_field_to_halo2_field(
-                    *self
-                        .witness_values
-                        .get(&term.1)
-                        .unwrap_or(&FieldElement::zero()),
+                    *self.witness_values.get(&term.1).unwrap_or(&FieldElement::zero()),
                 ),
             );
             // multiply to get term value & add to existing solution value
-            solution = config
-                .gate_chip
-                .mul_add(&mut ctx, coefficient, *variable, solution);
+            solution = config.gate_chip.mul_add(&mut ctx, coefficient, *variable, solution);
         }
 
         // constrain the solution to the output to be equal to 0
@@ -116,16 +104,11 @@ impl NoirHalo2Translator<Fr> {
             &mut ctx,
             &witness,
             noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(&witness)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(&witness).unwrap_or(&FieldElement::zero()),
             ),
         );
 
-        config
-            .range_chip
-            .range_check(&mut ctx, *x, num_bits as usize);
+        config.range_chip.range_check(&mut ctx, *x, num_bits as usize);
     }
 
     pub(crate) fn add_and_constrain(
@@ -143,30 +126,21 @@ impl NoirHalo2Translator<Fr> {
             &mut ctx,
             &lhs,
             noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(&lhs)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(&lhs).unwrap_or(&FieldElement::zero()),
             ),
         );
         let rhs_v = &witness_assignments.get_or_assign(
             &mut ctx,
             &rhs,
             noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(&rhs)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(&rhs).unwrap_or(&FieldElement::zero()),
             ),
         );
         let output_v = &witness_assignments.get_or_assign(
             &mut ctx,
             &output,
             noir_field_to_halo2_field(
-                *self
-                    .witness_values
-                    .get(&output)
-                    .unwrap_or(&FieldElement::zero()),
+                *self.witness_values.get(&output).unwrap_or(&FieldElement::zero()),
             ),
         );
 
@@ -212,10 +186,7 @@ impl NoirHalo2Translator<Fr> {
         assert_eq!(res.value(), &Fr::one());
 
         let result_value = noir_field_to_halo2_field(
-            *self
-                .witness_values
-                .get(&result)
-                .unwrap_or(&FieldElement::zero()),
+            *self.witness_values.get(&result).unwrap_or(&FieldElement::zero()),
         );
 
         let output = ctx.load_witness(result_value);

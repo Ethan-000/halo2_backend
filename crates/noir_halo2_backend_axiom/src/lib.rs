@@ -1,9 +1,8 @@
 mod acvm_interop;
-mod dimension_measure;
-
 mod assigned_map;
 mod circuit_translator;
 mod constrains;
+mod dimension_measure;
 mod halo2_params;
 mod halo2_plonk_api;
 mod tests;
