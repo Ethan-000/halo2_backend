@@ -106,6 +106,8 @@
 
         packages = {
           default = noir_halo2_pse_naitive;
+
+          # wasm not working with nix at the moment
           wasm = noir_halo2_pse_wasm;
         };
 
