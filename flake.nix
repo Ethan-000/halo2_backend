@@ -114,8 +114,6 @@
 
           nativeBuildInputs = with pkgs; [
             git
-            cargo
-            rustc
             rust_toolchain
           ];
         });
