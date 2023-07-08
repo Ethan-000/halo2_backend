@@ -22,6 +22,3 @@ jobs:
 
       - name: run `nix flake check`
         run: nix flake check --no-update-lock-file --show-trace
-
-      - name: build wasm package
-        run: nix build .#wasm
