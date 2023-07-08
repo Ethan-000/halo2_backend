@@ -9,8 +9,6 @@ license.workspace = true
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-resolver = "2"
-
 [dependencies]
 acvm.workspace = true
 noir_halo2_backend_common.workspace = true

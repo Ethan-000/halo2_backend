@@ -7,6 +7,12 @@ node_modules
 pkg/
 **/noir
 
+# Nix stuff
+**/outputs
+result
+.envrc.local
+.direnv/
+
 # Nargo output
 *.proof
 *.acir
