@@ -31,6 +31,7 @@ pse_maingate = { git = "https://github.com/privacy-scaling-explorations/halo2wro
 pse_snark_verifier = { git = "https://github.com/privacy-scaling-explorations/snark-verifier", package = "snark-verifier", tag = "v2023_04_20", features = [
     "halo2_circuit_params",
 ] }
+wit-bindgen = "0.8.0"
 # pse_halo2_proofs = { git = "https://github.com/privacy-scaling-explorations/halo2.git", package = "halo2_proofs", tag = "v2023_04_20" }
 # pse_ecdsa = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "ecdsa", tag = "v2023_04_20", features = [
 #     "circuit-params",
