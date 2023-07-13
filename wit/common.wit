@@ -1,0 +1,50 @@
+package backend:component
+
+interface crs {
+    // Generate a halo2-compatible kzg structured reference string
+    // expects the calling client to be responsible for downloading the aztec crs
+    // expects the calling client to provide the serialized ACIR
+    generate-crs: func(aztec-crs: tuple<list<u8>, list<u8>>, circuit: list<u8>) -> list<u8>
+}
+
+interface acir {
+    // get the constraint size of the circuit (2^res)
+    get-exact-circuit-size: func(circuit: list<u8>) -> u32
+
+    // get the halo2 kzg proving key for a given circuit
+    get-proving-key: func(crs: list<u8>, circuit: list<u8>) -> list<u8>
+
+    // get the halo2 kzg verification key for a given circuit
+    get-verification-key: func(crs: list<u8>, circuit: list<u8>) -> list<u8>
+}
+
+interface proofsystem {
+    // generate the proving and verifying keys
+    preprocess: func(crs: list<u8>, circuit: list<u8>) -> tuple<list<u8>, list<u8>>
+
+    // prove an acir-generated halo2 circuit
+    // witness map should be serialized
+    prove-with-pk: func(crs: list<u8>, circuit: list<u8>, witness-values: list<u8>, key: list<u8>) -> list<u8>
+
+    // verify an acir-generated halo2 circuit
+    // witness map should be serialized
+    verify-with-vk: func(crs: list<u8>, proof: list<u8>, public-inputs: list<u8>, circuit: list<u8>, key: list<u8>) -> list<u8>
+}
+
+interface smartcontract {
+    // generate the smart contract verifier for a given circuit
+    // returns the utf8 encoded yul verifier
+    eth-contract-from-vk: func(crs: list<u8>, circuit: list<u8>, key: list<u8>) -> list<u8>
+}
+
+world backend {
+    import crs
+    import acir
+    import proofsystem
+    import smartcontract
+    
+    export crs
+    export acir
+    export proofsystem
+    export smartcontract
+}

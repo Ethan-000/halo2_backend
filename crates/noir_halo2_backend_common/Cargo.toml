@@ -8,6 +8,7 @@ license.workspace = true
 
 [dependencies]
 acvm.workspace = true
+wit-bindgen.workspace = true
 bincode = "1.3.3"
 bytesize = "1.2"
 reqwest = { version = "0.11.16", default-features = false, features = [
@@ -17,9 +18,16 @@ reqwest = { version = "0.11.16", default-features = false, features = [
 serde_json.workspace = true
 thiserror = "1.0.21"
 
-[target.'cfg(target_family = "wasm")'.dependencies]
-console_error_panic_hook.workspace = true
-getrandom.workspace = true
-serde-wasm-bindgen.workspace = true
-tokio.workspace = true
-wasm-bindgen.workspace = true
+[package.metadata.component]
+package = "backend:common"
+
+[package.metadata.component.target]
+path = "../../wit/common.wit"
+
+[package.metadata.component.dependencies]
+# [target.'cfg(target_family = "wasm")'.dependencies]
+# console_error_panic_hook.workspace = true
+# getrandom.workspace = true
+# serde-wasm-bindgen.workspace = true
+# tokio.workspace = true
+# wasm-bindgen.workspace = true
