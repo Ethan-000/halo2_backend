@@ -1539,20 +1539,24 @@ name = "noir_halo2_backend_pse"
 version = "0.1.0"
 dependencies = [
  "acvm",
- "console_error_panic_hook",
  "criterion",
  "ecc",
- "getrandom",
  "halo2wrong",
  "maingate",
  "noir_halo2_backend_common",
+ "noir_halo2_backend_pse-bindings",
  "rand",
  "serde",
- "serde-wasm-bindgen",
  "serde_json",
  "snark-verifier 0.1.0",
- "tokio",
- "wasm-bindgen",
+ "wit-bindgen",
+]
+
+[[package]]
+name = "noir_halo2_backend_pse-bindings"
+version = "0.1.0"
+dependencies = [
+ "wit-bindgen",
 ]
 
 [[package]]

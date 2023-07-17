@@ -39,12 +39,12 @@ interface smartcontract {
 
 world backend {
     import crs
-    import acir
-    import proofsystem
-    import smartcontract
+    //import acir
+    //import proofsystem
+    //import smartcontract
     
     export crs
-    export acir
-    export proofsystem
-    export smartcontract
+    //export acir
+    //export proofsystem
+    //export smartcontract
 }

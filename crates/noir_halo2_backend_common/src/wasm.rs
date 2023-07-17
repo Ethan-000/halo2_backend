@@ -1,26 +1,36 @@
-use bindings::{
-    backend::component::{crs, acir, smartcontract, proofsystem},
-    exports::backend::component::{crs::Crs, acir::Acir, smartcontract::Smartcontract, proofsystem::Proofsystem},
-};
+// use bindings::{
+//     backend::component::{crs, acir, smartcontract, proofsystem},
+//     exports::backend::component::{crs::Crs, acir::Acir, smartcontract::Smartcontract,
+// proofsystem::Proofsystem}, };
 
-struct Component;
+#[macro_export]
+macro_rules! impl_noir_halo2_backend_wasm_bindgen {
+    (
+        $halo2:ident
+    ) => {
+        use bindings::{backend::component::crs, exports::backend::component::crs::Crs};
+
+        struct Component;
+        bindings::export!(Component);
 
 
+        impl Crs for Component {
+            fn generate_crs(aztec_crs: (Vec<u8>, Vec<u8>), circuit: Vec<u8>) -> Vec<u8> {
+                Vec::new()
+            }
+        }
+    };
+}
 
-bindings::export!(Component);
 
 // #[cfg(target_family = "wasm")]
 // #[macro_export]
 // macro_rules! impl_noir_halo2_backend_wasm_bindgen {
 //     (
 //         $halo2:ident
-//     ) => {
-//         use acvm::{
-//             acir::{circuit::Circuit, native_types::WitnessMap},
-//             CommonReferenceString, ProofSystemCompiler, SmartContract,
-//         };
-//         use tokio::runtime::Builder;
-//         use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
+//     ) => { use acvm::{ acir::{circuit::Circuit, native_types::WitnessMap}, CommonReferenceString,
+//       ProofSystemCompiler, SmartContract, }; use tokio::runtime::Builder; use
+//       wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
 //         #[wasm_bindgen]
 //         pub fn init_panic_hook() {
@@ -28,8 +38,8 @@ bindings::export!(Component);
 //         }
 
 //         #[wasm_bindgen]
-//         pub fn generate_common_reference_string(circuit_js: JsValue) -> Result<JsValue, JsValue> {
-//             let runtime = Builder::new_current_thread().enable_all().build().unwrap();
+//         pub fn generate_common_reference_string(circuit_js: JsValue) -> Result<JsValue, JsValue>
+// {             let runtime = Builder::new_current_thread().enable_all().build().unwrap();
 //             let circuit: Circuit = serde_wasm_bindgen::from_value(circuit_js)?;
 
 //             let fut = $halo2.generate_common_reference_string(&circuit);
@@ -51,10 +61,9 @@ bindings::export!(Component);
 //         pub fn get_proving_key(
 //             common_reference_string_js: JsValue,
 //             circuit_js: JsValue,
-//         ) -> Result<JsValue, JsValue> {
-//             let common_reference_string: Vec<u8> =
-//                 serde_wasm_bindgen::from_value(common_reference_string_js)?;
-//             let circuit: Circuit = serde_wasm_bindgen::from_value(circuit_js)?;
+//         ) -> Result<JsValue, JsValue> { let common_reference_string: Vec<u8> =
+//           serde_wasm_bindgen::from_value(common_reference_string_js)?; let circuit: Circuit =
+//           serde_wasm_bindgen::from_value(circuit_js)?;
 
 //             let (pk, _) = $halo2.preprocess(&common_reference_string, &circuit).unwrap();
 
@@ -65,10 +74,9 @@ bindings::export!(Component);
 //         pub fn get_verification_key(
 //             common_reference_string_js: JsValue,
 //             circuit_js: JsValue,
-//         ) -> Result<JsValue, JsValue> {
-//             let common_reference_string: Vec<u8> =
-//                 serde_wasm_bindgen::from_value(common_reference_string_js)?;
-//             let circuit: Circuit = serde_wasm_bindgen::from_value(circuit_js)?;
+//         ) -> Result<JsValue, JsValue> { let common_reference_string: Vec<u8> =
+//           serde_wasm_bindgen::from_value(common_reference_string_js)?; let circuit: Circuit =
+//           serde_wasm_bindgen::from_value(circuit_js)?;
 
 //             let (_, vk) = $halo2.preprocess(&common_reference_string, &circuit).unwrap();
 
@@ -81,12 +89,11 @@ bindings::export!(Component);
 //             circuit_js: JsValue,
 //             witness_values_js: JsValue,
 //             proving_key_js: JsValue,
-//         ) -> Result<JsValue, JsValue> {
-//             let common_reference_string: Vec<u8> =
-//                 serde_wasm_bindgen::from_value(common_reference_string_js)?;
-//             let circuit: Circuit = serde_wasm_bindgen::from_value(circuit_js)?;
-//             let witness_values: WitnessMap = serde_wasm_bindgen::from_value(witness_values_js)?;
-//             let proving_key: Vec<u8> = serde_wasm_bindgen::from_value(proving_key_js)?;
+//         ) -> Result<JsValue, JsValue> { let common_reference_string: Vec<u8> =
+//           serde_wasm_bindgen::from_value(common_reference_string_js)?; let circuit: Circuit =
+//           serde_wasm_bindgen::from_value(circuit_js)?; let witness_values: WitnessMap =
+//           serde_wasm_bindgen::from_value(witness_values_js)?; let proving_key: Vec<u8> =
+//           serde_wasm_bindgen::from_value(proving_key_js)?;
 
 //             let proof = $halo2
 //                 .prove_with_pk(
@@ -108,13 +115,12 @@ bindings::export!(Component);
 //             public_inputs_js: JsValue,
 //             circuit_js: JsValue,
 //             verification_key_js: JsValue,
-//         ) -> Result<JsValue, JsValue> {
-//             let common_reference_string: Vec<u8> =
-//                 serde_wasm_bindgen::from_value(common_reference_string_js)?;
-//             let proof: Vec<u8> = serde_wasm_bindgen::from_value(proof_js)?;
-//             let circuit: Circuit = serde_wasm_bindgen::from_value(circuit_js)?;
-//             let public_inputs: WitnessMap = serde_wasm_bindgen::from_value(public_inputs_js)?;
-//             let verification_key: Vec<u8> = serde_wasm_bindgen::from_value(verification_key_js)?;
+//         ) -> Result<JsValue, JsValue> { let common_reference_string: Vec<u8> =
+//           serde_wasm_bindgen::from_value(common_reference_string_js)?; let proof: Vec<u8> =
+//           serde_wasm_bindgen::from_value(proof_js)?; let circuit: Circuit =
+//           serde_wasm_bindgen::from_value(circuit_js)?; let public_inputs: WitnessMap =
+//           serde_wasm_bindgen::from_value(public_inputs_js)?; let verification_key: Vec<u8> =
+//           serde_wasm_bindgen::from_value(verification_key_js)?;
 
 //             let valid_proof = $halo2
 //                 .verify_with_vk(
@@ -134,13 +140,13 @@ bindings::export!(Component);
 //         pub fn get_eth_verification_contract(
 //             common_reference_string_js: JsValue,
 //             verification_key_js: JsValue,
-//         ) -> Result<String, JsValue> {
-//             let common_reference_string: Vec<u8> =
-//                 serde_wasm_bindgen::from_value(common_reference_string_js)?;
-//             let verification_key: Vec<u8> = serde_wasm_bindgen::from_value(verification_key_js)?;
+//         ) -> Result<String, JsValue> { let common_reference_string: Vec<u8> =
+//           serde_wasm_bindgen::from_value(common_reference_string_js)?; let verification_key:
+//           Vec<u8> = serde_wasm_bindgen::from_value(verification_key_js)?;
 
 //             let contract =
-//                 $halo2.eth_contract_from_vk(&common_reference_string, &verification_key).unwrap();
+//                 $halo2.eth_contract_from_vk(&common_reference_string,
+// &verification_key).unwrap();
 
 //             Ok(contract)
 //         }

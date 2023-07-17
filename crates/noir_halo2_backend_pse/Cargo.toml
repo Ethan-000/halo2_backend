@@ -11,6 +11,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 acvm.workspace = true
+wit-bindgen.workspace = true
 noir_halo2_backend_common.workspace = true
 rand.workspace = true
 serde.workspace = true
@@ -51,9 +52,17 @@ name = "bench_noir_halo2_pse_verify"
 harness = false
 
 # can only build on linux because the use of a c lib
-[target.'cfg(target_family = "wasm")'.dependencies]
-console_error_panic_hook.workspace = true
-getrandom.workspace = true
-serde-wasm-bindgen.workspace = true
-tokio.workspace = true
-wasm-bindgen.workspace = true
+# [target.'cfg(target_family = "wasm")'.dependencies]
+# console_error_panic_hook.workspace = true
+# getrandom.workspace = true
+# serde-wasm-bindgen.workspace = true
+# tokio.workspace = true
+# wasm-bindgen.workspace = true
+
+[package.metadata.component]
+package = "backend:common"
+
+[package.metadata.component.target]
+path = "../../wit/common.wit"
+
+[package.metadata.component.dependencies]
