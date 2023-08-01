@@ -149,8 +149,7 @@ impl ProofSystemCompiler for PseHalo2 {
         match opcode {
             Opcode::Arithmetic(_) => true,
             Opcode::Directive(_) => false,
-            Opcode::MemoryInit { block_id: _, init: _ } => false,
-            Opcode::MemoryOp { block_id: _, op: _ } => false,
+            Opcode::MemoryInit { .. } | Opcode::MemoryOp { .. } => false,
             Opcode::BlackBoxFuncCall(func) => match func.get_black_box_func() {
                 BlackBoxFunc::RANGE | BlackBoxFunc::AND => true,
                 BlackBoxFunc::XOR

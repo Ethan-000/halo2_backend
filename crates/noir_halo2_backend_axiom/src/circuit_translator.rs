@@ -151,6 +151,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                                 &config,
                             );
                         }
+                        BlackBoxFuncCall::EcdsaSecp256r1 { .. } => { todo!() }
                         BlackBoxFuncCall::FixedBaseScalarMul { .. } => {
                             todo!()
                         }
@@ -175,15 +176,10 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                         } => todo!(),
                     };
                 }
-                Opcode::Directive(_) | Opcode::Oracle(_) => {
+                Opcode::Directive(_) => {
                     // Directives are only needed by the pwg
                 }
-                Opcode::Block(_) => {
-                    // Block is managed by ACVM
-                }
-                Opcode::RAM(_) | Opcode::ROM(_) => {
-                    todo!()
-                }
+                Opcode::MemoryInit { .. } | Opcode::MemoryOp { .. } => todo!(),
                 Opcode::Brillig(_) => todo!(),
             }
         }

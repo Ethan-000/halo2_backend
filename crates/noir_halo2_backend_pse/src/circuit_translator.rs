@@ -154,9 +154,9 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                 Opcode::Directive(_) => {
                     // Directives are only needed by the pwg
                 }
+                // memory managed by acvm
+                Opcode::MemoryInit { .. } | Opcode::MemoryOp { .. } => todo!(),
                 Opcode::Brillig(_) => todo!(),
-                Opcode::MemoryInit { .. } => todo!(),
-                Opcode::MemoryOp { .. } => todo!(),
             }
         }
 

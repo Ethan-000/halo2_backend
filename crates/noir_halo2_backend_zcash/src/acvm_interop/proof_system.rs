@@ -95,8 +95,7 @@ impl ProofSystemCompiler for ZcashHalo2 {
         match opcode {
             Opcode::Arithmetic(_) => true,
             Opcode::Directive(_) => false,
-            Opcode::MemoryInit { .. } => false,
-            Opcode::MemoryOp { .. } => false,
+            Opcode::MemoryInit { .. } | Opcode::MemoryOp { .. } => false,
             Opcode::BlackBoxFuncCall(func) => match func.get_black_box_func() {
                 BlackBoxFunc::AND | BlackBoxFunc::RANGE => true,
 
