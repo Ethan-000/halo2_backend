@@ -149,19 +149,17 @@ impl ProofSystemCompiler for PseHalo2 {
         match opcode {
             Opcode::Arithmetic(_) => true,
             Opcode::Directive(_) => false,
-            Opcode::Block(_) => false,
-            Opcode::ROM(_) => false,
-            Opcode::RAM(_) => false,
-            Opcode::Oracle(_) => false,
+            Opcode::MemoryInit { block_id: _, init: _ } => false,
+            Opcode::MemoryOp { block_id: _, op: _ } => false,
             Opcode::BlackBoxFuncCall(func) => match func.get_black_box_func() {
                 BlackBoxFunc::RANGE | BlackBoxFunc::AND => true,
-
                 BlackBoxFunc::XOR
                 | BlackBoxFunc::SHA256
                 | BlackBoxFunc::Blake2s
                 | BlackBoxFunc::Pedersen
                 | BlackBoxFunc::HashToField128Security
                 | BlackBoxFunc::EcdsaSecp256k1
+                | BlackBoxFunc::EcdsaSecp256r1
                 | BlackBoxFunc::Keccak256
                 | BlackBoxFunc::FixedBaseScalarMul
                 | BlackBoxFunc::RecursiveAggregation

@@ -229,6 +229,7 @@ impl OpcodeFlags {
                     BlackBoxFuncCall::Pedersen { .. } => pedersen = true,
                     BlackBoxFuncCall::HashToField128Security { .. } => hash_to_field = true,
                     BlackBoxFuncCall::EcdsaSecp256k1 { .. } => ecdsa_secp256k1 = true,
+                    BlackBoxFuncCall::EcdsaSecp256r1 { .. } => ecdsa_secp256k1 = true,
                     BlackBoxFuncCall::FixedBaseScalarMul { .. } => fixed_base_scalar_mul = true,
                     BlackBoxFuncCall::Keccak256 { .. } => keccak256 = true,
                     BlackBoxFuncCall::Keccak256VariableLength { .. } => {
@@ -236,13 +237,11 @@ impl OpcodeFlags {
                     }
                     BlackBoxFuncCall::RecursiveAggregation { .. } => recursive_aggregation = true,
                 },
-                Opcode::Directive(_) | Opcode::Oracle(_) => {
+                Opcode::Directive(_) => {
                     // Directives are only needed by the pwg
                 }
-                Opcode::Block(_) => {
-                    // Block is managed by ACVM
-                }
-                Opcode::RAM(_) | Opcode::ROM(_) => {}
+                Opcode::MemoryInit { .. } => {}
+                Opcode::MemoryOp { .. } => {}
                 Opcode::Brillig(_) => {}
             }
         }
