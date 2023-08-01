@@ -1,22 +1,22 @@
 use std::rc::Rc;
 
-use acvm::acir::circuit::Circuit;
-use acvm::SmartContract;
+use acvm::{acir::circuit::Circuit, SmartContract};
 use noir_halo2_backend_common::errors::BackendError;
-use pse_halo2wrong::curves::bn256::{Bn256, Fq, Fr, G1Affine};
-use pse_halo2wrong::halo2::plonk::VerifyingKey;
-use pse_halo2wrong::halo2::poly::commitment::ParamsProver;
-use pse_halo2wrong::halo2::poly::kzg::commitment::ParamsKZG;
-use pse_halo2wrong::halo2::SerdeFormat;
-use pse_snark_verifier::loader::evm::EvmLoader;
-use pse_snark_verifier::pcs::kzg::{Gwc19, KzgAs};
-use pse_snark_verifier::system::halo2::transcript::evm::EvmTranscript;
-use pse_snark_verifier::system::halo2::{compile, Config};
-use pse_snark_verifier::verifier::{self, SnarkVerifier};
+use pse_halo2wrong::{
+    curves::bn256::{Bn256, Fq, Fr, G1Affine},
+    halo2::{
+        plonk::VerifyingKey,
+        poly::{commitment::ParamsProver, kzg::commitment::ParamsKZG},
+        SerdeFormat,
+    },
+};
+use pse_snark_verifier::{
+    loader::evm::EvmLoader,
+    pcs::kzg::{Gwc19, KzgAs},
+    system::halo2::{compile, transcript::evm::EvmTranscript, Config},
+    verifier::{self, SnarkVerifier},
+};
 
-use crate::circuit_translator::NoirHalo2Translator;
-use crate::halo2_plonk_api::OpcodeFlags;
-use crate::PseHalo2;
 type PlonkVerifier = verifier::plonk::PlonkVerifier<KzgAs<Bn256, Gwc19>>;
 
 /// Generate the evm verifier of the circuit as Yul code
@@ -25,11 +25,7 @@ fn gen_evm_verifier(
     vk: &VerifyingKey<G1Affine>,
     num_instance: Vec<usize>,
 ) -> String {
-    let protocol = compile(
-        params,
-        vk,
-        Config::kzg().with_num_instance(num_instance.clone()),
-    );
+    let protocol = compile(params, vk, Config::kzg().with_num_instance(num_instance.clone()));
     let vk = (params.get_g()[0], params.g2(), params.s_g2()).into();
 
     let loader = EvmLoader::new::<Fq, Fr>();

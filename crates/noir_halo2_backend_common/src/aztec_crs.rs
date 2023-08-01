@@ -1,9 +1,7 @@
 use crate::errors::{CRSError, Error};
 use bytesize::ByteSize;
-use std::env;
-
 use reqwest::Client;
-
+use std::env;
 const G1_START: usize = 28;
 const G2_START: usize = 28 + (5_040_000 * 64);
 const G2_END: usize = G2_START + 128 - 1;
@@ -33,29 +31,16 @@ async fn download(start: usize, end: usize) -> Result<Vec<u8>, CRSError> {
         .get(&transcript_url)
         .header(reqwest::header::RANGE, format!("bytes={start}-{end}"))
         .build()
-        .map_err(|source| CRSError::Request {
-            url: transcript_url.to_string(),
-            source,
-        })?;
+        .map_err(|source| CRSError::Request { url: transcript_url.to_string(), source })?;
     let response = client
         .execute(request)
         .await
-        .map_err(|source| CRSError::Fetch {
-            url: transcript_url.to_string(),
-            source,
-        })?;
-    let total_size = response.content_length().ok_or(CRSError::Length {
-        url: transcript_url.to_string(),
-    })?;
+        .map_err(|source| CRSError::Fetch { url: transcript_url.to_string(), source })?;
+    let total_size =
+        response.content_length().ok_or(CRSError::Length { url: transcript_url.to_string() })?;
 
-    println!(
-        "\nDownloading the Ignite SRS ({})",
-        ByteSize(total_size).to_string_as(false)
-    );
-    let crs_bytes = response
-        .bytes()
-        .await
-        .map_err(|source| CRSError::Download { source })?;
+    println!("\nDownloading the Ignite SRS ({})", ByteSize(total_size).to_string_as(false));
+    let crs_bytes = response.bytes().await.map_err(|source| CRSError::Download { source })?;
     println!("Downloaded the SRS successfully!");
 
     Ok(crs_bytes.into())

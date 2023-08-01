@@ -1,5 +1,4 @@
-use std::io::Write;
-
+use crate::dimension_measure::DimensionMeasurement;
 use noir_halo2_backend_common::{aztec_crs::get_aztec_crs, errors::Error};
 use pse_halo2wrong::{
     curves::bn256::Fr,
@@ -16,8 +15,7 @@ use pse_halo2wrong::{
         SerdeFormat,
     },
 };
-
-use crate::dimension_measure::DimensionMeasurement;
+use std::io::Write;
 
 /// Serialize halo2 parameters from Aztec CRS ceremony
 pub(crate) async fn constuct_halo2_params_from_aztec_crs(

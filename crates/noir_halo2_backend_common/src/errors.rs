@@ -4,9 +4,7 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum FeatureError {
     #[error("Could not slice field element")]
-    _FieldElementSlice {
-        source: std::array::TryFromSliceError,
-    },
+    _FieldElementSlice { source: std::array::TryFromSliceError },
     #[error("Expected a Vec of length {0} but it was {1}")]
     _FieldToArray(usize, usize),
 }

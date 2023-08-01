@@ -45,9 +45,7 @@ macro_rules! impl_noir_halo2_backend_wasm_bindgen {
                 serde_wasm_bindgen::from_value(common_reference_string_js)?;
             let circuit: Circuit = serde_wasm_bindgen::from_value(circuit_js)?;
 
-            let (pk, _) = $halo2
-                .preprocess(&common_reference_string, &circuit)
-                .unwrap();
+            let (pk, _) = $halo2.preprocess(&common_reference_string, &circuit).unwrap();
 
             Ok(serde_wasm_bindgen::to_value(&pk)?)
         }
@@ -61,9 +59,7 @@ macro_rules! impl_noir_halo2_backend_wasm_bindgen {
                 serde_wasm_bindgen::from_value(common_reference_string_js)?;
             let circuit: Circuit = serde_wasm_bindgen::from_value(circuit_js)?;
 
-            let (_, vk) = $halo2
-                .preprocess(&common_reference_string, &circuit)
-                .unwrap();
+            let (_, vk) = $halo2.preprocess(&common_reference_string, &circuit).unwrap();
 
             Ok(serde_wasm_bindgen::to_value(&vk)?)
         }
@@ -132,9 +128,8 @@ macro_rules! impl_noir_halo2_backend_wasm_bindgen {
                 serde_wasm_bindgen::from_value(common_reference_string_js)?;
             let verification_key: Vec<u8> = serde_wasm_bindgen::from_value(verification_key_js)?;
 
-            let contract = $halo2
-                .eth_contract_from_vk(&common_reference_string, &verification_key)
-                .unwrap();
+            let contract =
+                $halo2.eth_contract_from_vk(&common_reference_string, &verification_key).unwrap();
 
             Ok(contract)
         }

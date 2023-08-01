@@ -1,8 +1,6 @@
 // copied and adapted from https://github.com/privacy-scaling-explorations/halo2wrong/blob/master/halo2wrong/src/utils.rs
 // cus fn k() is private.
 
-use std::{cell::RefCell, ops::RangeInclusive};
-
 use halo2_base::halo2_proofs::{
     circuit::Value,
     plonk::{
@@ -11,6 +9,7 @@ use halo2_base::halo2_proofs::{
     },
 };
 use halo2_ecc::fields::PrimeField;
+use std::{cell::RefCell, ops::RangeInclusive};
 
 #[derive(Default)]
 pub struct DimensionMeasurement {

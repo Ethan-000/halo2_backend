@@ -1,8 +1,7 @@
+use crate::ZcashHalo2;
 use acvm::SmartContract;
 use acvm::acir::circuit::Circuit;
 use noir_halo2_backend_common::errors::BackendError;
-
-use crate::ZcashHalo2;
 
 impl SmartContract for ZcashHalo2 {
     type Error = BackendError;

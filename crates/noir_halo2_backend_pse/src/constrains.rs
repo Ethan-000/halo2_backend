@@ -1,8 +1,9 @@
+use super::halo2_plonk_api::{NoirConstraint, PlonkConfig};
+use crate::{assigned_map::AssignedMap, circuit_translator::NoirHalo2Translator};
 use acvm::{
     acir::native_types::{Expression, Witness},
     FieldElement,
 };
-
 use noir_halo2_backend_common::noir_field_to_halo2_field;
 use pse_halo2wrong::{
     halo2::{
@@ -15,10 +16,6 @@ use pse_maingate::{
     CombinationOption, MainGate, MainGateColumn, MainGateInstructions, RangeChip,
     RangeInstructions, Term,
 };
-
-use crate::{assigned_map::AssignedMap, circuit_translator::NoirHalo2Translator};
-
-use super::halo2_plonk_api::{NoirConstraint, PlonkConfig};
 
 impl NoirHalo2Translator<Fr> {
     pub(crate) fn add_arithmetic_constrains(
@@ -51,22 +48,13 @@ impl NoirHalo2Translator<Fr> {
         noir_cs.qc = gate.q_c;
 
         let a = Value::known(noir_field_to_halo2_field(
-            *self
-                .witness_values
-                .get_index(noir_cs.a as u32)
-                .unwrap_or(&FieldElement::zero()),
+            *self.witness_values.get_index(noir_cs.a as u32).unwrap_or(&FieldElement::zero()),
         ));
         let b = Value::known(noir_field_to_halo2_field(
-            *self
-                .witness_values
-                .get_index(noir_cs.b as u32)
-                .unwrap_or(&FieldElement::zero()),
+            *self.witness_values.get_index(noir_cs.b as u32).unwrap_or(&FieldElement::zero()),
         ));
         let c = Value::known(noir_field_to_halo2_field(
-            *self
-                .witness_values
-                .get_index(noir_cs.c as u32)
-                .unwrap_or(&FieldElement::zero()),
+            *self.witness_values.get_index(noir_cs.c as u32).unwrap_or(&FieldElement::zero()),
         ));
 
         let qm = noir_field_to_halo2_field(noir_cs.qm);
@@ -137,10 +125,7 @@ impl NoirHalo2Translator<Fr> {
         witness_assignments: &mut AssignedMap<Fr>,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
         let input = noir_field_to_halo2_field(
-            *self
-                .witness_values
-                .get(&witness)
-                .unwrap_or(&FieldElement::zero()),
+            *self.witness_values.get(&witness).unwrap_or(&FieldElement::zero()),
         );
 
         layouter.assign_region(
@@ -176,24 +161,15 @@ impl NoirHalo2Translator<Fr> {
         witness_assignments: &mut AssignedMap<Fr>,
     ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
         let lhs_v = Value::known(noir_field_to_halo2_field(
-            *self
-                .witness_values
-                .get(&lhs)
-                .unwrap_or(&FieldElement::zero()),
+            *self.witness_values.get(&lhs).unwrap_or(&FieldElement::zero()),
         ));
 
         let rhs_v = Value::known(noir_field_to_halo2_field(
-            *self
-                .witness_values
-                .get(&rhs)
-                .unwrap_or(&FieldElement::zero()),
+            *self.witness_values.get(&rhs).unwrap_or(&FieldElement::zero()),
         ));
 
         let output_v = Value::known(noir_field_to_halo2_field(
-            *self
-                .witness_values
-                .get(&output)
-                .unwrap_or(&FieldElement::zero()),
+            *self.witness_values.get(&output).unwrap_or(&FieldElement::zero()),
         ));
 
         layouter.assign_region(
@@ -239,11 +215,8 @@ impl NoirHalo2Translator<Fr> {
         let main_gate = MainGate::<Fr>::new(config.main_gate_config.clone());
         // loop through public witness indices and expose publicly through main gate
         for (i, _) in public_indices.iter().enumerate() {
-            let assigned = witness_assignments
-                .get_index(public_indices[i])
-                .unwrap()
-                .last()
-                .unwrap();
+            let assigned =
+                witness_assignments.get_index(public_indices[i]).unwrap().last().unwrap();
             main_gate.expose_public(
                 layouter.namespace(|| format!("Public IO #{i:?}")),
                 assigned.clone(),

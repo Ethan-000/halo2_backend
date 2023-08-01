@@ -1,3 +1,4 @@
+use crate::dimension_measure::DimensionMeasurement;
 use halo2_base::halo2_proofs::{
     arithmetic::g_to_lagrange,
     halo2curves::{
@@ -12,8 +13,6 @@ use halo2_base::halo2_proofs::{
 };
 use noir_halo2_backend_common::{aztec_crs::get_aztec_crs, errors::Error};
 use std::io::Write;
-
-use crate::dimension_measure::DimensionMeasurement;
 
 pub(crate) async fn constuct_halo2_params_from_aztec_crs(
     translator: impl halo2_base::halo2_proofs::plonk::Circuit<Fr>,

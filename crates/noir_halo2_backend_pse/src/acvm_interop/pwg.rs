@@ -2,6 +2,7 @@ use acvm::acir::FieldElement;
 use acvm::{BlackBoxFunctionSolver, BlackBoxResolutionError};
 
 use crate::PseHalo2;
+use acvm::{acir::native_types::Witness, pwg::OpcodeResolutionError, PartialWitnessGenerator};
 
 impl BlackBoxFunctionSolver for PseHalo2 {
     fn schnorr_verify(

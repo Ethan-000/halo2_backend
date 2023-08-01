@@ -1,13 +1,12 @@
 #![allow(dead_code)]
+use acvm::acir::{circuit::Circuit, native_types::WitnessMap};
+use serde_json::Value;
 use std::{
     fs::{self, File},
     io::{Read, Result},
     path::PathBuf,
     process::{Command, Output},
 };
-
-use acvm::acir::{circuit::Circuit, native_types::WitnessMap};
-use serde_json::Value;
 
 pub fn configure_test_dirs() -> Vec<PathBuf> {
     let test_dirs_names = vec![
@@ -22,10 +21,7 @@ pub fn configure_test_dirs() -> Vec<PathBuf> {
         "9_public_io",
         "10_public_io_array",
     ];
-    test_dirs_names
-        .into_iter()
-        .map(test_program_dir_path)
-        .collect()
+    test_dirs_names.into_iter().map(test_program_dir_path).collect()
 }
 
 fn nargo_cmd() -> std::process::Command {
@@ -33,30 +29,15 @@ fn nargo_cmd() -> std::process::Command {
 }
 
 fn nargo_execute(test_program_dir: &PathBuf) -> Result<Output> {
-    nargo_cmd()
-        .current_dir(test_program_dir)
-        .arg("execute")
-        .spawn()
-        .unwrap()
-        .wait_with_output()
+    nargo_cmd().current_dir(test_program_dir).arg("execute").spawn().unwrap().wait_with_output()
 }
 
 fn nargo_test(test_program_dir: &PathBuf) -> Result<Output> {
-    nargo_cmd()
-        .current_dir(test_program_dir)
-        .arg("test")
-        .spawn()
-        .unwrap()
-        .wait_with_output()
+    nargo_cmd().current_dir(test_program_dir).arg("test").spawn().unwrap().wait_with_output()
 }
 
 fn nargo_check(test_program_dir: &PathBuf) -> Result<Output> {
-    nargo_cmd()
-        .current_dir(test_program_dir)
-        .arg("check")
-        .spawn()
-        .unwrap()
-        .wait_with_output()
+    nargo_cmd().current_dir(test_program_dir).arg("check").spawn().unwrap().wait_with_output()
 }
 
 fn nargo_contract(test_program_dir: &PathBuf) -> Result<Output> {
@@ -69,12 +50,7 @@ fn nargo_contract(test_program_dir: &PathBuf) -> Result<Output> {
 }
 
 fn nargo_gates(test_program_dir: &PathBuf) -> Result<Output> {
-    nargo_cmd()
-        .current_dir(test_program_dir)
-        .arg("gates")
-        .spawn()
-        .unwrap()
-        .wait_with_output()
+    nargo_cmd().current_dir(test_program_dir).arg("gates").spawn().unwrap().wait_with_output()
 }
 
 fn nargo_compile(test_program_dir: &PathBuf) -> Result<Output> {
@@ -201,7 +177,8 @@ pub fn run_nargo_verify(test_program: PathBuf) {
 }
 
 /**
- * Given a test_program circuit program name, build the circuit and witness artifacts & return the deserialized objects
+ * Given a test_program circuit program name, build the circuit and witness artifacts & return
+ * the deserialized objects
  *
  * @param program - program name for circuit to be compiled and solved
  * @return - the deserialized ACIR and solved witness (given the saved Prover.toml)
@@ -210,10 +187,9 @@ pub fn run_nargo_verify(test_program: PathBuf) {
 pub fn build_artifacts(program: &'static str, backend: &'static str) -> (Circuit, WitnessMap) {
     install_nargo(backend);
     // format path to test program
-    let path = std::fs::canonicalize(format!(
-        "../noir_halo2_backend_common/test_programs/{program}"
-    ))
-    .unwrap();
+    let path =
+        std::fs::canonicalize(format!("../noir_halo2_backend_common/test_programs/{program}"))
+            .unwrap();
     let path = path.to_str().unwrap();
 
     // build circuit bytecode

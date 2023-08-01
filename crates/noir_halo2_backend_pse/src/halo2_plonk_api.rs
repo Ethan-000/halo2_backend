@@ -1,12 +1,11 @@
+use crate::circuit_translator::NoirHalo2Translator;
 use acvm::{
     acir::circuit::{opcodes::BlackBoxFuncCall, Opcode},
     FieldElement,
 };
-
 use pse_halo2wrong::halo2::{
-    halo2curves::bn256::Fr,
     halo2curves::{
-        bn256::{Bn256, G1Affine, G1},
+        bn256::{Bn256, Fr, G1Affine, G1},
         group::cofactor::CofactorCurve,
     },
     plonk::{
@@ -20,23 +19,17 @@ use pse_halo2wrong::halo2::{
     },
     transcript::{TranscriptReadBuffer, TranscriptWriterBuffer},
 };
-
 use pse_maingate::{MainGate, MainGateConfig, RangeChip, RangeConfig};
 
 use pse_snark_verifier::system::halo2::transcript::evm::EvmTranscript;
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 
-use crate::circuit_translator::NoirHalo2Translator;
-
 /// Generate Halo2 Proving and Verifying Keys
 pub fn halo2_keygen(
     circuit: &NoirHalo2Translator<Fr>,
     params: &ParamsKZG<Bn256>,
-) -> (
-    ProvingKey<<G1 as CofactorCurve>::Affine>,
-    VerifyingKey<<G1 as CofactorCurve>::Affine>,
-) {
+) -> (ProvingKey<<G1 as CofactorCurve>::Affine>, VerifyingKey<<G1 as CofactorCurve>::Affine>) {
     let vk = keygen_vk(params, circuit).expect("keygen_vk should not fail");
     let vk_return = vk.clone();
     let pk = keygen_pk(params, vk, circuit).expect("keygen_pk should not fail");
@@ -105,10 +98,7 @@ impl PlonkConfig {
             overflow_bit_lens,
         );
 
-        PlonkConfig {
-            main_gate_config,
-            range_config,
-        }
+        PlonkConfig { main_gate_config, range_config }
     }
 
     pub(crate) fn configure_with_params(
@@ -127,10 +117,7 @@ impl PlonkConfig {
             overflow_bit_lens,
         );
 
-        PlonkConfig {
-            main_gate_config,
-            range_config,
-        }
+        PlonkConfig { main_gate_config, range_config }
     }
 }
 

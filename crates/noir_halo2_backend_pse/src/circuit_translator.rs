@@ -1,19 +1,17 @@
-use core::panic;
-use std::marker::PhantomData;
-
+use super::halo2_plonk_api::OpcodeFlags;
 use crate::{assigned_map::AssignedMap, halo2_plonk_api::PlonkConfig};
 use acvm::acir::{
     circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
     native_types::WitnessMap,
 };
-
+use core::panic;
 use pse_halo2wrong::halo2::{
-    circuit::SimpleFloorPlanner, halo2curves::bn256::Fr, plonk::Circuit as Halo2PlonkCircuit,
-    plonk::ConstraintSystem,
+    circuit::SimpleFloorPlanner,
+    halo2curves::bn256::Fr,
+    plonk::{Circuit as Halo2PlonkCircuit, ConstraintSystem},
 };
 use pse_maingate::{RangeChip, RangeInstructions};
-
-use super::halo2_plonk_api::OpcodeFlags;
+use std::marker::PhantomData;
 
 /// Concrete Halo2 Circuit
 #[derive(Clone, Default, Debug)]
@@ -130,10 +128,7 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                         BlackBoxFuncCall::FixedBaseScalarMul { .. } => {
                             todo!()
                         }
-                        BlackBoxFuncCall::Keccak256 {
-                            inputs: _,
-                            outputs: _,
-                        } => {
+                        BlackBoxFuncCall::Keccak256 { inputs: _, outputs: _ } => {
                             panic!("keccak256 has not yet been implemented")
                         }
                         BlackBoxFuncCall::Keccak256VariableLength {

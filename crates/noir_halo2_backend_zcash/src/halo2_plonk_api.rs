@@ -1,7 +1,8 @@
-use std::marker::PhantomData;
-
+use crate::circuit_translator::NoirHalo2Translator;
 use acvm::FieldElement;
+use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
+use std::marker::PhantomData;
 use zcash_halo2_proofs::{
     arithmetic::Field,
     circuit::{Cell, Layouter, Value},
@@ -13,10 +14,6 @@ use zcash_halo2_proofs::{
     poly::{commitment::Params, Rotation},
     transcript::{Blake2bRead, Blake2bWrite, Challenge255},
 };
-
-use rand::rngs::OsRng;
-
-use crate::circuit_translator::NoirHalo2Translator;
 
 pub fn halo2_keygen(
     circuit: &NoirHalo2Translator<Fp>,
@@ -94,16 +91,7 @@ impl PlonkConfig {
             vec![a.clone() * sl + b.clone() * sr + a * b * sm + (c * so) + sc]
         });
 
-        PlonkConfig {
-            a,
-            b,
-            c,
-            sl,
-            sr,
-            so,
-            sm,
-            sc,
-        }
+        PlonkConfig { a, b, c, sl, sr, so, sm, sc }
     }
 }
 #[allow(clippy::type_complexity)]
@@ -161,16 +149,7 @@ impl<F> PolyTriple<F> {
         qo: F,
         qc: F,
     ) -> PolyTriple<F> {
-        PolyTriple {
-            a,
-            b,
-            c,
-            qm,
-            ql,
-            qr,
-            qo,
-            qc,
-        }
+        PolyTriple { a, b, c, qm, ql, qr, qo, qc }
     }
 }
 
@@ -225,10 +204,7 @@ pub struct StandardPlonk<F: Field> {
 
 impl<FF: Field> StandardPlonk<FF> {
     pub fn new(config: PlonkConfig) -> Self {
-        StandardPlonk {
-            config,
-            _marker: PhantomData,
-        }
+        StandardPlonk { config, _marker: PhantomData }
     }
 }
 

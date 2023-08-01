@@ -1,16 +1,14 @@
-use core::panic;
-use std::marker::PhantomData;
-
 use crate::halo2_plonk_api::{PlonkConfig, StandardPlonk};
 use acvm::acir::{
     circuit::{opcodes::BlackBoxFuncCall, Circuit as NoirCircuit, Opcode},
     native_types::WitnessMap,
 };
+use core::panic;
+use std::marker::PhantomData;
 use zcash_halo2_proofs::{
     circuit::{Layouter, SimpleFloorPlanner},
     pasta::Fp,
-    plonk::Circuit as Halo2PlonkCircuit,
-    plonk::ConstraintSystem,
+    plonk::{Circuit as Halo2PlonkCircuit, ConstraintSystem},
 };
 
 #[derive(Clone, Default)]
@@ -50,16 +48,8 @@ impl Halo2PlonkCircuit<Fp> for NoirHalo2Translator<Fp> {
                         BlackBoxFuncCall::RANGE { input: _ } => {
                             panic!("range constraint has not yet been implemented")
                         }
-                        BlackBoxFuncCall::AND {
-                            lhs,
-                            rhs,
-                            output: _,
-                        }
-                        | BlackBoxFuncCall::XOR {
-                            lhs,
-                            rhs,
-                            output: _,
-                        } => {
+                        BlackBoxFuncCall::AND { lhs, rhs, output: _ }
+                        | BlackBoxFuncCall::XOR { lhs, rhs, output: _ } => {
                             assert_eq!(lhs.num_bits, rhs.num_bits);
 
                             match gadget_call {
@@ -102,10 +92,7 @@ impl Halo2PlonkCircuit<Fp> for NoirHalo2Translator<Fp> {
                         BlackBoxFuncCall::FixedBaseScalarMul { .. } => {
                             todo!()
                         }
-                        BlackBoxFuncCall::Keccak256 {
-                            inputs: _,
-                            outputs: _,
-                        } => {
+                        BlackBoxFuncCall::Keccak256 { inputs: _, outputs: _ } => {
                             panic!("keccak256 has not yet been implemented")
                         }
                         BlackBoxFuncCall::Keccak256VariableLength {

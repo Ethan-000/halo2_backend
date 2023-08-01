@@ -1,28 +1,24 @@
-use acvm::FieldElement;
-use noir_halo2_backend_common::errors::BackendError;
-
-use {
-    crate::{
-        circuit_translator::NoirHalo2Translator,
-        halo2_plonk_api::{halo2_keygen, halo2_prove, halo2_verify},
-        AxiomHalo2,
-    },
-    acvm::{
-        acir::{
-            circuit::{Circuit as NoirCircuit, Opcode},
-            native_types::WitnessMap,
-            BlackBoxFunc,
-        },
-        Language, ProofSystemCompiler,
-    },
-    halo2_base::halo2_proofs::{
-        halo2curves::bn256::{Bn256, Fr, G1Affine},
-        plonk::{ProvingKey, VerifyingKey},
-        poly::kzg::commitment::ParamsKZG,
-        SerdeFormat,
-    },
-    std::marker::PhantomData,
+use crate::{
+    circuit_translator::NoirHalo2Translator,
+    halo2_plonk_api::{halo2_keygen, halo2_prove, halo2_verify},
+    AxiomHalo2,
 };
+use acvm::{
+    acir::{
+        circuit::{Circuit as NoirCircuit, Opcode},
+        native_types::WitnessMap,
+        BlackBoxFunc,
+    },
+    FieldElement, Language, ProofSystemCompiler,
+};
+use halo2_base::halo2_proofs::{
+    halo2curves::bn256::{Bn256, Fr, G1Affine},
+    plonk::{ProvingKey, VerifyingKey},
+    poly::kzg::commitment::ParamsKZG,
+    SerdeFormat,
+};
+use noir_halo2_backend_common::errors::BackendError;
+use std::marker::PhantomData;
 
 impl ProofSystemCompiler for AxiomHalo2 {
     type Error = BackendError;
@@ -46,10 +42,7 @@ impl ProofSystemCompiler for AxiomHalo2 {
             ParamsKZG::<Bn256>::read_custom(&mut common_reference_string, SerdeFormat::RawBytes);
         let (pk, vk) = halo2_keygen(&translator, &params);
 
-        Ok((
-            pk.to_bytes(SerdeFormat::RawBytes),
-            vk.to_bytes(SerdeFormat::RawBytes),
-        ))
+        Ok((pk.to_bytes(SerdeFormat::RawBytes), vk.to_bytes(SerdeFormat::RawBytes)))
     }
 
     fn prove_with_pk(

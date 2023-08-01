@@ -1,3 +1,4 @@
+use crate::{circuit_translator::NoirHalo2Translator, AxiomHalo2};
 use acvm::SmartContract;
 use acvm::acir::circuit::Circuit;
 use halo2_base::halo2_proofs::{
@@ -13,11 +14,8 @@ use snark_verifier::{
     system::halo2::{compile, transcript::evm::EvmTranscript, Config},
     verifier::{self, SnarkVerifier},
 };
-
-use crate::circuit_translator::NoirHalo2Translator;
-use crate::AxiomHalo2;
-
 use std::rc::Rc;
+
 type PlonkVerifier = verifier::plonk::PlonkVerifier<KzgAs<Bn256, Gwc19>>;
 
 fn gen_evm_verifier(
@@ -25,11 +23,7 @@ fn gen_evm_verifier(
     vk: &VerifyingKey<G1Affine>,
     num_instance: Vec<usize>,
 ) -> String {
-    let protocol = compile(
-        params,
-        vk,
-        Config::kzg().with_num_instance(num_instance.clone()),
-    );
+    let protocol = compile(params, vk, Config::kzg().with_num_instance(num_instance.clone()));
     let vk = (params.get_g()[0], params.g2(), params.s_g2()).into();
 
     let loader = EvmLoader::new::<Fq, Fr>();

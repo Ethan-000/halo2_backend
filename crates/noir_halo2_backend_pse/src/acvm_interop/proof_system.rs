@@ -1,26 +1,25 @@
+use crate::{
+    circuit_translator::NoirHalo2Translator,
+    dimension_measure::DimensionMeasurement,
+    halo2_plonk_api::{halo2_keygen, halo2_prove, halo2_verify, OpcodeFlags},
+    PseHalo2,
+};
+use acvm::{
+    acir::{
+        circuit::{Circuit as NoirCircuit, Opcode},
+        native_types::WitnessMap,
+        BlackBoxFunc,
+    },
+    FieldElement, Language, ProofSystemCompiler,
+};
+use noir_halo2_backend_common::{errors::BackendError, noir_field_to_halo2_field};
+use pse_halo2wrong::halo2::{
+    halo2curves::bn256::{Bn256, Fr, G1Affine},
+    plonk::{ProvingKey, VerifyingKey},
+    poly::kzg::commitment::ParamsKZG,
+    SerdeFormat,
+};
 use std::marker::PhantomData;
-
-use acvm::acir::circuit::Circuit as NoirCircuit;
-use acvm::acir::circuit::Opcode;
-use acvm::acir::native_types::WitnessMap;
-use acvm::acir::BlackBoxFunc;
-use acvm::FieldElement;
-use acvm::{Language, ProofSystemCompiler};
-use noir_halo2_backend_common::errors::BackendError;
-use noir_halo2_backend_common::noir_field_to_halo2_field;
-use pse_halo2wrong::halo2::halo2curves::bn256::Fr;
-use pse_halo2wrong::halo2::halo2curves::bn256::{Bn256, G1Affine};
-use pse_halo2wrong::halo2::plonk::{ProvingKey, VerifyingKey};
-
-use pse_halo2wrong::halo2::poly::kzg::commitment::ParamsKZG;
-use pse_halo2wrong::halo2::SerdeFormat;
-
-use crate::circuit_translator::NoirHalo2Translator;
-use crate::dimension_measure::DimensionMeasurement;
-use crate::halo2_plonk_api::OpcodeFlags;
-use crate::halo2_plonk_api::{halo2_keygen, halo2_prove, halo2_verify};
-
-use crate::PseHalo2;
 
 impl ProofSystemCompiler for PseHalo2 {
     type Error = BackendError;
@@ -57,10 +56,7 @@ impl ProofSystemCompiler for PseHalo2 {
                 .unwrap();
         let (pk, vk) = halo2_keygen(&translator, &params);
 
-        Ok((
-            pk.to_bytes(SerdeFormat::RawBytes),
-            vk.to_bytes(SerdeFormat::RawBytes),
-        ))
+        Ok((pk.to_bytes(SerdeFormat::RawBytes), vk.to_bytes(SerdeFormat::RawBytes)))
     }
 
     /// Generate proof with Proving Key
@@ -129,10 +125,8 @@ impl ProofSystemCompiler for PseHalo2 {
         )
         .unwrap();
 
-        let instance: Vec<Fr> = public_inputs
-            .into_iter()
-            .map(|(_, el)| noir_field_to_halo2_field(el))
-            .collect();
+        let instance: Vec<Fr> =
+            public_inputs.into_iter().map(|(_, el)| noir_field_to_halo2_field(el)).collect();
 
         Ok(halo2_verify(&params, &vk, proof, &instance[..]).is_ok())
     }
