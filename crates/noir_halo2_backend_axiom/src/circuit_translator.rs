@@ -152,7 +152,9 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                                 &config,
                             );
                         }
-                        BlackBoxFuncCall::EcdsaSecp256r1 { .. } => { todo!() }
+                        BlackBoxFuncCall::EcdsaSecp256r1 { .. } => {
+                            todo!()
+                        }
                         BlackBoxFuncCall::FixedBaseScalarMul { .. } => {
                             todo!()
                         }

@@ -1,6 +1,5 @@
 use crate::ZcashHalo2;
-use acvm::SmartContract;
-use acvm::acir::circuit::Circuit;
+use acvm::{acir::circuit::Circuit, SmartContract};
 use noir_halo2_backend_common::errors::BackendError;
 
 impl SmartContract for ZcashHalo2 {

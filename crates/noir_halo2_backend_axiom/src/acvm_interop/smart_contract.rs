@@ -1,6 +1,5 @@
 use crate::{circuit_translator::NoirHalo2Translator, AxiomHalo2};
-use acvm::SmartContract;
-use acvm::acir::circuit::Circuit;
+use acvm::{acir::circuit::Circuit, SmartContract};
 use halo2_base::halo2_proofs::{
     halo2curves::bn256::{Bn256, Fq, Fr, G1Affine},
     plonk::VerifyingKey,

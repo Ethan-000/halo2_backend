@@ -1,5 +1,4 @@
-use acvm::acir::FieldElement;
-use acvm::{BlackBoxFunctionSolver, BlackBoxResolutionError};
+use acvm::{acir::FieldElement, BlackBoxFunctionSolver, BlackBoxResolutionError};
 
 use crate::ZcashHalo2;
 
@@ -11,9 +10,7 @@ impl BlackBoxFunctionSolver for ZcashHalo2 {
         _signature: &[u8],
         _message: &[u8],
     ) -> Result<bool, BlackBoxResolutionError> {
-        Err(BlackBoxResolutionError::Unsupported(
-            acvm::acir::BlackBoxFunc::SchnorrVerify,
-        ))
+        Err(BlackBoxResolutionError::Unsupported(acvm::acir::BlackBoxFunc::SchnorrVerify))
     }
 
     fn pedersen(
@@ -21,17 +18,13 @@ impl BlackBoxFunctionSolver for ZcashHalo2 {
         _inputs: &[FieldElement],
         _domain_separator: u32,
     ) -> Result<(FieldElement, FieldElement), BlackBoxResolutionError> {
-        Err(BlackBoxResolutionError::Unsupported(
-            acvm::acir::BlackBoxFunc::Pedersen,
-        ))
+        Err(BlackBoxResolutionError::Unsupported(acvm::acir::BlackBoxFunc::Pedersen))
     }
 
     fn fixed_base_scalar_mul(
         &self,
         _input: &FieldElement,
     ) -> Result<(FieldElement, FieldElement), BlackBoxResolutionError> {
-        Err(BlackBoxResolutionError::Unsupported(
-            acvm::acir::BlackBoxFunc::FixedBaseScalarMul,
-        ))
+        Err(BlackBoxResolutionError::Unsupported(acvm::acir::BlackBoxFunc::FixedBaseScalarMul))
     }
 }

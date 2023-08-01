@@ -3,7 +3,6 @@ use std::{
     path::PathBuf,
 };
 
-use hex;
 use noir_halo2_backend_common::test_helpers::{
     configure_test_dirs, install_nargo, run_nargo_check, run_nargo_contract, run_nargo_prove,
     run_nargo_tests,
@@ -24,21 +23,16 @@ fn test_pse_backend() {
 fn gen_nargo_files(test_program: PathBuf) {
     run_nargo_check(test_program.clone());
     run_nargo_contract(test_program.clone());
-    run_nargo_prove(test_program.clone());
+    run_nargo_prove(test_program);
 }
 
 fn evm_verify(deployment_code: Vec<u8>, instances: Vec<Vec<Fr>>, proof: Vec<u8>) {
     let calldata = encode_calldata(&instances, &proof);
     let success = {
-        let mut evm = ExecutorBuilder::default()
-            .with_gas_limit(u64::MAX.into())
-            .build();
+        let mut evm = ExecutorBuilder::default().with_gas_limit(u64::MAX.into()).build();
 
         let caller = Address::from_low_u64_be(0xfe);
-        let verifier = evm
-            .deploy(caller, deployment_code.into(), 0.into())
-            .address
-            .unwrap();
+        let verifier = evm.deploy(caller, deployment_code.into(), 0.into()).address.unwrap();
         let result = evm.call_raw(caller, verifier, calldata.into(), 0.into());
 
         dbg!(result.gas_used);
@@ -107,10 +101,6 @@ fn test_pse_verifier_contracts_public_io_array() {
         let deployment_code = compile_yul(&yul_code.unwrap());
 
         let proof = hex::decode(read(proof_path).unwrap()).unwrap();
-        evm_verify(
-            deployment_code,
-            vec![vec![Fr::from(341), Fr::from(219), Fr::from(499)]],
-            proof,
-        );
+        evm_verify(deployment_code, vec![vec![Fr::from(341), Fr::from(219), Fr::from(499)]], proof);
     }
 }

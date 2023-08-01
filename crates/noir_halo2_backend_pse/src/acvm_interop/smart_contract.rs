@@ -1,5 +1,4 @@
-use std::rc::Rc;
-
+use crate::{circuit_translator::NoirHalo2Translator, halo2_plonk_api::OpcodeFlags, PseHalo2};
 use acvm::{acir::circuit::Circuit, SmartContract};
 use noir_halo2_backend_common::errors::BackendError;
 use pse_halo2wrong::{
@@ -16,6 +15,7 @@ use pse_snark_verifier::{
     system::halo2::{compile, transcript::evm::EvmTranscript, Config},
     verifier::{self, SnarkVerifier},
 };
+use std::rc::Rc;
 
 type PlonkVerifier = verifier::plonk::PlonkVerifier<KzgAs<Bn256, Gwc19>>;
 
