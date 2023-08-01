@@ -95,10 +95,8 @@ impl ProofSystemCompiler for ZcashHalo2 {
         match opcode {
             Opcode::Arithmetic(_) => true,
             Opcode::Directive(_) => false,
-            Opcode::Block(_) => false,
-            Opcode::ROM(_) => false,
-            Opcode::RAM(_) => false,
-            Opcode::Oracle(_) => false,
+            Opcode::MemoryInit { .. } => false,
+            Opcode::MemoryOp { .. } => false,
             Opcode::BlackBoxFuncCall(func) => match func.get_black_box_func() {
                 BlackBoxFunc::AND | BlackBoxFunc::RANGE => true,
 
@@ -108,6 +106,7 @@ impl ProofSystemCompiler for ZcashHalo2 {
                 | BlackBoxFunc::Pedersen
                 | BlackBoxFunc::HashToField128Security
                 | BlackBoxFunc::EcdsaSecp256k1
+                | BlackBoxFunc::EcdsaSecp256r1
                 | BlackBoxFunc::Keccak256
                 | BlackBoxFunc::FixedBaseScalarMul
                 | BlackBoxFunc::RecursiveAggregation
