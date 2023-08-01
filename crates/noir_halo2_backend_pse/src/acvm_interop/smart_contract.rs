@@ -69,9 +69,10 @@ impl SmartContract for PseHalo2 {
         )
         .unwrap();
 
-        //get 
+        // get number of public inputs used in circuit
+        let num_instance = circuit.public_inputs().0.len();
 
-        // generate Yul verifier and return 
-        Ok(gen_evm_verifier(&params, &vk, vec![0]))
+        // generate Yul verifier and return
+        Ok(gen_evm_verifier(&params, &vk, vec![num_instance]))
     }
 }
