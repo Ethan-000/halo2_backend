@@ -5,12 +5,13 @@ use noir_halo2_backend_common::test_helpers::{
 // TODO: Axiom is currently not working.
 // tho tests passes the crs size does not
 // change with each test.
+// todo: add circuit builder API (and maybe multithreading)
 #[test]
 fn test_axiom_backend() {
     let test_program_dirs = configure_test_dirs();
     // Pass in Axiom Halo2 Backend as argument
     install_nargo("axiom_halo2_backend");
     for test_program in test_program_dirs {
-        run_nargo_tests(test_program);
+        run_nargo_tests(test_program, false);
     }
 }

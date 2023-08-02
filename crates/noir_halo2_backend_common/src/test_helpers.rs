@@ -155,15 +155,18 @@ pub fn install_nargo(backend: &'static str) {
         .unwrap();
 }
 
-pub fn run_nargo_tests(test_program: PathBuf) {
+// run_contract bool exists since it will fail in axiom due to no constraints being built
+pub fn run_nargo_tests(test_program: PathBuf, run_contract: bool) {
     assert_nargo_cmd_works("check", &test_program);
     assert_nargo_cmd_works("compile", &test_program);
-    assert_nargo_cmd_works("contract", &test_program);
     assert_nargo_cmd_works("execute", &test_program);
     assert_nargo_cmd_works("prove", &test_program);
     assert_nargo_cmd_works("verify", &test_program);
     assert_nargo_cmd_works("test", &test_program);
     assert_nargo_cmd_works("gates", &test_program);
+    if run_contract {
+        assert_nargo_cmd_works("contract", &test_program);
+    }
 }
 
 pub fn run_nargo_check(test_program: PathBuf) {

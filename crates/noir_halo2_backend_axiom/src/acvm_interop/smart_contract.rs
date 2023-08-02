@@ -55,6 +55,9 @@ impl SmartContract for AxiomHalo2 {
         )
         .unwrap();
 
-        Ok(gen_evm_verifier(&params, &vk, vec![0]))
+        // get number of public inputs used in circuit
+        let num_instance = circuit.public_inputs().0.len();
+
+        Ok(gen_evm_verifier(&params, &vk, vec![num_instance]))
     }
 }

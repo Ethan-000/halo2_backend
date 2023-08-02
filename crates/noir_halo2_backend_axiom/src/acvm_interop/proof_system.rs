@@ -101,8 +101,7 @@ impl ProofSystemCompiler for AxiomHalo2 {
     fn supports_opcode(&self, opcode: &acvm::acir::circuit::Opcode) -> bool {
         match opcode {
             Opcode::Arithmetic(_) => true,
-            Opcode::Directive(_) => false,
-            Opcode::MemoryInit { .. } | Opcode::MemoryOp { .. } => false,
+            Opcode::Directive(_) | Opcode::Brillig(_) => true,
             Opcode::BlackBoxFuncCall(func) => match func.get_black_box_func() {
                 BlackBoxFunc::AND | BlackBoxFunc::RANGE => true,
 
@@ -118,7 +117,7 @@ impl ProofSystemCompiler for AxiomHalo2 {
                 | BlackBoxFunc::RecursiveAggregation
                 | BlackBoxFunc::SchnorrVerify => false,
             },
-            Opcode::Brillig(_) => todo!(),
+            Opcode::Block(_) | Opcode::ROM(_) | Opcode::RAM(_) => false,
         }
     }
 
