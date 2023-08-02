@@ -75,5 +75,8 @@ jobs:
       - name: Install latest nextest release
         uses: taiki-e/install-action@nextest
 
+      - name: Install solc
+        run: (hash svm 2>/dev/null || cargo install --version 0.2.23 svm-rs) && svm install 0.8.20 && solc --version
+
       - name: run pse test
         run: cargo nextest run --package noir_halo2_backend_pse --test-threads=1
