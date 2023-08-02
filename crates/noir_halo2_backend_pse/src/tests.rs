@@ -1,7 +1,5 @@
 #[cfg(test)]
 mod test {
-    // put in pse folder to avoid publishing mods
-
     use crate::{circuit_translator::NoirHalo2Translator, dimension_measure::DimensionMeasurement};
     use acvm::{acir::native_types::Witness, FieldElement};
     use noir_halo2_backend_common::test_helpers::build_artifacts;
@@ -83,6 +81,7 @@ mod test {
         let instance = vec![Fr::from_raw([7u64, 0, 0, 0])];
 
         // run mock prover expecting success
+        // expects [-1(5) + -1(4) + 1(7)] == 0, should be [-1(3) + -1(4) + 1(7)]
         let prover = MockProver::run(dimension.k(), &translator, vec![instance]).unwrap();
         assert_eq!(
             prover.verify(),
@@ -96,9 +95,9 @@ mod test {
                     (((Any::advice(), 3).into(), 0).into(), String::from("0")),
                     (((Any::advice(), 4).into(), 0).into(), String::from("0")),
                     (((Any::advice(), 4).into(), 1).into(), String::from("0")),
-                    (((Any::Fixed, 0).into(), 0).into(), String::from("1")),
-                    (((Any::Fixed, 1).into(), 0).into(), String::from("1")),
-                    (((Any::Fixed, 2).into(), 0).into(), String::from("-1")),
+                    (((Any::Fixed, 0).into(), 0).into(), String::from("-1")),
+                    (((Any::Fixed, 1).into(), 0).into(), String::from("-1")),
+                    (((Any::Fixed, 2).into(), 0).into(), String::from("1")),
                     (((Any::Fixed, 3).into(), 0).into(), String::from("0")),
                     (((Any::Fixed, 4).into(), 0).into(), String::from("0")),
                     (((Any::Fixed, 5).into(), 0).into(), String::from("0")),

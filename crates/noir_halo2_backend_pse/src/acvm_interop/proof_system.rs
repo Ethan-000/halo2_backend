@@ -157,7 +157,7 @@ impl ProofSystemCompiler for PseHalo2 {
                 | BlackBoxFunc::RecursiveAggregation
                 | BlackBoxFunc::SchnorrVerify => false,
             },
-            Opcode::Block(_) | Opcode::ROM(_) | Opcode::RAM(_) => false
+            Opcode::Block(_) | Opcode::ROM(_) | Opcode::RAM(_) => false,
         }
     }
 

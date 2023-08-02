@@ -42,7 +42,6 @@ fn evm_verify(deployment_code: Vec<u8>, instances: Vec<Vec<Fr>>, proof: Vec<u8>)
     assert!(success);
 }
 
-// Set num instances in verifier contract file to 0
 #[test]
 fn test_pse_verifier_contracts_no_public_io() {
     let test_program_dirs = configure_test_dirs();
@@ -68,7 +67,7 @@ fn test_pse_verifier_contracts_public_io() {
     let test_program_dirs = configure_test_dirs();
     // Pass in PSE Halo2 Backend as argument
     install_nargo("pse_halo2_backend");
-    for test_program in &test_program_dirs[8..9] {
+    for test_program in &test_program_dirs[8..] {
         // Generate necessary files
         gen_nargo_files(test_program.clone());
         // Paths to relevant nargo generated files
@@ -83,7 +82,6 @@ fn test_pse_verifier_contracts_public_io() {
     }
 }
 
-// Set num instances in verifier contract file to 3
 #[test]
 fn test_pse_verifier_contracts_public_io_array() {
     let test_program_dirs = configure_test_dirs();

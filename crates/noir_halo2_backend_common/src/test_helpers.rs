@@ -7,7 +7,6 @@ use std::{
     path::PathBuf,
     process::{Command, Output},
 };
-use base64::Engine;
 
 pub fn configure_test_dirs() -> Vec<PathBuf> {
     let test_dirs_names = vec![
@@ -69,7 +68,6 @@ fn nargo_prove(test_program_dir: &PathBuf) -> Result<Output> {
         .current_dir(test_program_dir)
         .arg("prove")
         .arg("my_test_proof")
-        .arg("my_test_circuit")
         .spawn()
         .unwrap()
         .wait_with_output()
@@ -80,7 +78,6 @@ fn nargo_verify(test_program_dir: &PathBuf) -> Result<Output> {
         .current_dir(test_program_dir)
         .arg("verify")
         .arg("my_test_proof")
-        .arg("my_test_circuit")
         .spawn()
         .unwrap()
         .wait_with_output()
