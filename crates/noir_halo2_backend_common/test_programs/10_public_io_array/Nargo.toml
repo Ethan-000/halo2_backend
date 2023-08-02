@@ -1,5 +1,6 @@
 [package]
 authors = [""]
+name = "10_public_io_array"
 compiler_version = "0.7.1"
 
 [dependencies]

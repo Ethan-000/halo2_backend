@@ -7,6 +7,7 @@ use std::{
     path::PathBuf,
     process::{Command, Output},
 };
+use base64::Engine;
 
 pub fn configure_test_dirs() -> Vec<PathBuf> {
     let test_dirs_names = vec![
@@ -117,12 +118,22 @@ pub fn assert_nargo_cmd_works(cmd_name: &str, test_test_program_dir: &PathBuf) {
 
 pub fn install_nargo(backend: &'static str) {
     // Clone noir into repo
+    // Command::new("git")
+    //     .current_dir(fs::canonicalize("../").unwrap())
+    //     .arg("clone")
+    //     .arg("https://github.com/Ethan-000/noir")
+    //     .arg("--branch")
+    //     .arg("add_halo2_backend")
+    //     .spawn()
+    //     .unwrap()
+    //     .wait()
+    //     .unwrap();
     Command::new("git")
         .current_dir(fs::canonicalize("../").unwrap())
         .arg("clone")
-        .arg("https://github.com/Ethan-000/noir")
+        .arg("https://github.com/Mach-34/noir")
         .arg("--branch")
-        .arg("add_halo2_backend")
+        .arg("demo-0.1.3")
         .spawn()
         .unwrap()
         .wait()
@@ -216,13 +227,8 @@ pub fn build_artifacts(program: &'static str, backend: &'static str) -> (Circuit
         .read_to_string(&mut contents)
         .unwrap();
     let json: Value = serde_json::from_str(&contents).unwrap();
-    let bytecode: Vec<u8> = json
-        .get("bytecode")
-        .and_then(Value::as_array)
-        .unwrap()
-        .iter()
-        .filter_map(|v| v.as_u64().map(|n| n as u8))
-        .collect();
+    let bytecode = base64::engine::general_purpose::STANDARD
+        .decode(json.get("bytecode").and_then(Value::as_str).unwrap()).unwrap();
     let circuit = Circuit::read(&*bytecode).unwrap();
 
     // load witness

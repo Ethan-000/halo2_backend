@@ -1,5 +1,6 @@
 [package]
 authors = [""]
+name = "2_mul"
 compiler_version = "0.1"
 
 [dependencies]

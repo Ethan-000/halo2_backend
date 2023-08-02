@@ -1537,6 +1537,7 @@ name = "noir_halo2_backend_common"
 version = "0.1.0"
 dependencies = [
  "acvm",
+ "base64",
  "bincode",
  "bytesize",
  "console_error_panic_hook",
@@ -1554,6 +1555,7 @@ name = "noir_halo2_backend_pse"
 version = "0.1.0"
 dependencies = [
  "acvm",
+ "base64",
  "console_error_panic_hook",
  "criterion",
  "ecc",
