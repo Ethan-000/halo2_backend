@@ -72,7 +72,7 @@ mod test {
         let (circuit, mut witness_values) = build_artifacts("9_public_io", "pse_halo2_backend");
 
         // mutate witness to be incorrect
-        witness_values.insert(Witness(1), FieldElement::from(4u128));
+        witness_values.insert(Witness(1), FieldElement::from(5u128));
 
         // instantiate halo2 circuit
         let translator =
@@ -90,15 +90,15 @@ mod test {
                 constraint: ((0, "main_gate").into(), 0, "").into(),
                 location: FailureLocation::InRegion { region: (5, "region 0").into(), offset: 5 },
                 cell_values: vec![
-                    (((Any::advice(), 0).into(), 0).into(), String::from("0x4")),
+                    (((Any::advice(), 0).into(), 0).into(), String::from("0x5")),
                     (((Any::advice(), 1).into(), 0).into(), String::from("0x4")),
                     (((Any::advice(), 2).into(), 0).into(), String::from("0x7")),
                     (((Any::advice(), 3).into(), 0).into(), String::from("0")),
                     (((Any::advice(), 4).into(), 0).into(), String::from("0")),
                     (((Any::advice(), 4).into(), 1).into(), String::from("0")),
-                    (((Any::Fixed, 0).into(), 0).into(), String::from("-1")),
-                    (((Any::Fixed, 1).into(), 0).into(), String::from("-1")),
-                    (((Any::Fixed, 2).into(), 0).into(), String::from("1")),
+                    (((Any::Fixed, 0).into(), 0).into(), String::from("1")),
+                    (((Any::Fixed, 1).into(), 0).into(), String::from("1")),
+                    (((Any::Fixed, 2).into(), 0).into(), String::from("-1")),
                     (((Any::Fixed, 3).into(), 0).into(), String::from("0")),
                     (((Any::Fixed, 4).into(), 0).into(), String::from("0")),
                     (((Any::Fixed, 5).into(), 0).into(), String::from("0")),

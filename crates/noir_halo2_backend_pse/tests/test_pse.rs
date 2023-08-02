@@ -63,7 +63,6 @@ fn test_pse_verifier_contracts_no_public_io() {
     }
 }
 
-// Set num instances in verifier contract file to 1
 #[test]
 fn test_pse_verifier_contracts_public_io() {
     let test_program_dirs = configure_test_dirs();

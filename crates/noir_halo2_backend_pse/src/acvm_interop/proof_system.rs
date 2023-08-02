@@ -143,7 +143,6 @@ impl ProofSystemCompiler for PseHalo2 {
         match opcode {
             Opcode::Arithmetic(_) => true,
             Opcode::Directive(_) | Opcode::Brillig(_) => true,
-            Opcode::MemoryInit { .. } | Opcode::MemoryOp { .. } => false,
             Opcode::BlackBoxFuncCall(func) => match func.get_black_box_func() {
                 BlackBoxFunc::RANGE | BlackBoxFunc::AND => true,
                 BlackBoxFunc::XOR
@@ -158,6 +157,7 @@ impl ProofSystemCompiler for PseHalo2 {
                 | BlackBoxFunc::RecursiveAggregation
                 | BlackBoxFunc::SchnorrVerify => false,
             },
+            Opcode::Block(_) | Opcode::ROM(_) | Opcode::RAM(_) => false
         }
     }
 

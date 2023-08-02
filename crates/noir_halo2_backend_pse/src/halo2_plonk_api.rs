@@ -224,12 +224,12 @@ impl OpcodeFlags {
                     }
                     BlackBoxFuncCall::RecursiveAggregation { .. } => recursive_aggregation = true,
                 },
-                Opcode::Directive(_) => {
+                Opcode::Directive(_) | Opcode::Brillig(_) => {
                     // Directives are only needed by the pwg
                 }
-                Opcode::MemoryInit { .. } => {}
-                Opcode::MemoryOp { .. } => {}
-                Opcode::Brillig(_) => {}
+                Opcode::Block(_) | Opcode::ROM(_) | Opcode::RAM(_) => {
+                    
+                }
             }
         }
 

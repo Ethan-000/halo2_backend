@@ -132,6 +132,8 @@ pub fn install_nargo(backend: &'static str) {
         .current_dir(fs::canonicalize("../").unwrap())
         .arg("clone")
         .arg("https://github.com/Mach-34/noir")
+        .arg("--depth")
+        .arg("1")
         .arg("--branch")
         .arg("demo-0.1.3")
         .spawn()
@@ -227,8 +229,13 @@ pub fn build_artifacts(program: &'static str, backend: &'static str) -> (Circuit
         .read_to_string(&mut contents)
         .unwrap();
     let json: Value = serde_json::from_str(&contents).unwrap();
-    let bytecode = base64::engine::general_purpose::STANDARD
-        .decode(json.get("bytecode").and_then(Value::as_str).unwrap()).unwrap();
+    let bytecode: Vec<u8> = json
+        .get("bytecode")
+        .and_then(Value::as_array)
+        .unwrap()
+        .iter()
+        .filter_map(|v| v.as_u64().map(|n| n as u8))
+        .collect();
     let circuit = Circuit::read(&*bytecode).unwrap();
 
     // load witness
