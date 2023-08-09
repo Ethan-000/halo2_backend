@@ -47,7 +47,7 @@ fn test_pse_verifier_contracts_no_public_io() {
     let test_program_dirs = configure_test_dirs();
     // Pass in PSE Halo2 Backend as argument
     install_nargo("pse_halo2_backend");
-    for test_program in &test_program_dirs[0..8] {
+    for test_program in &test_program_dirs[0..9] {
         // Generate necessary files
         gen_nargo_files(test_program.clone());
         // Paths to relevant nargo generated files
@@ -68,11 +68,10 @@ fn test_pse_verifier_contracts_public_io() {
     // Pass in PSE Halo2 Backend as argument
     install_nargo("pse_halo2_backend");
     let pub_inputs = vec![vec![Fr::from(7)], vec![Fr::from(341), Fr::from(219), Fr::from(499)]];
-    let program_indexes = vec![8, 9];
-    // for test_program in &test_program_dirs[8..] {
+    let program_indexes = vec![9, 10];
     for i in 0..2 {
         // Generate necessary files
-        let test_program = &test_program_dirs[program_indexes[i]]; // 8, 9 are
+        let test_program = &test_program_dirs[program_indexes[i]]; // 9, 10 are
         gen_nargo_files(test_program.clone());
         // Paths to relevant nargo generated files
         let contract_path = format!("{}/contract/plonk_vk.sol", test_program.display());

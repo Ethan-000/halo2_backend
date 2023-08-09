@@ -18,8 +18,9 @@ pub fn configure_test_dirs() -> Vec<PathBuf> {
         "6_array",
         "7_function",
         "8_bit_and",
-        "9_public_io",
-        "10_public_io_array",
+        "9_poseidon",
+        "10_public_io",
+        "11_public_io_array",
     ];
     test_dirs_names.into_iter().map(test_program_dir_path).collect()
 }

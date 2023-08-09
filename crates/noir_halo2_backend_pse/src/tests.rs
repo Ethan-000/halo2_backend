@@ -15,7 +15,7 @@ mod test {
     #[test]
     fn test_public_io_circuit_success() {
         // get circuit
-        let (circuit, witness_values) = build_artifacts("9_public_io", "pse_halo2_backend");
+        let (circuit, witness_values) = build_artifacts("10_public_io", "pse_halo2_backend");
 
         // instantiate halo2 circuit
         let translator =
@@ -33,7 +33,7 @@ mod test {
     #[test]
     fn test_public_io_circuit_fail_instance() {
         // get circuit
-        let (circuit, witness_values) = build_artifacts("9_public_io", "pse_halo2_backend");
+        let (circuit, witness_values) = build_artifacts("10_public_io", "pse_halo2_backend");
 
         // instantiate halo2 circuit
         let translator =
@@ -67,7 +67,7 @@ mod test {
     #[test]
     fn test_public_io_circuit_fail_witness() {
         // get circuit
-        let (circuit, mut witness_values) = build_artifacts("9_public_io", "pse_halo2_backend");
+        let (circuit, mut witness_values) = build_artifacts("10_public_io", "pse_halo2_backend");
 
         // mutate witness to be incorrect
         witness_values.insert(Witness(1), FieldElement::from(5u128));
@@ -120,6 +120,7 @@ mod test {
             "6_array",
             "7_function",
             "8_bit_and",
+            "9_poseidon",
         ];
         for program in test_dirs_names {
             // get circuit

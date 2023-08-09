@@ -19,7 +19,7 @@ This crate will not be possible without
 ## Installtion
 
 ```text
-git clone https://github.com/Ethan-000/noir --branch demo-0.1.2
+git clone https://github.com/Mach-34/noir --branch demo-0.1.3
 ```
 
 ```text

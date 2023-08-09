@@ -37,6 +37,10 @@ fn benchmark_tests_verify(c: &mut Criterion) {
     // bit_and
     let path = test_program_dir_path("8_bit_and");
     c.bench_function("8_bit_and_verify", |b| b.iter(|| run_nargo_verify(path.clone())));
+
+    // poseidon
+    let path = test_program_dir_path("9_poseidon");
+    c.bench_function("9_poseidon", |b| b.iter(|| run_nargo_verify(path.clone())));
 }
 
 criterion_group! {
