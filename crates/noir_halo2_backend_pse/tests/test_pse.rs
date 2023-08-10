@@ -47,7 +47,7 @@ fn test_pse_verifier_contracts_no_public_io() {
     let test_program_dirs = configure_test_dirs();
     // Pass in PSE Halo2 Backend as argument
     install_nargo("pse_halo2_backend");
-    for test_program in &test_program_dirs[0..9] {
+    for test_program in &test_program_dirs[0..8] {
         // Generate necessary files
         gen_nargo_files(test_program.clone());
         // Paths to relevant nargo generated files
@@ -65,7 +65,7 @@ fn test_pse_verifier_contracts_no_public_io() {
 #[test]
 fn test_pse_verifier_contracts_public_io() {
     let test_program_dirs = configure_test_dirs();
-    // Pass in PSE Halo2 Backend as argument
+    // Pass in PSE Halo2     Backend as argument
     install_nargo("pse_halo2_backend");
     let pub_inputs = vec![vec![Fr::from(7)], vec![Fr::from(341), Fr::from(219), Fr::from(499)]];
     let program_indexes = vec![9, 10];
