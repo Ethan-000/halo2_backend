@@ -1,35 +1,30 @@
-use crate::PseHalo2;
-use acvm::{acir::native_types::Witness, pwg::OpcodeResolutionError, PartialWitnessGenerator};
+use acvm::{acir::FieldElement, BlackBoxFunctionSolver, BlackBoxResolutionError};
 
-impl PartialWitnessGenerator for PseHalo2 {
+use crate::PseHalo2;
+
+impl BlackBoxFunctionSolver for PseHalo2 {
     fn schnorr_verify(
         &self,
-        _initial_witness: &mut acvm::acir::native_types::WitnessMap,
-        _public_key_x: &acvm::acir::circuit::opcodes::FunctionInput,
-        _public_key_y: &acvm::acir::circuit::opcodes::FunctionInput,
-        _signature: &[acvm::acir::circuit::opcodes::FunctionInput],
-        _message: &[acvm::acir::circuit::opcodes::FunctionInput],
-        _output: &Witness,
-    ) -> Result<acvm::pwg::OpcodeResolution, OpcodeResolutionError> {
-        todo!()
+        _public_key_x: &FieldElement,
+        _public_key_y: &FieldElement,
+        _signature: &[u8],
+        _message: &[u8],
+    ) -> Result<bool, BlackBoxResolutionError> {
+        Err(BlackBoxResolutionError::Unsupported(acvm::acir::BlackBoxFunc::SchnorrVerify))
     }
 
     fn pedersen(
         &self,
-        _initial_witness: &mut acvm::acir::native_types::WitnessMap,
-        _inputs: &[acvm::acir::circuit::opcodes::FunctionInput],
+        _inputs: &[FieldElement],
         _domain_separator: u32,
-        _outputs: &[Witness],
-    ) -> Result<acvm::pwg::OpcodeResolution, OpcodeResolutionError> {
-        todo!()
+    ) -> Result<(FieldElement, FieldElement), BlackBoxResolutionError> {
+        Err(BlackBoxResolutionError::Unsupported(acvm::acir::BlackBoxFunc::Pedersen))
     }
 
     fn fixed_base_scalar_mul(
         &self,
-        _initial_witness: &mut acvm::acir::native_types::WitnessMap,
-        _input: &acvm::acir::circuit::opcodes::FunctionInput,
-        _outputs: &[Witness],
-    ) -> Result<acvm::pwg::OpcodeResolution, OpcodeResolutionError> {
-        todo!()
+        _input: &FieldElement,
+    ) -> Result<(FieldElement, FieldElement), BlackBoxResolutionError> {
+        Err(BlackBoxResolutionError::Unsupported(acvm::acir::BlackBoxFunc::FixedBaseScalarMul))
     }
 }

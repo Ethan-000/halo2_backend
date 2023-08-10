@@ -15,7 +15,7 @@ mod test {
     // #[test]
     // fn test_public_io_circuit_success() {
     //     // get circuit
-    //     let (circuit, witness_values) = build_artifacts("9_public_io");
+    //     let (circuit, witness_values) = build_artifacts("10_public_io");
 
     //     // instantiate halo2 circuit
     //     let translator = NoirHalo2Translator::<Fr> {
@@ -36,7 +36,7 @@ mod test {
     // #[test]
     // fn test_public_io_circuit_fail_instance() {
     //     // get circuit
-    //     let (circuit, witness_values) = build_artifacts("9_public_io");
+    //     let (circuit, witness_values) = build_artifacts("10_public_io");
 
     //     // instantiate halo2 circuit
     //     let translator = NoirHalo2Translator::<Fr> {
@@ -76,7 +76,7 @@ mod test {
     // #[test]
     // fn test_public_io_circuit_fail_witness() {
     //     // get circuit
-    //     let (circuit, mut witness_values) = build_artifacts("9_public_io");
+    //     let (circuit, mut witness_values) = build_artifacts("10_public_io");
 
     //     // mutate witness to be incorrect
     //     witness_values.insert(Witness(1), FieldElement::from(4u128));
@@ -126,7 +126,7 @@ mod test {
     // #[test]
     // fn test_add_circuit_success() {
     //     // get circuit
-    //     let (circuit, witness_values) = build_artifacts("9_public_io");
+    //     let (circuit, witness_values) = build_artifacts("10_public_io");
     //     // instantiate halo2 circuit
     //     let translator = NoirHalo2Translator::<Fr> {
     //         circuit,
@@ -154,6 +154,7 @@ mod test {
             "6_array",
             "7_function",
             "8_bit_and",
+            "9_poseidon",
         ];
         for program in test_dirs_names {
             // get circuit

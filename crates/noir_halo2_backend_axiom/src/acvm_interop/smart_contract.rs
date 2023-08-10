@@ -1,5 +1,5 @@
 use crate::{circuit_translator::NoirHalo2Translator, AxiomHalo2};
-use acvm::SmartContract;
+use acvm::{acir::circuit::Circuit, SmartContract};
 use halo2_base::halo2_proofs::{
     halo2curves::bn256::{Bn256, Fq, Fr, G1Affine},
     plonk::VerifyingKey,
@@ -40,6 +40,7 @@ impl SmartContract for AxiomHalo2 {
     fn eth_contract_from_vk(
         &self,
         common_reference_string: &[u8],
+        circuit: &Circuit,
         verification_key: &[u8],
     ) -> Result<String, Self::Error> {
         let params = ParamsKZG::<Bn256>::read_custom(
@@ -54,6 +55,9 @@ impl SmartContract for AxiomHalo2 {
         )
         .unwrap();
 
-        Ok(gen_evm_verifier(&params, &vk, vec![0]))
+        // get number of public inputs used in circuit
+        let num_instance = circuit.public_inputs().0.len();
+
+        Ok(gen_evm_verifier(&params, &vk, vec![num_instance]))
     }
 }

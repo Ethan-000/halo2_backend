@@ -142,26 +142,22 @@ impl ProofSystemCompiler for PseHalo2 {
     fn supports_opcode(&self, opcode: &acvm::acir::circuit::Opcode) -> bool {
         match opcode {
             Opcode::Arithmetic(_) => true,
-            Opcode::Directive(_) => false,
-            Opcode::Block(_) => false,
-            Opcode::ROM(_) => false,
-            Opcode::RAM(_) => false,
-            Opcode::Oracle(_) => false,
+            Opcode::Directive(_) | Opcode::Brillig(_) => true,
             Opcode::BlackBoxFuncCall(func) => match func.get_black_box_func() {
                 BlackBoxFunc::RANGE | BlackBoxFunc::AND => true,
-
                 BlackBoxFunc::XOR
                 | BlackBoxFunc::SHA256
                 | BlackBoxFunc::Blake2s
                 | BlackBoxFunc::Pedersen
                 | BlackBoxFunc::HashToField128Security
                 | BlackBoxFunc::EcdsaSecp256k1
+                | BlackBoxFunc::EcdsaSecp256r1
                 | BlackBoxFunc::Keccak256
                 | BlackBoxFunc::FixedBaseScalarMul
                 | BlackBoxFunc::RecursiveAggregation
                 | BlackBoxFunc::SchnorrVerify => false,
             },
-            Opcode::Brillig(_) => false,
+            Opcode::Block(_) | Opcode::ROM(_) | Opcode::RAM(_) => false,
         }
     }
 

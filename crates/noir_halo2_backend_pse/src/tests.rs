@@ -1,7 +1,5 @@
 #[cfg(test)]
 mod test {
-    // put in pse folder to avoid publishing mods
-
     use crate::{circuit_translator::NoirHalo2Translator, dimension_measure::DimensionMeasurement};
     use acvm::{acir::native_types::Witness, FieldElement};
     use noir_halo2_backend_common::test_helpers::build_artifacts;
@@ -17,7 +15,7 @@ mod test {
     #[test]
     fn test_public_io_circuit_success() {
         // get circuit
-        let (circuit, witness_values) = build_artifacts("9_public_io", "pse_halo2_backend");
+        let (circuit, witness_values) = build_artifacts("10_public_io", "pse_halo2_backend");
 
         // instantiate halo2 circuit
         let translator =
@@ -35,7 +33,7 @@ mod test {
     #[test]
     fn test_public_io_circuit_fail_instance() {
         // get circuit
-        let (circuit, witness_values) = build_artifacts("9_public_io", "pse_halo2_backend");
+        let (circuit, witness_values) = build_artifacts("10_public_io", "pse_halo2_backend");
 
         // instantiate halo2 circuit
         let translator =
@@ -69,10 +67,10 @@ mod test {
     #[test]
     fn test_public_io_circuit_fail_witness() {
         // get circuit
-        let (circuit, mut witness_values) = build_artifacts("9_public_io", "pse_halo2_backend");
+        let (circuit, mut witness_values) = build_artifacts("10_public_io", "pse_halo2_backend");
 
         // mutate witness to be incorrect
-        witness_values.insert(Witness(1), FieldElement::from(4u128));
+        witness_values.insert(Witness(1), FieldElement::from(5u128));
 
         // instantiate halo2 circuit
         let translator =
@@ -83,6 +81,7 @@ mod test {
         let instance = vec![Fr::from_raw([7u64, 0, 0, 0])];
 
         // run mock prover expecting success
+        // expects [-1(5) + -1(4) + 1(7)] == 0, should be [-1(3) + -1(4) + 1(7)]
         let prover = MockProver::run(dimension.k(), &translator, vec![instance]).unwrap();
         assert_eq!(
             prover.verify(),
@@ -90,7 +89,7 @@ mod test {
                 constraint: ((0, "main_gate").into(), 0, "").into(),
                 location: FailureLocation::InRegion { region: (5, "region 0").into(), offset: 5 },
                 cell_values: vec![
-                    (((Any::advice(), 0).into(), 0).into(), String::from("0x4")),
+                    (((Any::advice(), 0).into(), 0).into(), String::from("0x5")),
                     (((Any::advice(), 1).into(), 0).into(), String::from("0x4")),
                     (((Any::advice(), 2).into(), 0).into(), String::from("0x7")),
                     (((Any::advice(), 3).into(), 0).into(), String::from("0")),
@@ -121,6 +120,7 @@ mod test {
             "6_array",
             "7_function",
             "8_bit_and",
+            "9_poseidon",
         ];
         for program in test_dirs_names {
             // get circuit

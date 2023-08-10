@@ -1,6 +1,6 @@
 [package]
 authors = [""]
-name = "8_bit_and"
+name = "11_poseidon"
 compiler_version = "0.8.0"
 
 [dependencies]

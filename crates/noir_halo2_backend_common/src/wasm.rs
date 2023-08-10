@@ -122,14 +122,17 @@ macro_rules! impl_noir_halo2_backend_wasm_bindgen {
         #[wasm_bindgen]
         pub fn get_eth_verification_contract(
             common_reference_string_js: JsValue,
+            circuit: JsValue,
             verification_key_js: JsValue,
         ) -> Result<String, JsValue> {
             let common_reference_string: Vec<u8> =
                 serde_wasm_bindgen::from_value(common_reference_string_js)?;
             let verification_key: Vec<u8> = serde_wasm_bindgen::from_value(verification_key_js)?;
-
-            let contract =
-                $halo2.eth_contract_from_vk(&common_reference_string, &verification_key).unwrap();
+            let bytecode: Vec<u8> = serde_wasm_bindgen::from_value(circuit)?;
+            let circuit = Circuit::read(&*bytecode).unwrap();
+            let contract = $halo2
+                .eth_contract_from_vk(&common_reference_string, &circuit, &verification_key)
+                .unwrap();
 
             Ok(contract)
         }

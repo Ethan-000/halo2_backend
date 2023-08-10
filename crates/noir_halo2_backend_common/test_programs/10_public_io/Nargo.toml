@@ -1,6 +1,6 @@
 [package]
 authors = [""]
-name = "8_bit_and"
+name = "9_public_io"
 compiler_version = "0.8.0"
 
 [dependencies]

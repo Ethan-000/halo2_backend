@@ -17,11 +17,11 @@ use pse_halo2wrong::halo2::{
         multiopen::{ProverGWC, VerifierGWC},
         strategy::SingleStrategy,
     },
-    transcript::{
-        Blake2bRead, Blake2bWrite, Challenge255, TranscriptReadBuffer, TranscriptWriterBuffer,
-    },
+    transcript::{TranscriptReadBuffer, TranscriptWriterBuffer},
 };
 use pse_maingate::{MainGate, MainGateConfig, RangeChip, RangeConfig};
+
+use pse_snark_verifier::system::halo2::transcript::evm::EvmTranscript;
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 
@@ -44,17 +44,16 @@ pub fn halo2_prove(
     public_inputs: &[Fr],
 ) -> Vec<u8> {
     let rng = OsRng;
-    let mut transcript: Blake2bWrite<Vec<u8>, _, Challenge255<_>> =
-        Blake2bWrite::<_, _, Challenge255<_>>::init(vec![]);
+    let mut transcript = TranscriptWriterBuffer::<_, G1Affine, _>::init(Vec::new());
 
-    create_proof::<
-        KZGCommitmentScheme<Bn256>,
-        ProverGWC<'_, Bn256>,
-        Challenge255<G1Affine>,
-        _,
-        Blake2bWrite<Vec<u8>, G1Affine, Challenge255<_>>,
-        _,
-    >(params, pk, &[circuit], &[&[public_inputs]], rng, &mut transcript)
+    create_proof::<KZGCommitmentScheme<Bn256>, ProverGWC<_>, _, _, EvmTranscript<_, _, _, _>, _>(
+        params,
+        pk,
+        &[circuit],
+        &[&[public_inputs]],
+        rng,
+        &mut transcript,
+    )
     .expect("proof generation should not fail");
     transcript.finalize()
 }
@@ -67,15 +66,15 @@ pub fn halo2_verify(
     public_inputs: &[Fr],
 ) -> Result<(), Error> {
     let strategy = SingleStrategy::new(params);
-    let mut transcript = Blake2bRead::<_, _, Challenge255<_>>::init(proof);
+    let mut transcript = TranscriptReadBuffer::<_, G1Affine, _>::init(proof);
 
-    verify_proof::<
-        KZGCommitmentScheme<Bn256>,
-        VerifierGWC<'_, Bn256>,
-        Challenge255<G1Affine>,
-        Blake2bRead<&[u8], G1Affine, Challenge255<G1Affine>>,
-        SingleStrategy<'_, Bn256>,
-    >(params, vk, strategy, &[&[public_inputs]], &mut transcript)
+    verify_proof::<_, VerifierGWC<_>, _, EvmTranscript<_, _, _, _>, _>(
+        params,
+        vk,
+        strategy,
+        &[&[public_inputs]],
+        &mut transcript,
+    )
 }
 
 #[derive(Clone, Debug)]
@@ -217,6 +216,7 @@ impl OpcodeFlags {
                     BlackBoxFuncCall::Pedersen { .. } => pedersen = true,
                     BlackBoxFuncCall::HashToField128Security { .. } => hash_to_field = true,
                     BlackBoxFuncCall::EcdsaSecp256k1 { .. } => ecdsa_secp256k1 = true,
+                    BlackBoxFuncCall::EcdsaSecp256r1 { .. } => ecdsa_secp256k1 = true,
                     BlackBoxFuncCall::FixedBaseScalarMul { .. } => fixed_base_scalar_mul = true,
                     BlackBoxFuncCall::Keccak256 { .. } => keccak256 = true,
                     BlackBoxFuncCall::Keccak256VariableLength { .. } => {
@@ -224,14 +224,10 @@ impl OpcodeFlags {
                     }
                     BlackBoxFuncCall::RecursiveAggregation { .. } => recursive_aggregation = true,
                 },
-                Opcode::Directive(_) | Opcode::Oracle(_) => {
+                Opcode::Directive(_) | Opcode::Brillig(_) => {
                     // Directives are only needed by the pwg
                 }
-                Opcode::Block(_) => {
-                    // Block is managed by ACVM
-                }
-                Opcode::RAM(_) | Opcode::ROM(_) => {}
-                Opcode::Brillig(_) => {}
+                Opcode::Block(_) | Opcode::ROM(_) | Opcode::RAM(_) => {}
             }
         }
 

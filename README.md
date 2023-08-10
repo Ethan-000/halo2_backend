@@ -2,6 +2,8 @@
 
 This is a [halo2](https://zcash.github.io/halo2/) backend for the [Noir Programming Language](https://noir-lang.org/)
 
+Get [detailed documentation on this repository!](https://mach-34.github.io/halo2_backend_docs)
+
 **WARNING: This crate is experimental and under development. Expect bugs and unoptimized circuits.**
 
 ## Acknowledgement
@@ -17,7 +19,7 @@ This crate will not be possible without
 ## Installtion
 
 ```text
-git clone https://github.com/Ethan-000/noir --branch demo-0.1.2
+git clone https://github.com/Mach-34/noir --branch demo-0.1.3
 ```
 
 ```text

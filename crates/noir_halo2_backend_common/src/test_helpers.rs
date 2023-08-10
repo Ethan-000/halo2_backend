@@ -18,7 +18,9 @@ pub fn configure_test_dirs() -> Vec<PathBuf> {
         "6_array",
         "7_function",
         "8_bit_and",
-        // "9_public_io",
+        "9_poseidon",
+        "10_public_io",
+        "11_public_io_array",
     ];
     test_dirs_names.into_iter().map(test_program_dir_path).collect()
 }
@@ -37,6 +39,15 @@ fn nargo_test(test_program_dir: &PathBuf) -> Result<Output> {
 
 fn nargo_check(test_program_dir: &PathBuf) -> Result<Output> {
     nargo_cmd().current_dir(test_program_dir).arg("check").spawn().unwrap().wait_with_output()
+}
+
+fn nargo_contract(test_program_dir: &PathBuf) -> Result<Output> {
+    nargo_cmd()
+        .current_dir(test_program_dir)
+        .arg("codegen-verifier")
+        .spawn()
+        .unwrap()
+        .wait_with_output()
 }
 
 fn nargo_gates(test_program_dir: &PathBuf) -> Result<Output> {
@@ -58,7 +69,6 @@ fn nargo_prove(test_program_dir: &PathBuf) -> Result<Output> {
         .current_dir(test_program_dir)
         .arg("prove")
         .arg("my_test_proof")
-        .arg("my_test_circuit")
         .spawn()
         .unwrap()
         .wait_with_output()
@@ -69,7 +79,6 @@ fn nargo_verify(test_program_dir: &PathBuf) -> Result<Output> {
         .current_dir(test_program_dir)
         .arg("verify")
         .arg("my_test_proof")
-        .arg("my_test_circuit")
         .spawn()
         .unwrap()
         .wait_with_output()
@@ -85,7 +94,7 @@ pub fn test_program_dir_path(dir_name: &str) -> PathBuf {
 pub fn assert_nargo_cmd_works(cmd_name: &str, test_test_program_dir: &PathBuf) {
     let cmd_output = match cmd_name {
         "check" => nargo_check(test_test_program_dir),
-        "contract" => todo!(),
+        "contract" => nargo_contract(test_test_program_dir),
         "compile" => nargo_compile(test_test_program_dir),
         "new" => panic!("This cmd doesn't depend on the backend"),
         "execute" => nargo_execute(test_test_program_dir),
@@ -107,12 +116,24 @@ pub fn assert_nargo_cmd_works(cmd_name: &str, test_test_program_dir: &PathBuf) {
 
 pub fn install_nargo(backend: &'static str) {
     // Clone noir into repo
+    // Command::new("git")
+    //     .current_dir(fs::canonicalize("../").unwrap())
+    //     .arg("clone")
+    //     .arg("https://github.com/Ethan-000/noir")
+    //     .arg("--branch")
+    //     .arg("add_halo2_backend")
+    //     .spawn()
+    //     .unwrap()
+    //     .wait()
+    //     .unwrap();
     Command::new("git")
         .current_dir(fs::canonicalize("../").unwrap())
         .arg("clone")
-        .arg("https://github.com/Ethan-000/noir")
+        .arg("https://github.com/Mach-34/noir")
+        .arg("--depth")
+        .arg("1")
         .arg("--branch")
-        .arg("add_halo2_backend")
+        .arg("demo-0.1.3")
         .spawn()
         .unwrap()
         .wait()
@@ -135,7 +156,8 @@ pub fn install_nargo(backend: &'static str) {
         .unwrap();
 }
 
-pub fn run_nargo_tests(test_program: PathBuf) {
+// run_contract bool exists since it will fail in axiom due to no constraints being built
+pub fn run_nargo_tests(test_program: PathBuf, run_contract: bool) {
     assert_nargo_cmd_works("check", &test_program);
     assert_nargo_cmd_works("compile", &test_program);
     assert_nargo_cmd_works("execute", &test_program);
@@ -143,10 +165,21 @@ pub fn run_nargo_tests(test_program: PathBuf) {
     assert_nargo_cmd_works("verify", &test_program);
     assert_nargo_cmd_works("test", &test_program);
     assert_nargo_cmd_works("gates", &test_program);
+    if run_contract {
+        assert_nargo_cmd_works("contract", &test_program);
+    }
+}
+
+pub fn run_nargo_check(test_program: PathBuf) {
+    assert_nargo_cmd_works("check", &test_program);
 }
 
 pub fn run_nargo_compile(test_program: PathBuf) {
     assert_nargo_cmd_works("compile", &test_program);
+}
+
+pub fn run_nargo_contract(test_program: PathBuf) {
+    assert_nargo_cmd_works("contract", &test_program);
 }
 
 pub fn run_nargo_prove(test_program: PathBuf) {

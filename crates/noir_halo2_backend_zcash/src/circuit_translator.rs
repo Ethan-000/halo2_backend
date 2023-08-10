@@ -84,7 +84,10 @@ impl Halo2PlonkCircuit<Fp> for NoirHalo2Translator<Fp> {
                             hashed_message: _hashed_message_inputs,
                             output: _,
                         } => {
-                            panic!("ecdsa has not yet been implemented")
+                            panic!("secp256k1 has not yet been implemented")
+                        }
+                        BlackBoxFuncCall::EcdsaSecp256r1 { .. } => {
+                            panic!("secp256r1 has not yet been implemented")
                         }
                         BlackBoxFuncCall::FixedBaseScalarMul { .. } => {
                             todo!()
@@ -107,16 +110,13 @@ impl Halo2PlonkCircuit<Fp> for NoirHalo2Translator<Fp> {
                         } => todo!(),
                     };
                 }
-                Opcode::Directive(_) | Opcode::Oracle(_) => {
-                    // Directives are only needed by the pwg
+                Opcode::Directive(_) | Opcode::Brillig(_) => {
+                    // Directives/ Brillig are only needed by the pwg
                 }
-                Opcode::Block(_) => {
-                    // Block is managed by ACVM
-                }
-                Opcode::RAM(_) | Opcode::ROM(_) => {
+                // memory managed by acvm
+                Opcode::Block(_) | Opcode::ROM(_) | Opcode::RAM(_) => {
                     todo!()
                 }
-                Opcode::Brillig(_) => todo!(),
             }
         }
         Ok(())
