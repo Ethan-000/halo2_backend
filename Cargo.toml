@@ -1,12 +1,12 @@
 [workspace]
 
 members = [
-    "crates/noir_halo2_backend_axiom",
-    "crates/noir_halo2_backend_common",
-    "crates/noir_halo2_backend_pse",
-    "crates/noir_halo2_backend_zcash",
+    "noir_halo2_backend_axiom",
+    "noir_halo2_backend_common",
+    "noir_halo2_backend_pse",
+    "noir_halo2_backend_zcash",
 ]
-default-members = ["crates/noir_halo2_backend_pse"]
+default-members = ["noir_halo2_backend_pse"]
 
 resolver = "2"
 
@@ -24,7 +24,7 @@ reqwest = { version = "0.11.16", default-features = false, features = [
 ] }
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.68"
-noir_halo2_backend_common = { path = "crates/noir_halo2_backend_common" }
+noir_halo2_backend_common = { path = "noir_halo2_backend_common" }
 
 # wasm
 console_error_panic_hook = "0.1.7"
