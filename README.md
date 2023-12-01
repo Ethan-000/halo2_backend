@@ -79,7 +79,7 @@ nargo codegen-verifier
 | arithmetic gates | ✔️ | ✔️ |
 | range proofs | ✔️ | ✔️ |
 | and gates | ✔️ | ✔️ |
-| xor |  |  |
+| xor |  | ✔️ |
 | sha256 |  |  |
 | blake2s |  |  |
 | schnorr_verify |  |  |
@@ -89,8 +89,6 @@ nargo codegen-verifier
 | fixed_base_scalar_mul |  |  |
 | keccak256 |  |  |
 | keccak256_variable_length |  |  |
-
-✔️ indicates that the feature is present. The first three features are present in both halo2-pse and halo2-axiom.
 
 ## License
 
