@@ -90,6 +90,8 @@ nargo codegen-verifier
 | keccak256 |  |  |
 | keccak256_variable_length |  |  |
 
+✔️ indicates that the feature is present. The first three features are present in both halo2-pse and halo2-axiom.
+
 ## License
 
 This library is licensed under either of the following licenses, at your discretion.
