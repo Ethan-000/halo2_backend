@@ -72,39 +72,25 @@ nargo codegen-verifier
 - [x] [halo2-pse](https://github.com/privacy-scaling-explorations/halo2)
 - [x] [halo2-axiom](https://github.com/axiom-crypto/halo2-lib)
 
-### halo2-pse features
+### Halo2 Features
 
-- [x] arithmetic gates
-- [x] range proofs
-- [x] and gates
+| Features | halo2-pse | halo2-axiom |
+| --- | --- | --- |
+| arithmetic gates | ✔️ | ✔️ |
+| range proofs | ✔️ | ✔️ |
+| and gates | ✔️ | ✔️ |
+| xor |  |  |
+| sha256 |  |  |
+| blake2s |  |  |
+| schnorr_verify |  |  |
+| pedersen |  |  |
+| hash_to_field |  |  |
+| ecdsa_secp256k1 |  |  |
+| fixed_base_scalar_mul |  |  |
+| keccak256 |  |  |
+| keccak256_variable_length |  |  |
 
-- [ ] xor
-- [ ] sha256 
-- [ ] blake2s 
-- [ ] schnorr_verify
-- [ ] pedersen
-- [ ] hash_to_field
-- [ ] ecdsa_secp256k1
-- [ ] fixed_base_scalar_mul
-- [ ] keccak256
-- [ ] keccak256_variable_length 
-
-### halo2-axiom features
-
-- [x] arithmetic gates
-- [x] range proofs
-- [x] and gates
-
-- [ ] xor
-- [ ] sha256 
-- [ ] blake2s 
-- [ ] schnorr_verify
-- [ ] pedersen
-- [ ] hash_to_field
-- [ ] ecdsa_secp256k1
-- [ ] fixed_base_scalar_mul
-- [ ] keccak256
-- [ ] keccak256_variable_length 
+✔️ indicates that the feature is present. The first three features are present in both halo2-pse and halo2-axiom.
 
 ## License
 
