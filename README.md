@@ -79,7 +79,7 @@ nargo codegen-verifier
 | arithmetic gates | ✔️ | ✔️ |
 | range proofs | ✔️ | ✔️ |
 | and gates | ✔️ | ✔️ |
-| xor |  | ✔️ |
+| xor | ✔️ | ✔️ |
 | sha256 |  |  |
 | blake2s |  |  |
 | schnorr_verify |  |  |

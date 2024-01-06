@@ -17,16 +17,16 @@ serde.workspace = true
 serde_json.workspace = true
 
 # pse
-pse_ecc = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "ecc", tag = "v2023_04_20", features = [
+pse_ecc = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "ecc", features = [
     "circuit-params",
 ] }
-pse_halo2wrong = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "halo2wrong", tag = "v2023_04_20", features = [
+pse_halo2wrong = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "halo2wrong", features = [
     "circuit-params",
 ] }
-pse_maingate = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "maingate", tag = "v2023_04_20", features = [
+pse_maingate = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", package = "maingate", features = [
     "circuit-params",
 ] }
-pse_snark_verifier = { git = "https://github.com/privacy-scaling-explorations/snark-verifier", package = "snark-verifier", tag = "v2023_04_20", features = [
+pse_snark_verifier = { git = "https://github.com/privacy-scaling-explorations/snark-verifier", package = "snark-verifier", features = [
     "halo2_circuit_params",
 ] }
 toml = "0.7.5"

@@ -92,9 +92,14 @@ impl Halo2PlonkCircuit<Fr> for NoirHalo2Translator<Fr> {
                                     &mut layouter,
                                     &mut witness_assignments,
                                 )?,
-                                BlackBoxFuncCall::XOR { .. } => {
-                                    panic!("xor has not yet been implemented")
-                                }
+                                BlackBoxFuncCall::XOR { .. } => self.add_xor_constrain(
+                                    lhs.witness,
+                                    rhs.witness,
+                                    *output,
+                                    &config,
+                                    &mut layouter,
+                                    &mut witness_assignments,
+                                )?,
                                 _ => unreachable!("expected either an AND or XOR opcode"),
                             }
                         }
