@@ -203,6 +203,56 @@ impl NoirHalo2Translator<Fr> {
         Ok(())
     }
 
+    pub(crate) fn add_xor_constrain(
+        &self,
+        lhs: Witness,
+        rhs: Witness,
+        output: Witness,
+        config: &PlonkConfig,
+        layouter: &mut impl Layouter<Fr>,
+        witness_assignments: &mut AssignedMap<Fr>,
+    ) -> Result<(), pse_halo2wrong::halo2::plonk::Error> {
+        let lhs_v = Value::known(noir_field_to_halo2_field(
+            *self.witness_values.get(&lhs).unwrap_or(&FieldElement::zero()),
+        ));
+        let rhs_v = Value::known(noir_field_to_halo2_field(
+            *self.witness_values.get(&rhs).unwrap_or(&FieldElement::zero()),
+        ));
+        let output_v = Value::known(noir_field_to_halo2_field(
+            *self.witness_values.get(&output).unwrap_or(&FieldElement::zero()),
+        ));
+
+        layouter.assign_region(
+            || "region 0",
+            |region| {
+                let offset = 0;
+                let ctx = &mut RegionCtx::new(region, offset);
+                let main_gate = MainGate::<Fr>::new(config.main_gate_config.clone());
+
+                let lhs_cell = main_gate.assign_to_column(ctx, lhs_v, MainGateColumn::A)?;
+                witness_assignments.check_and_copy(ctx, lhs.0, &lhs_cell)?;
+
+                let rhs_cell = main_gate.assign_to_column(ctx, rhs_v, MainGateColumn::B)?;
+                witness_assignments.check_and_copy(ctx, rhs.0, &rhs_cell)?;
+
+                let output_cell = main_gate.assign_to_column(ctx, output_v, MainGateColumn::C)?;
+                witness_assignments.check_and_copy(ctx, output.0, &output_cell)?;
+
+                let result = main_gate.xor(ctx, &lhs_cell, &rhs_cell)?;
+                main_gate.assert_equal(ctx, &output_cell, &result)?;
+
+                // add to assignment map
+                witness_assignments.insert(lhs, lhs_cell);
+                witness_assignments.insert(rhs, rhs_cell);
+                witness_assignments.insert(output, output_cell);
+
+                Ok(())
+            },
+        )?;
+
+        Ok(())
+    }
+
     pub(crate) fn expose_public(
         &self,
         config: &PlonkConfig,
