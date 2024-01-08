@@ -149,6 +149,49 @@ impl NoirHalo2Translator<Fr> {
         config.gate_chip.is_equal(&mut ctx, *output_v, and_out);
     }
 
+    pub(crate) fn add_xor_constrain(
+        &self,
+        lhs: Witness,
+        rhs: Witness,
+        output: Witness,
+        config: &PlonkConfig,
+        witness_assignments: &mut AssignedMap<Fr>,
+    ) {
+        let mut ctx = Context::<Fr>::new(false, 0);
+
+        // assign lhs, rhs, output or get existing assignnments
+        let lhs_v = &witness_assignments.get_or_assign(
+            &mut ctx,
+            &lhs,
+            noir_field_to_halo2_field(
+                *self.witness_values.get(&lhs).unwrap_or(&FieldElement::zero()),
+            ),
+        );
+        let rhs_v = &witness_assignments.get_or_assign(
+            &mut ctx,
+            &rhs,
+            noir_field_to_halo2_field(
+                *self.witness_values.get(&rhs).unwrap_or(&FieldElement::zero()),
+            ),
+        );
+        let output_v = &witness_assignments.get_or_assign(
+            &mut ctx,
+            &output,
+            noir_field_to_halo2_field(
+                *self.witness_values.get(&output).unwrap_or(&FieldElement::zero()),
+            ),
+        );
+
+        // lhs + rhs - 2 * (lhs & rhs)
+        let two_val = QuantumCell::Constant(Fr::from(2));
+        let and_res = config.gate_chip.and(&mut ctx, *lhs_v, *rhs_v);
+        let and_res_with_two = config.gate_chip.mul(&mut ctx, and_res, two_val);
+        let add_res = config.gate_chip.add(&mut ctx, *lhs_v, *rhs_v);
+        let final_res = config.gate_chip.sub(&mut ctx, add_res, and_res_with_two);
+
+        config.gate_chip.is_equal(&mut ctx, final_res, *output_v);
+    }
+
     pub(crate) fn add_ecdsa_secp256k1_constrain(
         &self,
         hashed_message: Vec<Witness>,
